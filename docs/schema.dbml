@@ -1,0 +1,376 @@
+Enum VaiTroEnum {
+  Admin
+  KyThuatVien
+  NguoiSuDung
+}
+
+Enum TinhTrangThietBiEnum {
+  DangHoatDong
+  DangBaoTri
+  TamNgungDoSuCo
+  NgungSuDung
+}
+
+Enum MucDoUuTienEnum {
+  Thap
+  TrungBinh
+  Cao
+}
+
+Enum TrangThaiKeHoachEnum {
+  ChoThucHien
+  DaPhanCong
+  DangThucHien
+  ChoNghiemThu
+  HoanThanh
+  DaHuy
+}
+
+Enum MucDoSuCoEnum {
+  Thap
+  TrungBinh
+  Cao
+  KhanCap
+}
+
+Enum TrangThaiBaoCaoEnum {
+  MoiBao
+  DaTiepNhan
+  DangXuLy
+  ChoNghiemThu
+  HoanThanh
+  DaHuy
+}
+
+Enum LoaiXuLyEnum {
+  BaoTriDinhKy
+  XuLySuCo
+}
+
+Enum TrangThaiPhieuXuLyEnum {
+  ChoPhanCong
+  DaPhanCong
+  DangXuLy
+  ChoNghiemThu
+  HoanThanh
+  DaHuy
+}
+
+Enum TrangThaiPhanCongEnum {
+  DangHieuLuc
+  DaKetThuc
+}
+
+// --- ENUM CHO CHUC NANG NANG CAO / BAO MAT (BO SUNG) ---
+
+Enum KetQuaDangNhapEnum {
+  ThanhCong
+  SaiMatKhau
+  TaiKhoanBiKhoa
+  KhongTonTaiTaiKhoan
+}
+
+Enum LoaiDoiTuongDinhKemEnum {
+  ThietBi
+  BaoCaoSuCo
+  ChiTietXuLy
+}
+
+Enum KenhThongBaoEnum {
+  Email
+  HeThong
+}
+
+Enum TrangThaiGuiThongBaoEnum {
+  ChoGui
+  DaGui
+  Loi
+}
+
+// ---------------------------------------------------------
+// MODULE 1
+// ---------------------------------------------------------
+
+Table TaiKhoan {
+  MaTaiKhoan int [pk, increment]
+  TenDangNhap nvarchar(50) [not null, unique]
+  MatKhau nvarchar(255) [not null, note: 'Luu ban hash, khong luu plain text']
+  HoTen nvarchar(100) [not null]
+  Email nvarchar(100) [not null]
+  VaiTro VaiTroEnum [not null]
+  MaKhuVuc int [null, note: 'BO SUNG - pham vi khu vuc duoc phep xem/bao cao, dung cho VaiTro = NguoiSuDung. Null voi Admin/KyThuatVien (khong gioi han theo khu vuc).']
+  TrangThai bit [not null, default: 1, note: '1 = Hoat dong, 0 = Bi khoa']
+  MatKhauSalt nvarchar(255) [null, note: 'BO SUNG - BAO MAT. Chi can neu tu viet ham hash (vd PBKDF2 tay). Neu dung PasswordHasher<T> co san cua ASP.NET Core thi salt da nam trong chuoi MatKhau, cot nay de null/khong dung.']
+  SoLanDangNhapSai int [not null, default: 0, note: 'BO SUNG - BAO MAT. Dem so lan dang nhap sai lien tiep, reset ve 0 khi dang nhap thanh cong.']
+  KhoaDenNgay datetime [null, note: 'BO SUNG - BAO MAT. Tu dong khoa tam thoi sau N lan sai (vd 5 lan khoa 15 phut). Khac voi TrangThai=0 la khoa vinh vien do Admin.']
+  NgayTaoTaiKhoan datetime [not null, default: `getdate()`, note: 'BO SUNG - audit']
+  LanDangNhapCuoi datetime [null, note: 'BO SUNG - BAO MAT, phuc vu canh bao dang nhap bat thuong']
+
+  Note: 'Entity goc cho dang nhap/phan quyen. TenDangNhap khong trung.'
+}
+
+Table NhatKyDangNhap {
+  MaNhatKy int [pk, increment]
+  MaTaiKhoan int [null, note: 'Null neu nhap sai TenDangNhap (tai khoan khong ton tai)']
+  TenDangNhapNhap nvarchar(50) [not null, note: 'Luu dung gia tri nguoi dung go, de doi chieu khi MaTaiKhoan null']
+  ThoiGian datetime [not null, default: `getdate()`]
+  KetQua KetQuaDangNhapEnum [not null]
+  DiaChiIP nvarchar(45) [null]
+
+  indexes {
+    MaTaiKhoan
+    ThoiGian
+  }
+
+  Note: 'BO SUNG - BAO MAT. Phuc vu kiem thu muc 22.1 (dang nhap dung/sai, tai khoan bi khoa) va canh bao brute-force. Khong bao gio xoa dong nao (audit log).'
+}
+
+Table LoaiThietBi {
+  MaLoaiThietBi int [pk, increment]
+  TenLoaiThietBi nvarchar(100) [not null, unique]
+  ChuKyBaoTriMacDinhThang int [not null, note: 'Phai > 0']
+  MoTa nvarchar(255)
+  TrangThai bit [not null, default: 1]
+}
+
+Table KhuVuc {
+  MaKhuVuc int [pk, increment]
+  TenKhuVuc nvarchar(100) [not null, unique]
+  ViTri nvarchar(255)
+  NguoiPhuTrach nvarchar(100)
+  MoTa nvarchar(255)
+  TrangThai bit [not null, default: 1]
+}
+
+// ---------------------------------------------------------
+// MODULE 2
+// ---------------------------------------------------------
+
+Table ThietBi {
+  MaThietBi int [pk, increment]
+  TenThietBi nvarchar(150) [not null]
+  MaLoaiThietBi int [not null]
+  MaKhuVuc int [not null]
+  SoSerial nvarchar(100) [not null, unique]
+  NgayDuaVaoSuDung date [not null, note: '<= ngay hien tai']
+  ChuKyBaoTriThang int [not null, note: 'Phai > 0']
+  NgayBaoTriGanNhat date [null, note: 'Null = chua bao tri lan nao, tinh moc dau tu NgayDuaVaoSuDung']
+  TinhTrang TinhTrangThietBiEnum [not null]
+  MoTa nvarchar(255)
+
+  indexes {
+    MaLoaiThietBi
+    MaKhuVuc
+    TinhTrang
+    (MaLoaiThietBi, MaKhuVuc, TinhTrang) [note: 'BO SUNG - ho tro truy van Loc ket hop nhieu dieu kien (muc 6.4)']
+  }
+
+  Note: '''
+    NgayBaoTriTiepTheo KHONG luu cot rieng - tinh dong trong code:
+    NgayBaoTriTiepTheo = (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKyBaoTriThang (thang)
+    Chua/Sap/Qua han cung suy ra tu phep so sanh ngay, khong nhap tay.
+  '''
+}
+
+// ---------------------------------------------------------
+// MODULE 3
+// ---------------------------------------------------------
+
+Table KeHoachBaoTri {
+  MaKeHoach int [pk, increment]
+  MaThietBi int [not null]
+  NgayDuKien date [not null]
+  NoiDungBaoTri nvarchar(500) [not null]
+  MucDoUuTien MucDoUuTienEnum [not null]
+  TrangThai TrangThaiKeHoachEnum [not null, default: 'ChoThucHien']
+  GhiChu nvarchar(500)
+
+  indexes {
+    MaThietBi
+    TrangThai
+    NgayDuKien
+  }
+
+  Note: 'Khong cho 2 ke hoach dinh ky dang hoat dong cho cung 1 ThietBi + cung ky bao tri (kiem tra bang LINQ, khong phai constraint DB).'
+}
+
+// ---------------------------------------------------------
+// MODULE 4
+// ---------------------------------------------------------
+
+Table BaoCaoSuCo {
+  MaBaoCao int [pk, increment]
+  MaThietBi int [not null]
+  MaTaiKhoanBaoCao int [not null]
+  NgayBaoCao datetime [not null, note: 'He thong tu gan, khong cho nhap tay']
+  MoTaSuCo nvarchar(500) [not null]
+  MucDoSuCo MucDoSuCoEnum [not null]
+  TrangThai TrangThaiBaoCaoEnum [not null, default: 'MoiBao']
+  GhiChu nvarchar(500)
+
+  indexes {
+    MaThietBi
+    MaTaiKhoanBaoCao
+    TrangThai
+    MucDoSuCo
+  }
+}
+
+Table KyThuatVien {
+  MaKyThuatVien int [pk, increment]
+  MaTaiKhoan int [null, unique, note: 'FK 0..1 - lien ket voi tai khoan dang nhap cua KTV. LUU Y SQL Server: UNIQUE chi cho 1 dong NULL -> dung filtered unique index WHERE MaTaiKhoan IS NOT NULL (EF Core HasIndex().IsUnique() tu them filter nay)']
+  HoTen nvarchar(100) [not null]
+  ChuyenMon nvarchar(150)
+  SoDienThoai nvarchar(15)
+  Email nvarchar(100)
+  TrangThai bit [not null, default: 1, note: '0 = Ngung hoat dong, khong duoc nhan phan cong moi']
+}
+
+Table PhieuXuLy {
+  MaPhieuXuLy int [pk, increment]
+  MaBaoCao int [null, note: 'Co gia tri khi LoaiXuLy = XuLySuCo']
+  MaKeHoach int [null, note: 'Co gia tri khi LoaiXuLy = BaoTriDinhKy']
+  LoaiXuLy LoaiXuLyEnum [not null]
+  NgayTao datetime [not null]
+  NgayBatDau datetime [null]
+  NgayHoanThanh datetime [null]
+  TrangThai TrangThaiPhieuXuLyEnum [not null, default: 'ChoPhanCong']
+  KetQuaXuLy nvarchar(500) [null]
+
+  indexes {
+    MaBaoCao
+    MaKeHoach
+    TrangThai
+  }
+
+  Note: 'Dung dung 1 trong 2 FK (MaBaoCao hoac MaKeHoach) theo LoaiXuLy - DB ep bang CHECK CK_Phieu_Nguon (db.sql); Controller/Service van kiem tra de bao loi than thien.'
+}
+
+Table PhanCongXuLy {
+  MaPhanCong int [pk, increment]
+  MaPhieuXuLy int [not null]
+  MaKyThuatVien int [not null]
+  NgayPhanCong datetime [not null]
+  NgayKetThucPhanCong datetime [null]
+  NoiDungPhanCong nvarchar(500)
+  TrangThai TrangThaiPhanCongEnum [not null, default: 'DangHieuLuc']
+
+  indexes {
+    MaPhieuXuLy
+    MaKyThuatVien
+    TrangThai
+    (MaPhieuXuLy, TrangThai) [note: 'BO SUNG - truy van nhanh KTV dang phu trach 1 phieu (muc 8.7)']
+  }
+
+  Note: 'Khi doi KTV: KHONG update de ban ghi cu, ma set TrangThai = DaKetThuc + tao ban ghi moi de bao toan lich su. Moi phieu chi 1 ban ghi DangHieuLuc (db.sql: filtered unique index UX_PhanCong_DangHieuLuc) -> phai set ban ghi cu DaKetThuc TRUOC khi insert ban ghi moi.'
+}
+
+// ---------------------------------------------------------
+// MODULE 5
+// ---------------------------------------------------------
+
+Table VatTu {
+  MaVatTu int [pk, increment]
+  TenVatTu nvarchar(150) [not null, unique]
+  DonViTinh nvarchar(30) [not null, note: 'vd: Cai, Hop, Met, Lit...']
+  DonGiaMacDinh decimal(18,2) [not null, note: 'Phai >= 0, chi la gia goi y khi lap ChiTietXuLy, van sua duoc tung lan dung']
+  SoLuongTon int [not null, default: 0, note: 'Phai >= 0, giam dan khi ChiTietXuLy dung vat tu nay (tru thu cong hoac bang trigger/service)']
+  TrangThai bit [not null, default: 1]
+
+  Note: 'BO SUNG - CHUC NANG NANG CAO (muc 19: Quan ly kho vat tu chi tiet). Doc lap voi 10 bang bat buoc, co the bo qua neu nhom khong lam phan nang cao nay.'
+}
+
+Table ChiTietXuLy {
+  MaChiTiet int [pk, increment]
+  MaPhieuXuLy int [not null]
+  NgayCapNhat datetime [not null]
+  NoiDungThucHien nvarchar(500) [not null]
+  VatTuLinhKien nvarchar(150) [null, note: 'Ten vat tu hien thi/luu vet - neu chon tu kho (MaVatTu) thi copy TenVatTu vao day tai thoi diem dung, tranh vo lich su neu sau nay sua/xoa VatTu']
+  MaVatTu int [null, note: 'BO SUNG - FK toi kho vat tu (VatTu), null neu nhap tay ad-hoc khong co trong kho']
+  SoLuong int [null, note: 'Phai > 0 neu co vat tu']
+  DonGia decimal(18,2) [null, note: 'Phai >= 0']
+  ThanhTien decimal(18,2) [null, note: 'He thong tinh = SoLuong * DonGia, khong cho nhap tay']
+  GhiChu nvarchar(255)
+
+  indexes {
+    MaPhieuXuLy
+    MaVatTu
+  }
+
+  Note: 'TongChiPhi cua 1 PhieuXuLy = SUM(ThanhTien) cac ChiTietXuLy - tinh dong bang LINQ, khong luu cot rieng o PhieuXuLy.'
+}
+
+Table TepDinhKem {
+  MaTepDinhKem int [pk, increment]
+  LoaiDoiTuong LoaiDoiTuongDinhKemEnum [not null]
+  MaDoiTuong int [not null, note: 'Khoa ngoai "da hinh" - tro toi MaThietBi/MaBaoCao/MaChiTiet tuy LoaiDoiTuong, KHONG tao duoc FK constraint that su trong SQL Server, phai tu kiem tra o Service layer']
+  DuongDanFile nvarchar(255) [not null]
+  TenFileGoc nvarchar(255) [null]
+  NgayUpload datetime [not null, default: `getdate()`]
+  MaTaiKhoanUpload int [null]
+
+  indexes {
+    (LoaiDoiTuong, MaDoiTuong)
+  }
+
+  Note: 'BO SUNG - CHUC NANG NANG CAO (muc 19: Upload anh thiet bi/su co). 1 bang dung chung cho nhieu loai doi tuong thay vi them cot anh rieng vao tung bang.'
+}
+
+Table ThongBao {
+  MaThongBao int [pk, increment]
+  Kenh KenhThongBaoEnum [not null]
+  MaTaiKhoanNhan int [not null]
+  MaThietBi int [null, note: 'Thiet bi lien quan (vd thong bao den han bao tri), co the null voi thong bao khac']
+  NoiDung nvarchar(500) [not null]
+  NgayTao datetime [not null, default: `getdate()`]
+  NgayGui datetime [null]
+  TrangThai TrangThaiGuiThongBaoEnum [not null, default: 'ChoGui']
+  DaDoc bit [not null, default: 0, note: 'Danh cho Kenh = HeThong (thong bao trong app)']
+
+  indexes {
+    MaTaiKhoanNhan
+    TrangThai
+  }
+
+  Note: 'BO SUNG - CHUC NANG NANG CAO (muc 19: Email den han bao tri + Thong bao thoi gian thuc). Ghi log truoc khi gui de tranh gui trung (vd job quet moi ngay chi gui 1 lan/thiet bi/ky han).'
+}
+
+// ---------------------------------------------------------
+// QUAN HE (theo dung muc 10 cua de bai)
+// ---------------------------------------------------------
+
+Ref: ThietBi.MaLoaiThietBi > LoaiThietBi.MaLoaiThietBi       // 1 - n
+Ref: ThietBi.MaKhuVuc > KhuVuc.MaKhuVuc                      // 1 - n
+Ref: TaiKhoan.MaKhuVuc > KhuVuc.MaKhuVuc                     // 1 - 0..n (BO SUNG - pham vi NguoiSuDung)
+Ref: KeHoachBaoTri.MaThietBi > ThietBi.MaThietBi             // 1 - n
+Ref: BaoCaoSuCo.MaThietBi > ThietBi.MaThietBi                // 1 - n
+Ref: BaoCaoSuCo.MaTaiKhoanBaoCao > TaiKhoan.MaTaiKhoan       // 1 - n
+Ref: KyThuatVien.MaTaiKhoan > TaiKhoan.MaTaiKhoan            // 1 - 0..1 (FK nam o KyThuatVien; unique o cot dam bao 1-0..1)
+Ref: PhieuXuLy.MaBaoCao > BaoCaoSuCo.MaBaoCao                // 1 - 0..n
+Ref: PhieuXuLy.MaKeHoach > KeHoachBaoTri.MaKeHoach           // 1 - 0..n
+Ref: PhanCongXuLy.MaPhieuXuLy > PhieuXuLy.MaPhieuXuLy        // 1 - n
+Ref: PhanCongXuLy.MaKyThuatVien > KyThuatVien.MaKyThuatVien  // 1 - n
+Ref: ChiTietXuLy.MaPhieuXuLy > PhieuXuLy.MaPhieuXuLy         // 1 - n
+
+// --- Quan he cho cac bang nang cao/bao mat (BO SUNG) ---
+Ref: NhatKyDangNhap.MaTaiKhoan > TaiKhoan.MaTaiKhoan         // 1 - 0..n
+Ref: ChiTietXuLy.MaVatTu > VatTu.MaVatTu                     // 1 - 0..n
+Ref: TepDinhKem.MaTaiKhoanUpload > TaiKhoan.MaTaiKhoan       // 1 - 0..n
+Ref: ThongBao.MaTaiKhoanNhan > TaiKhoan.MaTaiKhoan           // 1 - n
+Ref: ThongBao.MaThietBi > ThietBi.MaThietBi                  // 1 - 0..n
+
+// ---------------------------------------------------------
+// GHI CHU QUAN TRONG KHI CAU HINH EF CORE (OnModelCreating)
+// ---------------------------------------------------------
+// Tat ca FK o tren PHAI cau hinh .OnDelete(DeleteBehavior.Restrict)
+// (khong dung mac dinh Cascade cua EF Core). Ly do: de bai yeu cau
+// "bao toan lich su bao tri, su co, phan cong va xu ly" (muc 25) -
+// neu de Cascade, lo xoa 1 ThietBi se tu dong xoa sach
+// KeHoachBaoTri/BaoCaoSuCo/PhieuXuLy/PhanCongXuLy/ChiTietXuLy lien quan.
+// Vi du trong DbContext:
+//   modelBuilder.Entity<KeHoachBaoTri>()
+//       .HasOne(k => k.ThietBi)
+//       .WithMany(t => t.KeHoachBaoTris)
+//       .HasForeignKey(k => k.MaThietBi)
+//       .OnDelete(DeleteBehavior.Restrict);
+// Ap dung tuong tu cho toan bo quan he con lai.
