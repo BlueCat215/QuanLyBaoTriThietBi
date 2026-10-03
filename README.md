@@ -4,6 +4,11 @@
 
 Quản lý thiết bị, lập kế hoạch bảo trì định kỳ, tiếp nhận báo cáo sự cố, phân công kỹ thuật viên xử lý, nghiệm thu và thống kê chi phí.
 
+# Xem chi tiết cấu trúc tại
+
+- [Sơ đồ ERD](./docs/ERD.md)
+- [Nội dung](./docs/THIETKE.md)
+
 ## Công nghệ sử dụng
 
 - ASP.NET Core 10 MVC
