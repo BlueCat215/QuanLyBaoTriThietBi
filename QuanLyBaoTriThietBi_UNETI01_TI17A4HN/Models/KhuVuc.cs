@@ -8,8 +8,7 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 [Table("KhuVuc")]
 public class KhuVuc
 {
-    [Key]
-    public int MaKhuVuc { get; set; }
+    [Key] public int MaKhuVuc { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập tên khu vực"), StringLength(100)]
     [Display(Name = "Tên khu vực")]

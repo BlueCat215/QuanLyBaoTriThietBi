@@ -8,8 +8,7 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 [Table("LoaiThietBi")]
 public class LoaiThietBi
 {
-    [Key]
-    public int MaLoaiThietBi { get; set; }
+    [Key] public int MaLoaiThietBi { get; set; }
 
     [Required(ErrorMessage = "Vui lòng nhập tên loại thiết bị"), StringLength(100)]
     [Display(Name = "Tên loại thiết bị")]
