@@ -15,7 +15,6 @@ public class TaiKhoan
     [Display(Name = "Tên đăng nhập")]
     public string TenDangNhap { get; set; } = string.Empty;
 
-    /// <summary>Luu ban HASH (PasswordHasher), khong bao gio luu plain text.</summary>
     [Required, StringLength(255)]
     public string MatKhau { get; set; } = string.Empty;
 
@@ -29,11 +28,9 @@ public class TaiKhoan
     [Display(Name = "Vai trò")]
     public VaiTroEnum VaiTro { get; set; }
 
-    /// <summary>Pham vi khu vuc cua NguoiSuDung. Null voi Admin/KyThuatVien.</summary>
     [Display(Name = "Khu vực")]
     public int? MaKhuVuc { get; set; }
 
-    /// <summary>1 = hoat dong, 0 = bi khoa vinh vien boi Admin.</summary>
     [Display(Name = "Đang hoạt động")]
     public bool TrangThai { get; set; } = true;
 
@@ -41,14 +38,12 @@ public class TaiKhoan
 
     public int SoLanDangNhapSai { get; set; }
 
-    /// <summary>Khoa tam thoi sau N lan sai (khac TrangThai = khoa vinh vien).</summary>
     public DateTime? KhoaDenNgay { get; set; }
 
     public DateTime NgayTaoTaiKhoan { get; set; }
 
     public DateTime? LanDangNhapCuoi { get; set; }
 
-    // Navigation
     public KhuVuc? KhuVuc { get; set; }
     public KyThuatVien? KyThuatVien { get; set; }
     public ICollection<BaoCaoSuCo> BaoCaoSuCos { get; set; } = new List<BaoCaoSuCo>();

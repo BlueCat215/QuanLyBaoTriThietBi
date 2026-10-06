@@ -30,7 +30,7 @@ Quản lý thiết bị, lập kế hoạch bảo trì định kỳ, tiếp nh�
 
 ```
 QuanLyBaoTriThietBi_UNETI01_TI17A4HN (đang trong quá trình bổ sug)/
-├── Data/                   # ApplicationDbContext, khai báo DbSet cho 10 bảng — tạo khi gộp Entity
+├── Data/                   # AppDbContext, khai báo DbSet cho 14 bảng (10 bắt buộc + 4 bảng phụ)  — tạo khi gộp Entity
 ├── Models/                 # Entity ánh xạ CSDL theo ERD, mỗi Entity 1 file, đúng 1 người phụ trách:
 │   ├── TaiKhoan.cs / LoaiThietBi.cs / KhuVuc.cs
 │   ├── ThietBi.cs
