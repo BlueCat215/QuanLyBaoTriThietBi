@@ -1,0 +1,102 @@
+@using System.Security.Claims
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@*
+    SIDEBAR THEO VAI TRO (docs/GIAO_DIEN.md muc 11). Chi hien muc ma vai tro duoc phep.
+    Ten controller/action o day la DU KIEN - moi nguoi doi cho khop controller cua module minh.
+*@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    // TAM THOI de xem giao dien khi CHUA co dang nhap: coi nhu Admin. SV1 XOA dong nay (dat = false) khi da lam xong dang nhap.
+    const bool XemTruocMenuAdminKhiChuaDangNhap = true;
+    var daDangNhap = User.Identity?.IsAuthenticated ?? false;
+    var laAdmin = User.IsInRole("Admin") || (XemTruocMenuAdminKhiChuaDangNhap && !daDangNhap);
+    var laKtv = User.IsInRole("KyThuatVien");
+    var laNguoiDung = User.IsInRole("NguoiSuDung");
+
+    var hoTen = User.FindFirst("HoTen")?.Value ?? User.Identity?.Name ?? (laAdmin ? "Xem trước (chưa đăng nhập)" : "Khách");
+    var vaiTro = User.FindFirst(ClaimTypes.Role)?.Value ?? (laAdmin ? nameof(VaiTroEnum.Admin) : "");
+    var vaiTroText = Enum.TryParse<VaiTroEnum>(vaiTro, out var vt) ? UiHelper.Badge(vt).Text : "";
+
+    // matchAction = true: chi sang khi dung ca action (dung khi 2 muc cung controller)
+    void Muc(string ctrl, string act, string icon, string text, bool matchAction = false, bool accent = false)
+    {
+        var active = string.Equals(controller, ctrl, StringComparison.OrdinalIgnoreCase)
+                     && (!matchAction || string.Equals(action, act, StringComparison.OrdinalIgnoreCase));
+        <a class="sidebar-link @(active ? "active" : "") @(accent ? "is-accent" : "")" href="@Url.Action(act, ctrl)" @(active ? "aria-current=page" : "")>
+            <span class="material-symbols-outlined">@icon</span>
+            <span class="label">@text</span>
+        </a>
+    }
+}
+<aside class="sidebar">
+    <a class="sidebar-brand" href="@Url.Action("Index", "Home")">
+        <span class="brand-mark"><span class="material-symbols-outlined">construction</span></span>
+        <span class="sidebar-brand-text">
+            <span class="brand-title">MaintainPro</span>
+            <small>Quản lý bảo trì thiết bị</small>
+        </span>
+    </a>
+
+    <nav>
+        @if (laAdmin)
+        {
+            <div class="sidebar-group">Tổng quan</div>
+            Muc("Dashboard", "Index", "space_dashboard", "Dashboard");
+            Muc("ThongKe", "Index", "bar_chart", "Thống kê");
+
+            <div class="sidebar-group">Thiết bị</div>
+            Muc("ThietBi", "Index", "precision_manufacturing", "Thiết bị");
+            Muc("LoaiThietBi", "Index", "category", "Loại thiết bị");
+            Muc("KhuVuc", "Index", "apartment", "Khu vực");
+            Muc("VatTu", "Index", "inventory_2", "Vật tư");
+
+            <div class="sidebar-group">Bảo trì &amp; sự cố</div>
+            Muc("KeHoachBaoTri", "Index", "calendar_clock", "Kế hoạch bảo trì");
+            Muc("BaoCaoSuCo", "Index", "warning", "Báo cáo sự cố");
+            Muc("PhieuXuLy", "Index", "assignment_turned_in", "Phiếu xử lý");
+            Muc("KyThuatVien", "Index", "engineering", "Kỹ thuật viên");
+
+            <div class="sidebar-group">Hệ thống</div>
+            Muc("TaiKhoan", "Index", "manage_accounts", "Tài khoản");
+            Muc("NhatKyDangNhap", "Index", "history", "Nhật ký đăng nhập");
+        }
+        else if (laKtv)
+        {
+            <div class="sidebar-group">Công việc</div>
+            Muc("PhieuXuLy", "ViecCuaToi", "assignment_ind", "Việc của tôi", matchAction: true);
+
+            <div class="sidebar-group">Tra cứu</div>
+            Muc("ThietBi", "Index", "precision_manufacturing", "Thiết bị");
+            Muc("KeHoachBaoTri", "Index", "calendar_clock", "Kế hoạch bảo trì");
+        }
+        else if (laNguoiDung)
+        {
+            <div class="sidebar-group">Thiết bị</div>
+            Muc("ThietBi", "Index", "precision_manufacturing", "Thiết bị khu vực của tôi");
+
+            <div class="sidebar-group">Sự cố</div>
+            Muc("BaoCaoSuCo", "Create", "add_alert", "Báo sự cố mới", matchAction: true, accent: true);
+            Muc("BaoCaoSuCo", "CuaToi", "list_alt", "Báo cáo của tôi", matchAction: true);
+        }
+    </nav>
+
+    <div class="sidebar-user">
+        <div class="d-flex align-items-center gap-2">
+            <span class="avatar avatar-lg">@UiHelper.VietTat(hoTen)</span>
+            <div class="user-meta flex-grow-1">
+                <div class="text-truncate user-name">@hoTen</div>
+                <div class="user-role">@vaiTroText</div>
+            </div>
+            @if (daDangNhap)
+            {
+                <form asp-controller="TaiKhoan" asp-action="DangXuat" method="post" class="m-0">
+                    <button type="submit" class="btn btn-ghost btn-icon" title="Đăng xuất" aria-label="Đăng xuất">
+                        <span class="material-symbols-outlined">logout</span>
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</aside>
