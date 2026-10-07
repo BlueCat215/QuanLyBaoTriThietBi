@@ -1,0 +1,15 @@
+@* Badge dung chung. Cach dung:
+   <partial name="_StatusBadge" model="UiHelper.Badge(item.TinhTrang)" />
+   <partial name="_StatusBadge" model="UiHelper.Badge(item.MucDoSuCo)" />
+   Can them vao Views/_ViewImports.cshtml dong:  @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers.BadgeInfo
+@{
+    var baseClass = Model.Kind switch
+    {
+        "level"    => "level-badge",
+        "priority" => "priority-tag",
+        "role"     => "role-chip",
+        _          => "status-badge"
+    };
+}
+<span class="@baseClass @Model.Css">@Model.Text</span>
