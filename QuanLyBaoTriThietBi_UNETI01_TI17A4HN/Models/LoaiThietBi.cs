@@ -1,4 +1,4 @@
-//////2310310023103100303_Nguyễn Văn Hoàng: Module 1: Tạo Model LoaiThietBi.cs
+///2310310023103100303_Nguyễn Văn Hoàng: Module 1: Tạo Model LoaiThietBi.cs
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
