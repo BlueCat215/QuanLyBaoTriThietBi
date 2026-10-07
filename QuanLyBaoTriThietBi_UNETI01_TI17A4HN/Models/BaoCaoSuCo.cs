@@ -15,7 +15,7 @@ public class BaoCaoSuCo
 
     public int MaTaiKhoanBaoCao { get; set; }
 
-    /// <summary>Hệ thống tự gán (DateTime.Now), không cho nhập tay =.</summary>
+    // Hệ thống tự gán (DateTime.Now), không cho nhập tay =
     [Display(Name = "Ngày báo cáo")]
     public DateTime NgayBaoCao { get; set; }
 
