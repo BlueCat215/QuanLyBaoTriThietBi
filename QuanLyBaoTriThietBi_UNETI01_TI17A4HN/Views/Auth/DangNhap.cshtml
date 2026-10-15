@@ -1,0 +1,52 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Trang đăng nhập (không sidebar) *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.DangNhapViewModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="auth-split">
+    <section class="auth-hero">
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <span class="brand-mark"><span class="material-symbols-outlined">construction</span></span>
+            <span class="fs-4 fw-bold text-white">MaintainPro</span>
+        </div>
+        <h1 class="text-white">Quản lý bảo trì thiết bị</h1>
+        <p class="mb-0">Theo dõi thiết bị, lập kế hoạch bảo trì và xử lý sự cố trong một hệ thống.</p>
+    </section>
+
+    <section class="auth-form">
+        <div>
+            <h2 class="mb-1">Đăng nhập</h2>
+            <p class="text-muted mb-4">Nhập tài khoản được cấp để tiếp tục.</p>
+
+            @if (TempData["ThanhCong"] is string thanhCong)
+            {
+                <div class="alert alert-success" role="alert">@thanhCong</div>
+            }
+
+            <form asp-action="DangNhap" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="mb-3">
+                    <label asp-for="TenDangNhap" class="form-label required"></label>
+                    <input asp-for="TenDangNhap" class="form-control" autocomplete="username" autofocus />
+                    <span asp-validation-for="TenDangNhap"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="MatKhau" class="form-label required"></label>
+                    <input asp-for="MatKhau" type="password" class="form-control" autocomplete="current-password" />
+                    <span asp-validation-for="MatKhau"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
