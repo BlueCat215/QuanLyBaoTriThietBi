@@ -1,0 +1,140 @@
+@* Chi tiết Thiết bị, đổi tình trạng, xóa an toàn *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiDetailsViewModel
+@{
+    var tb = Model.ThietBi;
+    var lienQuan = Model.DuLieuLienQuan;
+    var ngung = tb.TinhTrang == TinhTrangThietBiEnum.NgungSuDung;
+    ViewData["Title"] = tb.TenThietBi;
+}
+
+<div class="page-header">
+    <div>
+        <h1>@tb.TenThietBi</h1>
+        <p><span class="mono">@UiHelper.Ma("TB", tb.MaThietBi)</span> · Serial <span class="mono">@tb.SoSerial</span>
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
+        @if (!ngung)
+        {
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@tb.MaThietBi">Sửa thiết bị</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Thông tin thiết bị</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tình trạng</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(tb.TinhTrang)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Loại thiết bị</dt>
+                    <dd class="col-sm-8">@(tb.LoaiThietBi?.TenLoaiThietBi ?? "—")</dd>
+
+                    <dt class="col-sm-4">Khu vực</dt>
+                    <dd class="col-sm-8">@(tb.KhuVuc?.TenKhuVuc ?? "—")</dd>
+
+                    <dt class="col-sm-4">Ngày đưa vào sử dụng</dt>
+                    <dd class="col-sm-8">@UiHelper.Ngay(tb.NgayDuaVaoSuDung)</dd>
+
+                    <dt class="col-sm-4">Chu kỳ bảo trì</dt>
+                    <dd class="col-sm-8">@tb.ChuKyBaoTriThang tháng</dd>
+
+                    <dt class="col-sm-4">Bảo trì gần nhất</dt>
+                    <dd class="col-sm-8">@(tb.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(tb.NgayBaoTriGanNhat) : "Chưa bảo trì lần nào")</dd>
+
+                    <dt class="col-sm-4">Bảo trì tiếp theo</dt>
+                    <dd class="col-sm-8">
+                        @if (ngung)
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            var (badge, ghiChu) = UiHelper.HanBaoTri(tb.NgayBaoTriTiepTheo);
+                            <span>@UiHelper.Ngay(tb.NgayBaoTriTiepTheo)</span>
+                            <partial name="_StatusBadge" model="badge" />
+                            <span class="text-muted">(@ghiChu)</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Mô tả</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(tb.MoTa) ? "—" : tb.MoTa)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="mb-3">Đổi tình trạng</h3>
+                <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
+                    <input type="hidden" name="quayLai" value="details" />
+                    <label class="form-label" for="tinhTrang">Tình trạng mới</label>
+                    <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
+                        @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
+                        {
+                            <option value="@v" selected="@(tb.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary w-100">Cập nhật tình trạng</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Dữ liệu liên quan</h3>
+                <ul class="list-unstyled mb-3">
+                    <li>Kế hoạch bảo trì: <strong>@lienQuan.SoKeHoach</strong></li>
+                    <li>Báo cáo sự cố: <strong>@lienQuan.SoBaoCao</strong></li>
+                    <li>Thông báo: <strong>@lienQuan.SoThongBao</strong></li>
+                    <li>Tệp đính kèm: <strong>@lienQuan.SoTepDinhKem</strong></li>
+                </ul>
+
+                @if (lienQuan.CoDuLieu)
+                {
+                    <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
+                        <strong>Ngừng sử dụng</strong> để giữ lịch sử.</p>
+                    }
+                else
+                    {
+                        <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                                data-bs-target="#modalXoa">Xóa thiết bị</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!lienQuan.CoDuLieu)
+    {
+        <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="Delete" asp-route-id="@tb.MaThietBi" method="post">
+                        <div class="modal-header">
+                            <h3 class="modal-title" id="modalXoaTitle">Xóa thiết bị</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Bạn có chắc muốn xóa thiết bị <strong>@tb.TenThietBi</strong>? Hành động này không thể hoàn tác.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-danger">Xóa thiết bị</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }

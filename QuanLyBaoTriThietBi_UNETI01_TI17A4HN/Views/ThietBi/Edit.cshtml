@@ -1,0 +1,35 @@
+@*  Sửa Thiết bị *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiFormViewModel
+@{
+    ViewData["Title"] = "Sửa thiết bị";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Sửa thiết bị</h1>
+        <p>Cập nhật thông tin thiết bị. Để đổi tình trạng, dùng mục "Đổi tình trạng" ở trang chi tiết.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.MaThietBi" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input type="hidden" asp-for="MaThietBi" />
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="Details"
+                           asp-route-id="@Model.MaThietBi">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
