@@ -1,0 +1,63 @@
+@* Các trường nhập chung cho Thêm/Sửa Thiết bị *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiFormViewModel
+@{
+    var homNay = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<div class="mb-3">
+    <label asp-for="TenThietBi" class="form-label required"></label>
+    <input asp-for="TenThietBi" class="form-control" placeholder="Ví dụ: Máy in Canon LBP6030" />
+    <span asp-validation-for="TenThietBi"></span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="SoSerial" class="form-label required"></label>
+        <input asp-for="SoSerial" class="form-control" autocomplete="off" />
+        <span asp-validation-for="SoSerial"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="ChuKyBaoTriThang" class="form-label required"></label>
+        <input asp-for="ChuKyBaoTriThang" type="number" min="1" max="600" class="form-control" />
+        <div class="form-text">Số tháng giữa hai lần bảo trì, phải lớn hơn 0.</div>
+        <span asp-validation-for="ChuKyBaoTriThang"></span>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="MaLoaiThietBi" class="form-label required"></label>
+        <select asp-for="MaLoaiThietBi" asp-items="Model.LoaiOptions" class="form-select">
+            <option value="">-- Chọn loại thiết bị --</option>
+        </select>
+        <span asp-validation-for="MaLoaiThietBi"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="MaKhuVuc" class="form-label required"></label>
+        <select asp-for="MaKhuVuc" asp-items="Model.KhuVucOptions" class="form-select">
+            <option value="">-- Chọn khu vực --</option>
+        </select>
+        <span asp-validation-for="MaKhuVuc"></span>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="NgayDuaVaoSuDung" class="form-label required"></label>
+        <input asp-for="NgayDuaVaoSuDung" type="date" max="@homNay" class="form-control" />
+        <div class="form-text">Không được lớn hơn ngày hiện tại.</div>
+        <span asp-validation-for="NgayDuaVaoSuDung"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="NgayBaoTriGanNhat" class="form-label"></label>
+        <input asp-for="NgayBaoTriGanNhat" type="date" max="@homNay" class="form-control" />
+        <div class="form-text">Để trống nếu chưa bảo trì lần nào (mốc tính từ ngày đưa vào sử dụng).</div>
+        <span asp-validation-for="NgayBaoTriGanNhat"></span>
+    </div>
+</div>
+
+<div class="mb-4">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="MoTa"></span>
+</div>

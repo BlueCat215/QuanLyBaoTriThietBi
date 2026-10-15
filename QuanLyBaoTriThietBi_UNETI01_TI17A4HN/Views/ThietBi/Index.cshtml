@@ -1,0 +1,140 @@
+@* Danh sách Thiết bị + tìm kiếm theo Tên/Serial/Khu vực *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiIndexViewModel
+@{
+    ViewData["Title"] = "Thiết bị";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Thiết bị</h1>
+        <p>Quản lý danh sách thiết bị, tình trạng và hạn bảo trì.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">precision_manufacturing</span>
+            <h3>Chưa có thiết bị nào</h3>
+            <p>Hãy thêm thiết bị đầu tiên để bắt đầu theo dõi bảo trì.</p>
+            <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+                   placeholder="Tìm theo tên thiết bị, số serial hoặc tên khu vực" />
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy thiết bị phù hợp</h3>
+                <p>Không có thiết bị nào khớp với "@Model.TuKhoa". Hãy thử từ khóa khác.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Thiết bị</th>
+                        <th>Loại thiết bị</th>
+                        <th>Khu vực</th>
+                        <th>Tình trạng</th>
+                        <th>Bảo trì tiếp theo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        var ngung = item.TinhTrang == TinhTrangThietBiEnum.NgungSuDung;
+                        <tr class="@(ngung ? "is-muted" : "")">
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.MaThietBi"
+                                   class="cell-title text-decoration-none">@item.TenThietBi</a>
+                                <div class="cell-sub mono">@item.SoSerial</div>
+                            </td>
+                            <td>@item.TenLoaiThietBi</td>
+                            <td>@item.TenKhuVuc</td>
+                            <td>
+                                <partial name="_StatusBadge" model="UiHelper.Badge(item.TinhTrang)" />
+                            </td>
+                            <td>
+                                @if (ngung)
+                                {
+                                    <span>—</span>
+                                }
+                                else
+                                {
+                                    var (badge, ghiChu) = UiHelper.HanBaoTri(item.NgayBaoTriTiepTheo);
+                                    <div>@UiHelper.Ngay(item.NgayBaoTriTiepTheo)</div>
+                                    <partial name="_StatusBadge" model="badge" />
+                                    <span class="cell-sub">@ghiChu</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Details" asp-route-id="@item.MaThietBi"
+                                       title="Xem chi tiết">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
+                                    @if (!ngung)
+                                    {
+                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaThietBi"
+                                           title="Sửa thiết bị">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                    }
+                                    <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
+                                        <input type="hidden" name="tinhTrang"
+                                               value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
+                                        <input type="hidden" name="tuKhoa" value="@Model.TuKhoa" />
+                                        <button type="submit" class="btn btn-ghost btn-icon"
+                                                title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
+                                            <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <span>
+                    @if (Model.CoBoLoc)
+                    {
+                        <text>Tìm thấy @Model.Items.Count thiết bị cho từ khóa "@Model.TuKhoa"</text>
+                    }
+                    else
+                    {
+                        <text>Tổng số: @Model.Items.Count thiết bị</text>
+                    }
+                </span>
+            </div>
+        </div>
+    }
+}

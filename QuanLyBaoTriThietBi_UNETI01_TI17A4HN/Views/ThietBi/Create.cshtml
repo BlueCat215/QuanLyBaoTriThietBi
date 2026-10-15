@@ -1,0 +1,33 @@
+@*  Thêm Thiết bị *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiFormViewModel
+@{
+    ViewData["Title"] = "Thêm thiết bị";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Thêm thiết bị</h1>
+        <p>Nhập thông tin thiết bị mới. Thiết bị mới luôn ở tình trạng "Đang hoạt động".</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu thiết bị</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
