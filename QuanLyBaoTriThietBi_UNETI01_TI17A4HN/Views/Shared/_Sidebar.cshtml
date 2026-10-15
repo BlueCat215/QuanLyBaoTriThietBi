@@ -8,7 +8,7 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
-    // TAM THOI de xem giao dien khi CHUA co dang nhap: coi nhu Admin. SV1 XOA dong nay (dat = false) khi da lam xong dang nhap.
+    @* TAM THOI de xem giao dien khi CHUA co dang nhap: coi nhu Admin. SV1 XOA dong nay (dat = false) khi da lam xong dang *@
     const bool XemTruocMenuAdminKhiChuaDangNhap = true;
     var daDangNhap = User.Identity?.IsAuthenticated ?? false;
     var laAdmin = User.IsInRole("Admin") || (XemTruocMenuAdminKhiChuaDangNhap && !daDangNhap);
@@ -24,7 +24,8 @@
     {
         var active = string.Equals(controller, ctrl, StringComparison.OrdinalIgnoreCase)
                      && (!matchAction || string.Equals(action, act, StringComparison.OrdinalIgnoreCase));
-        <a class="sidebar-link @(active ? "active" : "") @(accent ? "is-accent" : "")" href="@Url.Action(act, ctrl)" @(active ? "aria-current=page" : "")>
+        <a class="sidebar-link @(active ? "active" : "") @(accent ? "is-accent" : "")" href="@Url.Action(act, ctrl)" @(active ?
+           "aria-current=page" : "")>
             <span class="material-symbols-outlined">@icon</span>
             <span class="label">@text</span>
         </a>
@@ -96,6 +97,13 @@
                         <span class="material-symbols-outlined">logout</span>
                     </button>
                 </form>
+            }
+            else
+            {
+                <a class="btn btn-ghost btn-icon" asp-controller="Auth" asp-action="DangNhap" title="Đăng nhập"
+                   aria-label="Đăng nhập">
+                    <span class="material-symbols-outlined">login</span>
+                </a>
             }
         </div>
     </div>
