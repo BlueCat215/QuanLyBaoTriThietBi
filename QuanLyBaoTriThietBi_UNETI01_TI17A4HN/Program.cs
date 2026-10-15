@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -7,22 +8,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
-// [KHUNG CHUNG] tự đăng ký mọi Repository/Service theo quy ước tên
+//tự đăng ký mọi Repository/Service theo quy ước tên
 builder.Services.AddRepositoriesAndServices();
 
-// [VIỆC 12] Đăng nhập bằng Session
+//Đăng nhập bằng Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);   // hết hạn sau 30 phút không thao tác
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // hết hạn sau 30 phút không thao tác
     options.Cookie.Name = ".MaintainPro.Session";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
-    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { });
+builder
+    .Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
+        SessionAuthenticationHandler.SchemeName,
+        _ => { }
+    );
 
 var app = builder.Build();
 
@@ -40,7 +46,7 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseRouting();
 
-// [VIỆC 12] Thứ tự bắt buộc: Session -> Authentication -> Authorization
+//Thứ tự bắt buộc: Session -> Authentication -> Authorization
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
