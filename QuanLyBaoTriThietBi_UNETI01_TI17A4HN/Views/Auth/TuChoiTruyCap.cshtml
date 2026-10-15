@@ -1,0 +1,14 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Trang 403 không đủ quyền truy cập *@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Không có quyền truy cập";
+}
+
+<div class="d-flex align-items-center justify-content-center min-vh-100 p-4">
+    <div class="text-center">
+        <span class="material-symbols-outlined icon-24">lock</span>
+        <h1 class="mt-2">Không có quyền truy cập</h1>
+        <p class="text-muted">Tài khoản của bạn không được phép xem trang này.</p>
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Về trang chủ</a>
+    </div>
+</div>
