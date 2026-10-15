@@ -1,0 +1,26 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303  | Nội dung: Module 1 - Các trường nhập chung cho Thêm/Sửa Loại thiết bị *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.LoaiThietBi
+
+<div class="mb-3">
+    <label asp-for="TenLoaiThietBi" class="form-label required"></label>
+    <input asp-for="TenLoaiThietBi" class="form-control" placeholder="Ví dụ: Máy lạnh" />
+    <span asp-validation-for="TenLoaiThietBi"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="ChuKyBaoTriMacDinhThang" class="form-label required"></label>
+    <input asp-for="ChuKyBaoTriMacDinhThang" type="number" min="1" class="form-control" />
+    <div class="form-text">Số tháng giữa hai lần bảo trì, phải lớn hơn 0.</div>
+    <span asp-validation-for="ChuKyBaoTriMacDinhThang"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="MoTa"></span>
+</div>
+
+<div class="form-check mb-4">
+    <input asp-for="TrangThai" class="form-check-input" />
+    <label class="form-check-label" asp-for="TrangThai">Đang sử dụng</label>
+</div>

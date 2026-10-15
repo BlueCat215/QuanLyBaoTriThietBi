@@ -1,0 +1,154 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Danh sách Khu vực *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KhuVucIndexViewModel
+@{
+    ViewData["Title"] = "Khu vực";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Khu vực</h1>
+        <p>Quản lý các khu vực đặt thiết bị và người phụ trách.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create">Thêm khu vực</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">apartment</span>
+            <h3>Chưa có khu vực nào</h3>
+            <p>Hãy thêm khu vực đầu tiên để gán thiết bị và người dùng.</p>
+            <a class="btn btn-primary" asp-action="Create">Thêm khu vực</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control" placeholder="Nhập tên khu vực, vị trí hoặc người phụ trách" />
+        </div>
+        <div>
+            <label class="form-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.TrangThai == true)">Hoạt động</option>
+                <option value="false" selected="@(Model.TrangThai == false)">Ngừng hoạt động</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy khu vực phù hợp</h3>
+                <p>Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Khu vực</th>
+                        <th>Người phụ trách</th>
+                        <th class="num">Số thiết bị</th>
+                        <th class="num">Số tài khoản</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="@(item.TrangThai ? "" : "is-muted")">
+                            <td>
+                                <div class="cell-title">@item.TenKhuVuc</div>
+                                @if (!string.IsNullOrEmpty(item.ViTri))
+                                {
+                                    <div class="cell-sub">@item.ViTri</div>
+                                }
+                            </td>
+                            <td>@(string.IsNullOrEmpty(item.NguoiPhuTrach) ? "—" : item.NguoiPhuTrach)</td>
+                            <td class="num">@item.SoThietBi</td>
+                            <td class="num">@item.SoTaiKhoan</td>
+                            <td><partial name="_StatusBadge" model="UiHelper.BadgeHoatDong(item.TrangThai)" /></td>
+                            <td>
+                                <div class="row-actions">
+                                    @if (item.TrangThai)
+                                    {
+                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaKhuVuc" title="Sửa khu vực">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                    }
+                                    <form asp-action="DoiTrangThai" asp-route-id="@item.MaKhuVuc" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-ghost btn-icon" title="@(item.TrangThai ? "Ngừng hoạt động" : "Kích hoạt lại")">
+                                            <span class="material-symbols-outlined">@(item.TrangThai ? "block" : "check_circle")</span>
+                                        </button>
+                                    </form>
+                                    @if (item.SoThietBi == 0 && item.SoTaiKhoan == 0)
+                                    {
+                                        <button type="button" class="btn btn-ghost btn-icon is-danger" title="Xóa khu vực"
+                                                data-bs-toggle="modal" data-bs-target="#modalXoa"
+                                                data-id="@item.MaKhuVuc" data-ten="@item.TenKhuVuc">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <span>Tổng số: @Model.Items.Count khu vực</span>
+            </div>
+        </div>
+    }
+}
+
+<div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalXoaTitle">Xóa khu vực</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn xóa khu vực <strong id="xoaTen"></strong>? Hành động này không thể hoàn tác.</p>
+                    <input type="hidden" name="id" id="xoaId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xóa khu vực</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('modalXoa').addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('xoaId').value = nut.getAttribute('data-id');
+            document.getElementById('xoaTen').textContent = nut.getAttribute('data-ten');
+        });
+    </script>
+}
