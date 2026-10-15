@@ -8,8 +8,7 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
-    // TAM THOI de xem giao dien khi CHUA co dang nhap: coi nhu Admin. SV1 XOA dong nay (dat = false) khi da lam xong dang
-    nhap.
+    @* TAM THOI de xem giao dien khi CHUA co dang nhap: coi nhu Admin. SV1 XOA dong nay (dat = false) khi da lam xong dang *@
     const bool XemTruocMenuAdminKhiChuaDangNhap = true;
     var daDangNhap = User.Identity?.IsAuthenticated ?? false;
     var laAdmin = User.IsInRole("Admin") || (XemTruocMenuAdminKhiChuaDangNhap && !daDangNhap);
