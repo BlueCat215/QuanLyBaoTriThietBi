@@ -1,0 +1,31 @@
+@*Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303  | Nội dung: Module 1 - Các trường nhập chung cho Thêm/Sửa Khu vực *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.KhuVuc
+
+<div class="mb-3">
+    <label asp-for="TenKhuVuc" class="form-label required"></label>
+    <input asp-for="TenKhuVuc" class="form-control" placeholder="Ví dụ: Phòng máy chủ" />
+    <span asp-validation-for="TenKhuVuc"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="ViTri" class="form-label"></label>
+    <input asp-for="ViTri" class="form-control" placeholder="Ví dụ: Tầng 2, nhà A" />
+    <span asp-validation-for="ViTri"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="NguoiPhuTrach" class="form-label"></label>
+    <input asp-for="NguoiPhuTrach" class="form-control" />
+    <span asp-validation-for="NguoiPhuTrach"></span>
+</div>
+
+<div class="mb-3">
+    <label asp-for="MoTa" class="form-label"></label>
+    <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+    <span asp-validation-for="MoTa"></span>
+</div>
+
+<div class="form-check mb-4">
+    <input asp-for="TrangThai" class="form-check-input" />
+    <label class="form-check-label" asp-for="TrangThai">Đang hoạt động</label>
+</div>

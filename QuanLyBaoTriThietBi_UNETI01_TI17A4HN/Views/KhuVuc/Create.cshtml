@@ -1,0 +1,33 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303  | Nội dung: Module 1 - Thêm Khu vực *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.KhuVuc
+@{
+    ViewData["Title"] = "Thêm khu vực";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Thêm khu vực</h1>
+        <p>Nhập thông tin khu vực đặt thiết bị.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu khu vực</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,152 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Danh sách Loại thiết bị *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.LoaiThietBiIndexViewModel
+@{
+    ViewData["Title"] = "Loại thiết bị";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Loại thiết bị</h1>
+        <p>Quản lý danh mục loại thiết bị và chu kỳ bảo trì mặc định.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create">Thêm loại thiết bị</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">category</span>
+            <h3>Chưa có loại thiết bị nào</h3>
+            <p>Hãy thêm loại thiết bị đầu tiên để bắt đầu quản lý thiết bị.</p>
+            <a class="btn btn-primary" asp-action="Create">Thêm loại thiết bị</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control" placeholder="Nhập tên hoặc mô tả loại thiết bị" />
+        </div>
+        <div>
+            <label class="form-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.TrangThai == true)">Hoạt động</option>
+                <option value="false" selected="@(Model.TrangThai == false)">Ngừng hoạt động</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy loại thiết bị phù hợp</h3>
+                <p>Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Loại thiết bị</th>
+                        <th class="num">Chu kỳ bảo trì</th>
+                        <th class="num">Số thiết bị</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="@(item.TrangThai ? "" : "is-muted")">
+                            <td>
+                                <div class="cell-title">@item.TenLoaiThietBi</div>
+                                @if (!string.IsNullOrEmpty(item.MoTa))
+                                {
+                                    <div class="cell-sub">@item.MoTa</div>
+                                }
+                            </td>
+                            <td class="num">@item.ChuKyBaoTriMacDinhThang tháng</td>
+                            <td class="num">@item.SoThietBi</td>
+                            <td><partial name="_StatusBadge" model="UiHelper.BadgeHoatDong(item.TrangThai)" /></td>
+                            <td>
+                                <div class="row-actions">
+                                    @if (item.TrangThai)
+                                    {
+                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaLoaiThietBi" title="Sửa loại thiết bị">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                    }
+                                    <form asp-action="DoiTrangThai" asp-route-id="@item.MaLoaiThietBi" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-ghost btn-icon" title="@(item.TrangThai ? "Ngừng sử dụng" : "Kích hoạt lại")">
+                                            <span class="material-symbols-outlined">@(item.TrangThai ? "block" : "check_circle")</span>
+                                        </button>
+                                    </form>
+                                    @if (item.SoThietBi == 0)
+                                    {
+                                        <button type="button" class="btn btn-ghost btn-icon is-danger" title="Xóa loại thiết bị"
+                                                data-bs-toggle="modal" data-bs-target="#modalXoa"
+                                                data-id="@item.MaLoaiThietBi" data-ten="@item.TenLoaiThietBi">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <span>Tổng số: @Model.Items.Count loại thiết bị</span>
+            </div>
+        </div>
+    }
+}
+
+<div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalXoaTitle">Xóa loại thiết bị</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn xóa loại thiết bị <strong id="xoaTen"></strong>? Hành động này không thể hoàn tác.</p>
+                    <input type="hidden" name="id" id="xoaId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xóa loại thiết bị</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('modalXoa').addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('xoaId').value = nut.getAttribute('data-id');
+            document.getElementById('xoaTen').textContent = nut.getAttribute('data-ten');
+        });
+    </script>
+}
