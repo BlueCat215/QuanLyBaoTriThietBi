@@ -1,0 +1,18 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303   | Nội dung: Module 1 - Chỉ bật ô Khu vực khi vai trò là Người sử dụng *@
+<script>
+    (function () {
+        var vaiTro = document.getElementById('VaiTro');
+        var khuVuc = document.getElementById('MaKhuVuc');
+        var nhom = document.getElementById('nhomKhuVuc');
+        if (!vaiTro || !khuVuc || !nhom) return;
+
+        function capNhat() {
+            var coKhuVuc = vaiTro.value === 'NguoiSuDung';
+            khuVuc.disabled = !coKhuVuc;
+            nhom.style.display = coKhuVuc ? '' : 'none';
+            if (!coKhuVuc) khuVuc.value = '';
+        }
+        vaiTro.addEventListener('change', capNhat);
+        capNhat();
+    })();
+</script>

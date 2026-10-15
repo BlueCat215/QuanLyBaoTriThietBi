@@ -1,0 +1,65 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303   | Nội dung: Module 1 - Các trường nhập chung cho Thêm/Sửa Tài khoản *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.TaiKhoanFormViewModel
+@{
+    var vaiTroOptions = Enum.GetValues<VaiTroEnum>()
+        .Select(v => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(UiHelper.Badge(v).Text, v.ToString()))
+        .ToList();
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="TenDangNhap" class="form-label required"></label>
+        <input asp-for="TenDangNhap" class="form-control" autocomplete="off" placeholder="Ví dụ: ktv_hung" />
+        <span asp-validation-for="TenDangNhap"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="HoTen" class="form-label required"></label>
+        <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen"></span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Email" class="form-label required"></label>
+    <input asp-for="Email" type="email" class="form-control" placeholder="ten@congty.vn" />
+    <span asp-validation-for="Email"></span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="VaiTro" class="form-label required"></label>
+        <select asp-for="VaiTro" asp-items="vaiTroOptions" class="form-select"></select>
+        <span asp-validation-for="VaiTro"></span>
+    </div>
+    <div class="col-md-6" id="nhomKhuVuc">
+        <label asp-for="MaKhuVuc" class="form-label"></label>
+        <select asp-for="MaKhuVuc" asp-items="Model.KhuVucOptions" class="form-select">
+            <option value="">-- Chọn khu vực --</option>
+        </select>
+        <div class="form-text">Chỉ áp dụng cho Người sử dụng: xác định khu vực được xem thiết bị và gửi báo cáo sự cố.</div>
+        <span asp-validation-for="MaKhuVuc"></span>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="MatKhau" class="form-label @(Model.LaThemMoi ? "required" : "")"></label>
+        <input asp-for="MatKhau" type="password" class="form-control" autocomplete="new-password" />
+        @if (!Model.LaThemMoi)
+        {
+            <div class="form-text">Để trống nếu không muốn đổi mật khẩu.</div>
+        }
+        <span asp-validation-for="MatKhau"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="XacNhanMatKhau" class="form-label"></label>
+        <input asp-for="XacNhanMatKhau" type="password" class="form-control" autocomplete="new-password" />
+        <span asp-validation-for="XacNhanMatKhau"></span>
+    </div>
+</div>
+
+<div class="form-check mb-4">
+    <input asp-for="TrangThai" class="form-check-input" />
+    <label class="form-check-label" asp-for="TrangThai">Đang hoạt động (bỏ chọn để khóa tài khoản)</label>
+</div>

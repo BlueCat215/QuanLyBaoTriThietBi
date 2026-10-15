@@ -1,0 +1,35 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303   | Nội dung: Module 1 - Sửa Tài khoản *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.TaiKhoanFormViewModel
+@{
+    ViewData["Title"] = "Sửa tài khoản";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Sửa tài khoản</h1>
+        <p>Cập nhật thông tin, vai trò hoặc đặt lại mật khẩu.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@Model.MaTaiKhoan" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input type="hidden" asp-for="MaTaiKhoan" />
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="Index">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="_KhuVucScript" />
+}
