@@ -1,7 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
 // Nội dung: Module 4 - ViewModel Kỹ thuật viên (danh sách, form Thêm/Sửa, kết quả đổi trạng thái)
-#nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;

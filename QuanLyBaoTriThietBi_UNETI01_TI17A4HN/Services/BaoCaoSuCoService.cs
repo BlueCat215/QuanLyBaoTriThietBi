@@ -1,7 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
 // Nội dung: Module 4 - Service Báo cáo sự cố (validate thiết bị/mô tả/mức độ, ngày do hệ thống gán, phạm vi xem, hủy/xóa an toàn)
-#nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;

@@ -1,7 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
 // Nội dung: Module 4 - Interface Service Báo cáo sự cố
-#nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 

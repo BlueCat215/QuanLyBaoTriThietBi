@@ -1,7 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
 // Nội dung: Module 4 - Interface Service Kỹ thuật viên
-#nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
