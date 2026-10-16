@@ -1,0 +1,183 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Chi tiết báo cáo sự cố, hủy, xóa an toàn *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoDetailsViewModel
+@{
+    var bc = Model.BaoCao;
+    var lienQuan = Model.DuLieuLienQuan;
+    ViewData["Title"] = "Báo cáo " + UiHelper.Ma("SC", bc.MaBaoCao);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Báo cáo sự cố <span class="mono">@UiHelper.Ma("SC", bc.MaBaoCao)</span></h1>
+        <p>Gửi lúc @UiHelper.NgayGio(bc.NgayBaoCao) bởi @(bc.TaiKhoanBaoCao?.HoTen ?? "—")</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="@(Model.LaAdmin ? "Index" : "CuaToi")">Quay lại danh sách</a>
+        @if (Model.CoTheSua)
+        {
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@bc.MaBaoCao">Sửa báo cáo</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="mb-3">Thông tin sự cố</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Trạng thái</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(bc.TrangThai)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Mức độ sự cố</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(bc.MucDoSuCo)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Thiết bị</dt>
+                    <dd class="col-sm-8">
+                        <a asp-controller="ThietBi" asp-action="Details"
+                           asp-route-id="@bc.MaThietBi">@(bc.ThietBi?.TenThietBi ?? "—")</a>
+                        <span class="text-muted">· Serial <span class="mono">@bc.ThietBi?.SoSerial</span></span>
+                    </dd>
+
+                    <dt class="col-sm-4">Loại / Khu vực</dt>
+                    <dd class="col-sm-8">@(bc.ThietBi?.LoaiThietBi?.TenLoaiThietBi ?? "—") ·
+                        @(bc.ThietBi?.KhuVuc?.TenKhuVuc ?? "—")</dd>
+
+                        <dt class="col-sm-4">Ngày báo cáo</dt>
+                        <dd class="col-sm-8">@UiHelper.NgayGio(bc.NgayBaoCao)</dd>
+
+                        <dt class="col-sm-4">Người báo</dt>
+                        <dd class="col-sm-8">@(bc.TaiKhoanBaoCao?.HoTen ?? "—")</dd>
+
+                        <dt class="col-sm-4">Mô tả sự cố</dt>
+                        <dd class="col-sm-8" style="white-space: pre-line">@bc.MoTaSuCo</dd>
+
+                        <dt class="col-sm-4">Ghi chú</dt>
+                        <dd class="col-sm-8" style="white-space: pre-line">@(string.IsNullOrEmpty(bc.GhiChu) ? "—" :
+                                                                                bc.GhiChu)</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">Phiếu xử lý</h3>
+                        @if (!Model.PhieuXuLys.Any())
+                        {
+                            <p class="text-muted mb-0">Chưa có phiếu xử lý nào cho báo cáo này.</p>
+                        }
+                        else
+                        {
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã phiếu</th>
+                                        <th>Loại</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ngày tạo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in Model.PhieuXuLys)
+                                    {
+                                        <tr>
+                                            <td class="mono">@UiHelper.Ma("PX", p.MaPhieuXuLy)</td>
+                                            <td>@(p.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</td>
+                                            <td>
+                                                <partial name="_StatusBadge" model="UiHelper.Badge(p.TrangThai)" />
+                                            </td>
+                                            <td>@UiHelper.NgayGio(p.NgayTao)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">Thao tác</h3>
+
+                        @if (!Model.CoTheSua && !Model.CoTheHuy && !Model.CoTheXoa)
+                        {
+                            <p class="text-muted mb-0">Báo cáo đã được xử lý hoặc đang trong quy trình xử lý nên không còn thao tác
+                                chỉnh sửa. Lịch sử được giữ nguyên.</p>
+                            }
+
+                            @if (Model.CoTheHuy)
+                            {
+                                <p class="text-muted">Hủy báo cáo (ví dụ báo nhầm). Báo cáo vẫn được lưu để giữ lịch sử.</p>
+                                <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                                        data-bs-target="#modalHuy">Hủy báo cáo</button>
+                            }
+
+                            @if (Model.CoTheXoa)
+                            {
+                                <p class="text-muted">Báo cáo chưa phát sinh dữ liệu nên có thể xóa hẳn.</p>
+                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                                        data-bs-target="#modalXoa">Xóa báo cáo</button>
+                            }
+                            else if (bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao && lienQuan.CoDuLieu)
+                            {
+                                <p class="text-muted mb-0">Đã phát sinh dữ liệu (@lienQuan.SoPhieuXuLy phiếu xử lý,
+                                    @lienQuan.SoTepDinhKem tệp) nên không thể xóa.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.CoTheHuy)
+                {
+                    <div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form asp-action="Huy" asp-route-id="@bc.MaBaoCao" method="post">
+                                    <div class="modal-header">
+                                        <h3 class="modal-title" id="modalHuyTitle">Hủy báo cáo sự cố</h3>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Bạn có chắc muốn hủy báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
+                                        <button type="submit" class="btn btn-danger">Hủy báo cáo</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.CoTheXoa)
+                {
+                    <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form asp-action="Delete" asp-route-id="@bc.MaBaoCao" method="post">
+                                    <div class="modal-header">
+                                        <h3 class="modal-title" id="modalXoaTitle">Xóa báo cáo sự cố</h3>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Bạn có chắc muốn xóa báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>? Hành động này
+                                            không thể hoàn tác.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-danger">Xóa báo cáo</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }

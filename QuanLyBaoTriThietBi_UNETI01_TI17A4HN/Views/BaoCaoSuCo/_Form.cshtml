@@ -1,0 +1,52 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Các trường nhập chung cho Gửi/Sửa Báo cáo sự cố *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoFormViewModel
+@{
+    var mucDoOptions = Enum.GetValues<MucDoSuCoEnum>()
+        .Select(v => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(UiHelper.Badge(v).Text, v.ToString()))
+        .ToList();
+}
+
+<div class="mb-3">
+    <label asp-for="MaThietBi" class="form-label required"></label>
+    @if (Model.LaThemMoi)
+    {
+        <select asp-for="MaThietBi" asp-items="Model.ThietBiOptions" class="form-select">
+            <option value="">-- Chọn thiết bị gặp sự cố --</option>
+        </select>
+        @if (!Model.ThietBiOptions.Any())
+        {
+            <div class="form-text">Không có thiết bị nào bạn được phép báo sự cố (chỉ thiết bị chưa ngừng sử dụng thuộc khu vực
+                của bạn).</div>
+            }
+            <span asp-validation-for="MaThietBi"></span>
+        }
+        else
+        {
+            @* Sửa: thiết bị bị khóa, chỉ hiển thị *@
+            <input type="hidden" asp-for="MaThietBi" />
+            <input class="form-control" readonly
+                   value="@(Model.ThietBiOptions.FirstOrDefault(o => o.Value == Model.MaThietBi?.ToString())?.Text)" />
+            <div class="form-text">Không đổi được thiết bị sau khi đã gửi báo cáo. Nếu chọn nhầm, hãy hủy báo cáo và gửi lại.
+            </div>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MucDoSuCo" class="form-label required"></label>
+        <select asp-for="MucDoSuCo" asp-items="mucDoOptions" class="form-select"></select>
+        <span asp-validation-for="MucDoSuCo"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MoTaSuCo" class="form-label required"></label>
+        <textarea asp-for="MoTaSuCo" class="form-control" rows="4" maxlength="500"
+                  placeholder="Mô tả hiện tượng: thiết bị bị gì, xảy ra khi nào, ảnh hưởng ra sao..."></textarea>
+        <span asp-validation-for="MoTaSuCo"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="GhiChu" class="form-label"></label>
+        <textarea asp-for="GhiChu" class="form-control" rows="2" maxlength="500"></textarea>
+        <span asp-validation-for="GhiChu"></span>
+    </div>

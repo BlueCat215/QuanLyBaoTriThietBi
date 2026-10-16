@@ -1,0 +1,143 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Danh sách Báo cáo sự cố (Admin: tất cả; Người dùng: báo cáo của tôi) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoIndexViewModel
+@{
+    var cuaToi = Model.LaCuaToi;
+    var tieuDe = cuaToi ? "Báo cáo của tôi" : "Báo cáo sự cố";
+    var actionLoc = cuaToi ? "CuaToi" : "Index";
+    ViewData["Title"] = tieuDe;
+}
+
+<div class="page-header">
+    <div>
+        <h1>@tieuDe</h1>
+        <p>@(cuaToi ? "Các sự cố bạn đã gửi và trạng thái xử lý." : "Tiếp nhận và theo dõi toàn bộ báo cáo sự cố của người dùng.")</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-accent" asp-action="Create">Báo sự cố mới</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">warning</span>
+            <h3>@(cuaToi ? "Bạn chưa gửi báo cáo nào" : "Chưa có báo cáo sự cố nào")</h3>
+            <p>Khi thiết bị gặp sự cố, hãy gửi báo cáo để kỹ thuật viên xử lý.</p>
+            <a class="btn btn-accent" asp-action="Create">Báo sự cố mới</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="@actionLoc" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+                   placeholder="Tên/serial thiết bị, mô tả sự cố@(cuaToi ? "" : ", người báo")" />
+        </div>
+        <div>
+            <label class="form-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<TrangThaiBaoCaoEnum>())
+                {
+                    <option value="@v" selected="@(Model.TrangThai == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="mucDo">Mức độ</label>
+            <select id="mucDo" name="mucDo" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<MucDoSuCoEnum>())
+                {
+                    <option value="@v" selected="@(Model.MucDo == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="@actionLoc">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy báo cáo phù hợp</h3>
+                <p>Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Thiết bị</th>
+                        <th>Mô tả sự cố</th>
+                        <th>Mức độ</th>
+                        <th>Trạng thái</th>
+                        @if (!cuaToi)
+                        {
+                            <th>Người báo</th>
+                        }
+                        <th>Ngày báo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="@(item.TrangThai == TrangThaiBaoCaoEnum.DaHuy ? "is-muted" : "")">
+                            <td class="mono">@UiHelper.Ma("SC", item.MaBaoCao)</td>
+                            <td>
+                                <div class="cell-title">@item.TenThietBi</div>
+                                <div class="cell-sub mono">@item.SoSerial</div>
+                            </td>
+                            <td>@(item.MoTaSuCo.Length > 70 ? item.MoTaSuCo[..70] + "…" : item.MoTaSuCo)</td>
+                            <td>
+                                <partial name="_StatusBadge" model="UiHelper.Badge(item.MucDoSuCo)" />
+                            </td>
+                            <td>
+                                <partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" />
+                            </td>
+                            @if (!cuaToi)
+                            {
+                                <td>@item.NguoiBao</td>
+                            }
+                            <td>@UiHelper.NgayGio(item.NgayBaoCao)</td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Details" asp-route-id="@item.MaBaoCao"
+                                       title="Xem chi tiết">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
+                                    @if (item.CoTheSua)
+                                    {
+                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaBaoCao"
+                                           title="Sửa báo cáo">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <span>Tổng số: @Model.Items.Count báo cáo</span>
+            </div>
+        </div>
+    }
+}

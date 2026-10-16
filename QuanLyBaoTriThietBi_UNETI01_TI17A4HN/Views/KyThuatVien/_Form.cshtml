@@ -1,0 +1,44 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Các trường nhập chung cho Thêm/Sửa Kỹ thuật viên *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KyThuatVienFormViewModel
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="HoTen" class="form-label required"></label>
+        <input asp-for="HoTen" class="form-control" placeholder="Ví dụ: Nguyễn Văn Hùng" />
+        <span asp-validation-for="HoTen"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="ChuyenMon" class="form-label"></label>
+        <input asp-for="ChuyenMon" class="form-control" placeholder="Ví dụ: Điện lạnh, mạng và hệ thống" />
+        <span asp-validation-for="ChuyenMon"></span>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="SoDienThoai" class="form-label"></label>
+        <input asp-for="SoDienThoai" class="form-control" inputmode="tel" placeholder="0912345678" />
+        <span asp-validation-for="SoDienThoai"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" type="email" class="form-control" placeholder="ten@congty.vn" />
+        <span asp-validation-for="Email"></span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="MaTaiKhoan" class="form-label"></label>
+    <select asp-for="MaTaiKhoan" asp-items="Model.TaiKhoanOptions" class="form-select">
+        <option value="">-- Chưa liên kết tài khoản --</option>
+    </select>
+    <div class="form-text">Chỉ hiện tài khoản vai trò Kỹ thuật viên chưa gắn hồ sơ nào. Cần liên kết để kỹ thuật viên
+        đăng nhập và xem "Việc của tôi".</div>
+        <span asp-validation-for="MaTaiKhoan"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="TrangThai" class="form-check-input" />
+        <label class="form-check-label" asp-for="TrangThai">Đang hoạt động (bỏ chọn = ngừng hoạt động, không nhận phân công
+            mới)</label>
+        </div>
