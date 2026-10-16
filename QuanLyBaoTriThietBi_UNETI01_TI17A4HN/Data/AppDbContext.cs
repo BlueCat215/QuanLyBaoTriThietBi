@@ -25,6 +25,39 @@ public class AppDbContext : DbContext
     public DbSet<TepDinhKem> TepDinhKems => Set<TepDinhKem>();
     public DbSet<ThongBao> ThongBaos => Set<ThongBao>();
 
+    // Tuần 2: bảo vệ mọi đường ghi phân công, kể cả module khác gọi DbContext trực tiếp.
+    private async Task ValidateAssignmentsAsync(CancellationToken cancellationToken)
+    {
+        var assignments = ChangeTracker.Entries<PhanCongXuLy>()
+            .Where(e => e.State == EntityState.Added ||
+                (e.State == EntityState.Modified &&
+                    (e.Property(x => x.MaKyThuatVien).IsModified ||
+                     (e.Property(x => x.TrangThai).IsModified && e.Entity.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc))))
+            .Select(e => e.Entity).ToList();
+        foreach (var assignment in assignments)
+        {
+            var tracked = ChangeTracker.Entries<KyThuatVien>()
+                .FirstOrDefault(e => e.Entity.MaKyThuatVien == assignment.MaKyThuatVien);
+            var active = tracked is not null
+                ? tracked.State != EntityState.Deleted && tracked.Entity.TrangThai
+                : await KyThuatViens.AnyAsync(k => k.MaKyThuatVien == assignment.MaKyThuatVien && k.TrangThai, cancellationToken);
+            if (!active)
+                throw new InvalidOperationException("Kỹ thuật viên không tồn tại hoặc đã ngừng hoạt động, không được nhận phân công mới.");
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateAssignmentsAsync(CancellationToken.None).GetAwaiter().GetResult();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        await ValidateAssignmentsAsync(cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     private static string InList<TEnum>(string column) where TEnum : struct, Enum =>
         $"[{column}] IN ({string.Join(", ", Enum.GetNames<TEnum>().Select(n => $"'{n}'"))})";
 

@@ -1,0 +1,35 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Sửa báo cáo sự cố *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoFormViewModel
+@{
+    ViewData["Title"] = "Sửa báo cáo sự cố";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Sửa báo cáo sự cố</h1>
+        <p><span class="mono">@UiHelper.Ma("SC", Model.MaBaoCao)</span> · Chỉ sửa được khi báo cáo còn ở trạng thái Mới
+            báo.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Edit" asp-route-id="@Model.MaBaoCao" method="post">
+                        <div asp-validation-summary="ModelOnly"></div>
+                        <input type="hidden" asp-for="MaBaoCao" />
+                        <partial name="_Form" model="Model" />
+                        <div class="d-flex justify-content-between">
+                            <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.MaBaoCao">Hủy</a>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }

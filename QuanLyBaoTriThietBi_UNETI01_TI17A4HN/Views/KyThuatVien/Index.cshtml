@@ -1,0 +1,166 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Danh sách Kỹ thuật viên *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KyThuatVienIndexViewModel
+@{
+    ViewData["Title"] = "Kỹ thuật viên";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Kỹ thuật viên</h1>
+        <p>Quản lý hồ sơ kỹ thuật viên. Kỹ thuật viên ngừng hoạt động sẽ không nhận phân công mới.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create">Thêm kỹ thuật viên</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">engineering</span>
+            <h3>Chưa có kỹ thuật viên nào</h3>
+            <p>Hãy thêm kỹ thuật viên đầu tiên để bắt đầu phân công xử lý.</p>
+            <a class="btn btn-primary" asp-action="Create">Thêm kỹ thuật viên</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+                   placeholder="Nhập họ tên, chuyên môn, SĐT, email hoặc tên đăng nhập" />
+        </div>
+        <div>
+            <label class="form-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.TrangThai == true)">Hoạt động</option>
+                <option value="false" selected="@(Model.TrangThai == false)">Ngừng hoạt động</option>
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy kỹ thuật viên phù hợp</h3>
+                <p>Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Kỹ thuật viên</th>
+                        <th>Chuyên môn</th>
+                        <th>Liên hệ</th>
+                        <th>Tài khoản</th>
+                        <th>Phân công</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="@(item.TrangThai ? "" : "is-muted")">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar">@UiHelper.VietTat(item.HoTen)</span>
+                                    <div class="cell-title">@item.HoTen</div>
+                                </div>
+                            </td>
+                            <td>@(string.IsNullOrEmpty(item.ChuyenMon) ? "—" : item.ChuyenMon)</td>
+                            <td>
+                                <div>@(string.IsNullOrEmpty(item.SoDienThoai) ? "—" : item.SoDienThoai)</div>
+                                <div class="cell-sub">@(string.IsNullOrEmpty(item.Email) ? "" : item.Email)</div>
+                            </td>
+                            <td class="mono">@(string.IsNullOrEmpty(item.TenDangNhap) ? "—" : item.TenDangNhap)</td>
+                            <td>
+                                <div>@item.SoPhanCongDangHieuLuc đang hiệu lực</div>
+                                <div class="cell-sub">Tổng @item.TongSoPhanCong phân công</div>
+                            </td>
+                            <td>
+                                <partial name="_StatusBadge" model="UiHelper.BadgeHoatDong(item.TrangThai)" />
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaKyThuatVien"
+                                       title="Sửa kỹ thuật viên">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <form asp-action="DoiTrangThai" asp-route-id="@item.MaKyThuatVien" method="post"
+                                          class="d-inline">
+                                        <button type="submit" class="btn btn-ghost btn-icon"
+                                                title="@(item.TrangThai ? "Ngừng hoạt động" : "Kích hoạt lại")">
+                                            <span class="material-symbols-outlined">@(item.TrangThai ? "person_off" :
+                                                                                                                                                 "person_check")</span>
+                                            </button>
+                                        </form>
+                                        @if (!item.CoLichSuPhanCong)
+                                        {
+                                            <button type="button" class="btn btn-ghost btn-icon is-danger" title="Xóa kỹ thuật viên"
+                                                    data-bs-toggle="modal" data-bs-target="#modalXoa" data-id="@item.MaKyThuatVien"
+                                                    data-ten="@item.HoTen">
+                                                <span class="material-symbols-outlined">delete</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <span>Tổng số: @Model.Items.Count kỹ thuật viên</span>
+                </div>
+            </div>
+        }
+    }
+
+    <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Delete" method="post">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalXoaTitle">Xóa kỹ thuật viên</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn xóa kỹ thuật viên <strong id="xoaTen"></strong>? Hành động này không thể hoàn
+                            tác.</p>
+                            <input type="hidden" name="id" id="xoaId" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-danger">Xóa kỹ thuật viên</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <script>
+                document.getElementById('modalXoa').addEventListener('show.bs.modal', function (e) {
+                    var nut = e.relatedTarget;
+                    document.getElementById('xoaId').value = nut.getAttribute('data-id');
+                    document.getElementById('xoaTen').textContent = nut.getAttribute('data-ten');
+                });
+            </script>
+        }

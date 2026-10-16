@@ -1,0 +1,33 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Gửi báo cáo sự cố *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoFormViewModel
+@{
+    ViewData["Title"] = "Báo sự cố mới";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Báo sự cố mới</h1>
+        <p>Chọn thiết bị và mô tả sự cố. Ngày báo cáo do hệ thống tự ghi nhận.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="CuaToi">Hủy</a>
+                        <button type="submit" class="btn btn-accent">Gửi báo cáo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
