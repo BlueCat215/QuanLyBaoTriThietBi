@@ -1,0 +1,94 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Chọn phiếu xử lý để xem/nhập chi tiết xử lý *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyPhieuListViewModel
+@{
+    ViewData["Title"] = "Chi tiết xử lý";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Chi tiết xử lý</h1>
+        <p>Chọn một phiếu xử lý để xem hoặc ghi nhận nội dung thực hiện, vật tư và chi phí. Chỉ phiếu đang xử lý mới được thêm, sửa hoặc xóa chi tiết.</p>
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="filter-bar">
+    <div>
+        <label class="form-label" for="trangThai">Trạng thái phiếu</label>
+        <select id="trangThai" name="trangThai" class="form-select">
+            <option value="">Tất cả</option>
+            @foreach (var tt in Enum.GetValues<TrangThaiPhieuXuLyEnum>())
+            {
+                <option value="@tt" selected="@(Model.TrangThai == tt)">@UiHelper.Badge(tt).Text</option>
+            }
+        </select>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lọc</button>
+        @if (Model.CoBoLoc)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+        }
+    </div>
+</form>
+
+@if (!Model.Items.Any())
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">assignment</span>
+            <h3>@(Model.CoBoLoc ? "Không có phiếu xử lý phù hợp" : "Chưa có phiếu xử lý nào")</h3>
+            <p>@(Model.CoBoLoc ? "Hãy thử đổi hoặc bỏ bộ lọc." : "Phiếu xử lý được tạo từ báo cáo sự cố hoặc kế hoạch bảo trì.")</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Phiếu</th>
+                    <th>Loại xử lý</th>
+                    <th>Thiết bị</th>
+                    <th>Trạng thái</th>
+                    <th class="num">Số dòng</th>
+                    <th class="num">Tổng chi phí</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="cell-title mono">@UiHelper.Ma("PX", item.MaPhieuXuLy)</div>
+                            <div class="cell-sub">Tạo @UiHelper.Ngay(item.NgayTao)</div>
+                        </td>
+                        <td>@(item.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</td>
+                        <td>
+                            <div>@(item.TenThietBi ?? "—")</div>
+                            <div class="cell-sub mono">@item.SoSerial</div>
+                        </td>
+                        <td>
+                            <partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" />
+                        </td>
+                        <td class="num">@item.SoDong</td>
+                        <td class="num">@UiHelper.Tien(item.TongChiPhi)</td>
+                        <td>
+                            <div class="row-actions">
+                                <a class="btn btn-ghost btn-icon" asp-action="TheoPhieu" asp-route-maPhieu="@item.MaPhieuXuLy"
+                                   title="Xem chi tiết xử lý">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="table-footer">
+            <span>Tổng số: @Model.Items.Count phiếu</span>
+        </div>
+    </div>
+}

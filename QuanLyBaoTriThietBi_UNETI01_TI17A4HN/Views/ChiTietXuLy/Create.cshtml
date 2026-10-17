@@ -1,0 +1,37 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Thêm chi tiết xử lý *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyFormViewModel
+@{
+    ViewData["Title"] = "Thêm chi tiết xử lý";
+    var phieu = Model.Phieu!;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Thêm chi tiết xử lý</h1>
+        <p>Phiếu <span class="mono">@UiHelper.Ma("PX", phieu.MaPhieuXuLy)</span> · @(phieu.TenThietBi ?? "—") · @phieu.NguonText</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input type="hidden" asp-for="MaChiTiet" />
+                    <input type="hidden" asp-for="MaPhieuXuLy" />
+                    <partial name="_Form" model="Model" />
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" asp-action="TheoPhieu" asp-route-maPhieu="@phieu.MaPhieuXuLy">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Lưu chi tiết xử lý</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <partial name="_FormScripts" />
+}

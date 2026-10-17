@@ -1,0 +1,34 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Script tự điền tên/đơn giá từ vật tư và tạm tính thành tiền (xem trước, số liệu thật do Service tính) *@
+<script>
+    (function () {
+        var vt = document.getElementById('MaVatTu');
+        var ten = document.getElementById('VatTuLinhKien');
+        var sl = document.getElementById('SoLuong');
+        var dg = document.getElementById('DonGia');
+        var out = document.getElementById('thanhTienXemTruoc');
+        if (!vt || !ten || !sl || !dg || !out) return;
+
+        var tenTuDong = null; // tên đã được điền tự động từ vật tư (để biết có được phép ghi đè không)
+
+        function tamTinh() {
+            var a = parseFloat(sl.value), b = parseFloat(dg.value);
+            out.textContent = (isNaN(a) || isNaN(b))
+                ? '—'
+                : (a * b).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' ₫';
+        }
+
+        vt.addEventListener('change', function () {
+            var opt = vt.options[vt.selectedIndex];
+            if (!vt.value || !opt) return;
+            dg.value = opt.getAttribute('data-dongia');
+            if (ten.value.trim() === '' || ten.value === tenTuDong) {
+                ten.value = opt.getAttribute('data-ten');
+                tenTuDong = ten.value;
+            }
+            tamTinh();
+        });
+        sl.addEventListener('input', tamTinh);
+        dg.addEventListener('input', tamTinh);
+        tamTinh();
+    })();
+</script>
