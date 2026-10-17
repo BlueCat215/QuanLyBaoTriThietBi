@@ -28,8 +28,17 @@ public record ThietBiRow(
 public class ThietBiIndexViewModel
 {
     public List<ThietBiRow> Items { get; set; } = new();
-    public string? TuKhoa { get; set; }
-    public bool CoBoLoc => !string.IsNullOrWhiteSpace(TuKhoa);
+
+    ///Điều kiện Tìm kiếm + Lọc + Sắp xếp hiện tại (đổ lại vào form để giữ nguyên điều kiện).
+    public ThietBiBoLoc BoLoc { get; set; } = new();
+
+    public List<(int Ma, string Ten)> LoaiDeLoc { get; set; } = new();
+    public List<(int Ma, string Ten)> KhuVucDeLoc { get; set; } = new();
+
+    ///Thông báo khi có điều kiện lọc không hợp lệ (đã bị bỏ qua).
+    public string? CanhBao { get; set; }
+
+    public bool CoBoLoc => BoLoc.CoBoLoc;
 }
 
 public class ThietBiDetailsViewModel

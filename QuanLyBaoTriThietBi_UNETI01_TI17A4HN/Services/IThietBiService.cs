@@ -7,7 +7,7 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 public interface IThietBiService
 {
-    Task<ThietBiIndexViewModel> LayDanhSachAsync(string? tuKhoa);
+    Task<ThietBiIndexViewModel> LayDanhSachAsync(ThietBiBoLoc boLoc);
     Task<ThietBiDetailsViewModel?> LayChiTietAsync(int id);
     Task<ThietBiFormViewModel?> LayDeSuaAsync(int id);
 

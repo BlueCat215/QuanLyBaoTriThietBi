@@ -17,13 +17,20 @@ public class ThietBiService : IThietBiService
     public ThietBiService(IThietBiRepository repo) => _repo = repo;
 
     // ---------------- Truy vấn ----------------
-    public async Task<ThietBiIndexViewModel> LayDanhSachAsync(string? tuKhoa)
+    public async Task<ThietBiIndexViewModel> LayDanhSachAsync(ThietBiBoLoc boLoc)
     {
-        var ds = await _repo.TimKiemAsync(tuKhoa);
+        boLoc.TuKhoa = boLoc.TuKhoa?.Trim();
+
+        var ds = await _repo.TimKiemAsync(boLoc);
 
         return new ThietBiIndexViewModel
         {
-            TuKhoa = tuKhoa?.Trim(),
+            BoLoc = boLoc,
+            LoaiDeLoc = await _repo.LayLoaiDeLocAsync(),
+            KhuVucDeLoc = await _repo.LayKhuVucDeLocAsync(),
+            CanhBao = boLoc.KhoangNgayKhongHopLe
+                ? "Khoảng ngày không hợp lệ: \"Từ ngày\" lớn hơn \"Đến ngày\" nên khoảng ngày đã được bỏ qua."
+                : null,
             Items = ds.Select(t => new ThietBiRow(
                     t.MaThietBi,
                     t.TenThietBi,
