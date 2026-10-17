@@ -1,0 +1,53 @@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Các trường nhập chung cho Thêm/Sửa Kế hoạch bảo trì *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriFormViewModel
+@{
+    var uuTienOptions = Enum.GetValues<MucDoUuTienEnum>()
+        .Select(v => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem(UiHelper.Badge(v).Text, v.ToString()))
+        .ToList();
+}
+
+<div class="mb-3">
+    <label asp-for="MaThietBi" class="form-label required"></label>
+    @if (Model.LaThemMoi)
+    {
+        <select asp-for="MaThietBi" asp-items="Model.ThietBiOptions" class="form-select">
+            <option value="">-- Chọn thiết bị cần bảo trì --</option>
+        </select>
+        <span asp-validation-for="MaThietBi"></span>
+    }
+    else
+    {
+        @* Sửa: thiết bị bị khóa, chỉ hiển thị *@
+        <input type="hidden" asp-for="MaThietBi" />
+        <input class="form-control" readonly value="@(Model.ThietBiOptions.FirstOrDefault(o => o.Value == Model.MaThietBi?.ToString())?.Text)" />
+        <div class="form-text">Không đổi được thiết bị của kế hoạch. Nếu chọn nhầm, hãy hủy kế hoạch và lập lại.</div>
+    }
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="NgayDuKien" class="form-label required"></label>
+        <input asp-for="NgayDuKien" type="date" class="form-control" />
+        <div class="form-text">Mỗi thiết bị chỉ có 1 kế hoạch đang hoạt động trong cùng tháng.</div>
+        <span asp-validation-for="NgayDuKien"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="MucDoUuTien" class="form-label required"></label>
+        <select asp-for="MucDoUuTien" asp-items="uuTienOptions" class="form-select"></select>
+        <span asp-validation-for="MucDoUuTien"></span>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="NoiDungBaoTri" class="form-label required"></label>
+    <textarea asp-for="NoiDungBaoTri" class="form-control" rows="3" maxlength="500"
+              placeholder="Ví dụ: Vệ sinh dàn lạnh, kiểm tra gas, thay lọc..."></textarea>
+    <span asp-validation-for="NoiDungBaoTri"></span>
+</div>
+
+<div class="mb-4">
+    <label asp-for="GhiChu" class="form-label"></label>
+    <textarea asp-for="GhiChu" class="form-control" rows="2" maxlength="500"></textarea>
+    <span asp-validation-for="GhiChu"></span>
+</div>

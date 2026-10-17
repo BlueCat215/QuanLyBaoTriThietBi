@@ -1,0 +1,170 @@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Danh sách Kế hoạch bảo trì, tìm kiếm, lọc, hủy *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriIndexViewModel
+@{
+    ViewData["Title"] = "Kế hoạch bảo trì";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Kế hoạch bảo trì</h1>
+        <p>Lập và theo dõi kế hoạch bảo trì định kỳ cho thiết bị.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-primary" asp-action="Create">Thêm kế hoạch</a>
+    </div>
+</div>
+
+@if (!Model.Items.Any() && !Model.CoBoLoc)
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">calendar_clock</span>
+            <h3>Chưa có kế hoạch bảo trì nào</h3>
+            <p>Hãy lập kế hoạch đầu tiên để thiết bị được bảo trì đúng hạn.</p>
+            <a class="btn btn-primary" asp-action="Create">Thêm kế hoạch</a>
+        </div>
+    </div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="filter-bar">
+        <div class="search">
+            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+                   placeholder="Tên/serial thiết bị, khu vực hoặc nội dung bảo trì" />
+        </div>
+        <div>
+            <label class="form-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" name="trangThai" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<TrangThaiKeHoachEnum>())
+                {
+                    <option value="@v" selected="@(Model.TrangThai == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="mucDo">Ưu tiên</label>
+            <select id="mucDo" name="mucDo" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<MucDoUuTienEnum>())
+                {
+                    <option value="@v" selected="@(Model.MucDo == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+            @if (Model.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card">
+            <div class="card-body empty-state">
+                <span class="material-symbols-outlined icon-24">search_off</span>
+                <h3>Không tìm thấy kế hoạch phù hợp</h3>
+                <p>Hãy thử đổi từ khóa hoặc bỏ bớt bộ lọc.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Thiết bị</th>
+                        <th>Khu vực</th>
+                        <th>Ngày dự kiến</th>
+                        <th>Nội dung bảo trì</th>
+                        <th>Ưu tiên</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="@(item.TrangThai == TrangThaiKeHoachEnum.DaHuy ? "is-muted" : "")">
+                            <td class="mono">@UiHelper.Ma("KH", item.MaKeHoach)</td>
+                            <td>
+                                <div class="cell-title">@item.TenThietBi</div>
+                                <div class="cell-sub mono">@item.SoSerial</div>
+                            </td>
+                            <td>@item.TenKhuVuc</td>
+                            <td>
+                                <div>@UiHelper.Ngay(item.NgayDuKien)</div>
+                                @if (item.QuaHan)
+                                {
+                                    <div class="cell-sub">Quá hạn</div>
+                                }
+                            </td>
+                            <td>@(item.NoiDungBaoTri.Length > 60 ? item.NoiDungBaoTri[..60] + "…" : item.NoiDungBaoTri)</td>
+                            <td><partial name="_StatusBadge" model="UiHelper.Badge(item.MucDoUuTien)" /></td>
+                            <td><partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" /></td>
+                            <td>
+                                <div class="row-actions">
+                                    @if (item.CoTheSua)
+                                    {
+                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaKeHoach" title="Sửa kế hoạch">
+                                            <span class="material-symbols-outlined">edit</span>
+                                        </a>
+                                    }
+                                    @if (item.CoTheHuy)
+                                    {
+                                        <button type="button" class="btn btn-ghost btn-icon is-danger" title="Hủy kế hoạch"
+                                                data-bs-toggle="modal" data-bs-target="#modalHuy"
+                                                data-id="@item.MaKeHoach" data-ten="@UiHelper.Ma("KH", item.MaKeHoach) - @item.TenThietBi">
+                                            <span class="material-symbols-outlined">event_busy</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="table-footer">
+                <span>Tổng số: @Model.Items.Count kế hoạch</span>
+            </div>
+        </div>
+    }
+}
+
+<div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Huy" method="post">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalHuyTitle">Hủy kế hoạch bảo trì</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn hủy kế hoạch <strong id="huyTen"></strong>? Kế hoạch vẫn được lưu để giữ lịch sử.</p>
+                    <input type="hidden" name="id" id="huyId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
+                    <button type="submit" class="btn btn-danger">Hủy kế hoạch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('modalHuy').addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('huyId').value = nut.getAttribute('data-id');
+            document.getElementById('huyTen').textContent = nut.getAttribute('data-ten');
+        });
+    </script>
+}
