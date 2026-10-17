@@ -1,0 +1,92 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Khung giao diện Dashboard (8 chỉ số tổng quan) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Tổng quan thiết bị, bảo trì, sự cố và chi phí xử lý.</p>
+    </div>
+</div>
+
+@if (Model.LaDuLieuMinhHoa)
+{
+    <div class="alert alert-warning" role="alert">
+        Đang hiển thị <strong>dữ liệu minh họa</strong> để dựng giao diện. Số liệu thật sẽ được nối ở tuần 4.
+    </div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">precision_manufacturing</span></span>
+            <span class="kpi-label">Tổng số thiết bị</span>
+            <span class="kpi-value num">@Model.TongThietBi</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card is-warning">
+            <span class="kpi-icon"><span class="material-symbols-outlined">schedule</span></span>
+            <span class="kpi-label">Sắp đến hạn bảo trì</span>
+            <span class="kpi-value num">@Model.ThietBiSapDenHan</span>
+            <span class="cell-sub">Trong @UiHelper.NgayCanhBaoSapDenHan ngày tới</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card is-danger">
+            <span class="kpi-icon"><span class="material-symbols-outlined">error</span></span>
+            <span class="kpi-label">Quá hạn bảo trì</span>
+            <span class="kpi-value num">@Model.ThietBiQuaHan</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">calendar_clock</span></span>
+            <span class="kpi-label">Kế hoạch chờ thực hiện</span>
+            <span class="kpi-value num">@Model.KeHoachChoThucHien</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span>
+            <span class="kpi-label">Chi phí tháng @Model.Thang/@Model.Nam</span>
+            <span class="kpi-value num">@UiHelper.Tien(Model.TongChiPhiThang)</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    @{
+        void Nhom(string tieuDe, string donVi, List<ThongKeMuc> muc)
+        {
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="mb-3">@tieuDe</h3>
+                        @foreach (var m in muc)
+                        {
+                            var pct = DashboardViewModel.PhanTram(m, muc);
+                            <div class="bar-row">
+                                <div class="bar-head">
+                                    <span>@m.Nhan</span>
+                                    <span class="num">@m.SoLuong @donVi</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill @m.MauCot" style="width:@(pct)%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    @{
+        Nhom("Thiết bị theo tình trạng", "thiết bị", Model.ThietBiTheoTinhTrang);
+        Nhom("Báo cáo sự cố theo trạng thái", "sự cố", Model.SuCoTheoTrangThai);
+        Nhom("Phiếu xử lý theo trạng thái", "phiếu", Model.PhieuTheoTrangThai);
+    }
+</div>

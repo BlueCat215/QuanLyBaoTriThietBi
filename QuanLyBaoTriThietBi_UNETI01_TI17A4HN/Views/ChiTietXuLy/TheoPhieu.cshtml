@@ -1,0 +1,161 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý của một phiếu + tổng chi phí *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyIndexViewModel
+@{
+    var phieu = Model.Phieu;
+    ViewData["Title"] = "Chi tiết xử lý " + UiHelper.Ma("PX", phieu.MaPhieuXuLy);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Chi tiết xử lý <span class="mono">@UiHelper.Ma("PX", phieu.MaPhieuXuLy)</span></h1>
+        <p>@(phieu.TenThietBi ?? "—") · <span class="mono">@phieu.SoSerial</span> · @phieu.NguonText</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index">Danh sách phiếu</a>
+        @if (phieu.ChoPhepGhiChiTiet)
+        {
+            <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">Thêm chi tiết xử lý</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <span class="kpi-label">Trạng thái phiếu</span>
+            <div><partial name="_StatusBadge" model="UiHelper.Badge(phieu.TrangThai)" /></div>
+            <span class="cell-sub">@(phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</span>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <span class="kpi-label">Thời gian xử lý</span>
+            <span class="fw-semibold">Bắt đầu: @UiHelper.NgayGio(phieu.NgayBatDau)</span>
+            <span class="fw-semibold">Hoàn thành: @UiHelper.NgayGio(phieu.NgayHoanThanh)</span>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <span class="kpi-label">Số dòng chi tiết</span>
+            <span class="kpi-value">@Model.Items.Count</span>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card kpi-card">
+            <span class="kpi-label">Tổng chi phí</span>
+            <span class="kpi-value num">@UiHelper.Tien(Model.TongChiPhi)</span>
+            <span class="cell-sub">Tổng thành tiền các dòng, hệ thống tự tính</span>
+        </div>
+    </div>
+</div>
+
+@if (!phieu.ChoPhepGhiChiTiet)
+{
+    <div class="alert alert-info" role="alert">
+        Phiếu đang ở trạng thái <strong>@UiHelper.Badge(phieu.TrangThai).Text</strong> nên chỉ được xem chi tiết xử lý. Chỉ phiếu <strong>Đang xử lý</strong> mới được thêm, sửa hoặc xóa.
+    </div>
+}
+
+@if (!Model.Items.Any())
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">build</span>
+            <h3>Chưa có chi tiết xử lý nào</h3>
+            <p>Ghi nhận từng bước thực hiện, vật tư / linh kiện đã dùng và chi phí cho phiếu này.</p>
+            @if (phieu.ChoPhepGhiChiTiet)
+            {
+                <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">Thêm chi tiết xử lý</a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Nội dung thực hiện</th>
+                    <th>Vật tư / linh kiện</th>
+                    <th class="num">Số lượng</th>
+                    <th class="num">Đơn giá</th>
+                    <th class="num">Thành tiền</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td class="num">@UiHelper.NgayGio(item.NgayCapNhat)</td>
+                        <td>
+                            <div class="cell-title">@item.NoiDungThucHien</div>
+                            @if (!string.IsNullOrEmpty(item.GhiChu))
+                            {
+                                <div class="cell-sub">@item.GhiChu</div>
+                            }
+                        </td>
+                        <td>@(string.IsNullOrEmpty(item.VatTuLinhKien) ? "—" : item.VatTuLinhKien)</td>
+                        <td class="num">@(item.SoLuong?.ToString() ?? "—")</td>
+                        <td class="num">@UiHelper.Tien(item.DonGia)</td>
+                        <td class="num">@UiHelper.Tien(item.ThanhTien)</td>
+                        <td>
+                            @if (phieu.ChoPhepGhiChiTiet)
+                            {
+                                <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaChiTiet"
+                                       title="Sửa chi tiết xử lý">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <button type="button" class="btn btn-ghost btn-icon is-danger" title="Xóa chi tiết xử lý"
+                                            data-bs-toggle="modal" data-bs-target="#modalXoa" data-id="@item.MaChiTiet"
+                                            data-ten="@item.NoiDungThucHien">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="table-footer">
+            <span>Tổng chi phí: <strong class="num">@UiHelper.Tien(Model.TongChiPhi)</strong></span>
+        </div>
+    </div>
+}
+
+<div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Delete" method="post">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalXoaTitle">Xóa chi tiết xử lý</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn xóa dòng <strong id="xoaTen"></strong>? Tổng chi phí của phiếu sẽ được tính lại.</p>
+                    <input type="hidden" name="id" id="xoaId" />
+                    <input type="hidden" name="maPhieu" value="@phieu.MaPhieuXuLy" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xóa chi tiết</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('modalXoa').addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('xoaId').value = nut.getAttribute('data-id');
+            document.getElementById('xoaTen').textContent = nut.getAttribute('data-ten');
+        });
+    </script>
+}

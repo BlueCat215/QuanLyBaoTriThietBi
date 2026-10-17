@@ -1,0 +1,59 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Các trường nhập chung cho Thêm/Sửa chi tiết xử lý *@
+@using System.Globalization
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyFormViewModel
+
+<div class="mb-3">
+    <label asp-for="NoiDungThucHien" class="form-label required"></label>
+    <textarea asp-for="NoiDungThucHien" class="form-control" rows="3"
+              placeholder="Ví dụ: Tháo vệ sinh dàn lạnh, thay tụ khởi động"></textarea>
+    <span asp-validation-for="NoiDungThucHien"></span>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label asp-for="MaVatTu" class="form-label"></label>
+        <select asp-for="MaVatTu" class="form-select">
+            <option value="">-- Không chọn (nhập tay bên cạnh) --</option>
+            @foreach (var v in Model.VatTuOptions)
+            {
+                <option value="@v.Ma" selected="@(Model.MaVatTu == v.Ma)"
+                        data-ten="@v.Ten" data-dongia="@v.DonGia.ToString("0.##", CultureInfo.InvariantCulture)">
+                    @v.Ten (@v.DonViTinh)
+                </option>
+            }
+        </select>
+        <div class="form-text">Chọn vật tư trong kho để tự điền tên và đơn giá mặc định (vẫn sửa được).</div>
+        <span asp-validation-for="MaVatTu"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="VatTuLinhKien" class="form-label"></label>
+        <input asp-for="VatTuLinhKien" class="form-control" placeholder="Ví dụ: Tụ khởi động 35µF" />
+        <span asp-validation-for="VatTuLinhKien"></span>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label asp-for="SoLuong" class="form-label"></label>
+        <input asp-for="SoLuong" type="number" min="1" step="1" class="form-control num" />
+        <span asp-validation-for="SoLuong"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="DonGia" class="form-label"></label>
+        @* Không dùng asp-for để value luôn là số nguyên theo dạng invariant (tránh lệch dấu thập phân/nghìn theo culture máy chủ) *@
+        <input id="DonGia" name="DonGia" type="number" min="0" step="1" class="form-control num"
+               value="@(Model.DonGia?.ToString("0", CultureInfo.InvariantCulture))" />
+        <span asp-validation-for="DonGia"></span>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label" for="thanhTienXemTruoc">Thành tiền (tạm tính)</label>
+        <div id="thanhTienXemTruoc" class="form-control num" aria-live="polite">—</div>
+        <div class="form-text">Hệ thống tự tính = Số lượng × Đơn giá khi lưu, không nhập tay.</div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <label asp-for="GhiChu" class="form-label"></label>
+    <input asp-for="GhiChu" class="form-control" />
+    <span asp-validation-for="GhiChu"></span>
+</div>

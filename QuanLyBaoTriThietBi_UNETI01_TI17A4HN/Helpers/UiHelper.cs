@@ -172,4 +172,19 @@ public static class UiHelper
         hoatDong ? new BadgeInfo("Hoạt động", "is-success")
         : laTaiKhoan ? new BadgeInfo("Bị khóa", "is-danger")
         : new BadgeInfo("Ngừng hoạt động", "is-muted");
+
+    // MÀU CỘT BIỂU ĐỒ (Dashboard / Thống kê)
+
+    /// Class .bar-fill tương ứng với một badge, để màu cột luôn khớp màu badge (docs/GIAODIEN.md mục 12).
+    /// Ví dụ: Badge(DangXuLy) -> "is-info is-strong" -> "is-info-strong".
+    public static string MauCot(BadgeInfo badge)
+    {
+        var css = badge.Css;
+        if (css.Contains("is-info") && css.Contains("is-strong"))
+            return "is-info-strong";
+        foreach (var mau in new[] { "is-success", "is-danger", "is-warning", "is-purple", "is-info", "is-muted" })
+            if (css.Contains(mau))
+                return mau;
+        return "is-info";
+    }
 }
