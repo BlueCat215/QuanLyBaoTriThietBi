@@ -16,8 +16,16 @@ public class ThietBiController : Controller
 
     public ThietBiController(IThietBiService service) => _service = service;
 
-    public async Task<IActionResult> Index(string? tuKhoa) =>
-        View(await _service.LayDanhSachAsync(tuKhoa));
+    public async Task<IActionResult> Index(ThietBiBoLoc boLoc)
+    {
+        var vm = await _service.LayDanhSachAsync(boLoc);
+
+        // Giá trị query string sai kiểu (ví dụ ngày không đọc được) bị bỏ qua -> báo cho người dùng biết
+        if (!ModelState.IsValid)
+            vm.CanhBao ??= "Một số điều kiện lọc không hợp lệ nên đã được bỏ qua.";
+
+        return View(vm);
+    }
 
     public async Task<IActionResult> Details(int id)
     {
@@ -85,13 +93,12 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
-    /// <param name="quayLai">"details" = về trang chi tiết, còn lại về danh sách (giữ nguyên từ khóa tìm kiếm).</param>
+    /// <param name="returnUrl">Địa chỉ nội bộ để quay về sau khi đổi (danh sách giữ nguyên Tìm kiếm/Lọc/Sắp xếp, hoặc trang chi tiết).</param>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DoiTinhTrang(
         int id,
         TinhTrangThietBiEnum tinhTrang,
-        string? quayLai,
-        string? tuKhoa
+        string? returnUrl
     )
     {
         var result = await _service.DoiTinhTrangAsync(id, tinhTrang);
@@ -101,10 +108,11 @@ public class ThietBiController : Controller
         else
             TempData["Loi"] = result.ErrorMessage;
 
-        if (quayLai == "details")
-            return RedirectToAction(nameof(Details), new { id });
+        // Chỉ chuyển hướng về địa chỉ nội bộ (chống open redirect)
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
 
-        return RedirectToAction(nameof(Index), new { tuKhoa });
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost, ValidateAntiForgeryToken]

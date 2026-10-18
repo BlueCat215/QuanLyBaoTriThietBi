@@ -1,8 +1,12 @@
-@* Danh sách Thiết bị + tìm kiếm theo Tên/Serial/Khu vực *@
+@* Danh sách Thiết bị: Tìm kiếm + Lọc + Sắp xếp *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiIndexViewModel
 @{
     ViewData["Title"] = "Thiết bị";
+    var bl = Model.BoLoc;
+    var duongDanHienTai = Context.Request.Path + Context.Request.QueryString;
+    var coThayDoi = Model.CoBoLoc || bl.SapXep != ThietBiSapXep.TenAZ;
 }
 
 <div class="page-header">
@@ -15,7 +19,7 @@
     </div>
 </div>
 
-@if (!Model.Items.Any() && !Model.CoBoLoc)
+@if (!Model.Items.Any() && !coThayDoi)
 {
     <div class="card">
         <div class="card-body empty-state">
@@ -30,18 +34,92 @@ else
 {
     <form method="get" asp-action="Index" class="filter-bar">
         <div class="search">
-            <label class="form-label" for="tuKhoa">Tìm kiếm</label>
-            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
-                   placeholder="Tìm theo tên thiết bị, số serial hoặc tên khu vực" />
+            <label class="form-label" for="TuKhoa">Tìm kiếm</label>
+            <input id="TuKhoa" name="TuKhoa" value="@bl.TuKhoa" class="form-control"
+                   placeholder="Tên thiết bị, số serial hoặc tên khu vực" />
         </div>
+
+        <div>
+            <label class="form-label" for="MaLoaiThietBi">Loại thiết bị</label>
+            <select id="MaLoaiThietBi" name="MaLoaiThietBi" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var loai in Model.LoaiDeLoc)
+                {
+                    <option value="@loai.Ma" selected="@(bl.MaLoaiThietBi == loai.Ma)">@loai.Ten</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label" for="MaKhuVuc">Khu vực</label>
+            <select id="MaKhuVuc" name="MaKhuVuc" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var kv in Model.KhuVucDeLoc)
+                {
+                    <option value="@kv.Ma" selected="@(bl.MaKhuVuc == kv.Ma)">@kv.Ten</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label" for="TinhTrang">Tình trạng</label>
+            <select id="TinhTrang" name="TinhTrang" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
+                {
+                    <option value="@v" selected="@(bl.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label" for="HanBaoTri">Hạn bảo trì</label>
+            <select id="HanBaoTri" name="HanBaoTri" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var v in Enum.GetValues<TrangThaiHanBaoTriEnum>())
+                {
+                    <option value="@v" selected="@(bl.HanBaoTri == v)">
+                        @ThietBiBoLocText.HanBaoTri(v, UiHelper.NgayCanhBaoSapDenHan)
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label class="form-label" for="NgaySuDungTu">Đưa vào sử dụng từ</label>
+            <input id="NgaySuDungTu" name="NgaySuDungTu" type="date" class="form-control"
+                   value="@(bl.NgaySuDungTu?.ToString("yyyy-MM-dd"))" />
+        </div>
+
+        <div>
+            <label class="form-label" for="NgaySuDungDen">Đến ngày</label>
+            <input id="NgaySuDungDen" name="NgaySuDungDen" type="date" class="form-control"
+                   value="@(bl.NgaySuDungDen?.ToString("yyyy-MM-dd"))" />
+        </div>
+
+        <div>
+            <label class="form-label" for="SapXep">Sắp xếp</label>
+            <select id="SapXep" name="SapXep" class="form-select">
+                @foreach (var v in Enum.GetValues<ThietBiSapXep>())
+                {
+                    <option value="@v" selected="@(bl.SapXep == v)">@ThietBiBoLocText.SapXep(v)</option>
+                }
+            </select>
+        </div>
+
         <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
-            @if (Model.CoBoLoc)
+            <button type="submit" class="btn btn-primary">Áp dụng</button>
+            @if (coThayDoi)
             {
                 <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
             }
         </div>
     </form>
+
+    @if (!string.IsNullOrEmpty(Model.CanhBao))
+    {
+        <div class="alert alert-warning" role="alert">@Model.CanhBao</div>
+    }
 
     @if (!Model.Items.Any())
     {
@@ -49,7 +127,8 @@ else
             <div class="card-body empty-state">
                 <span class="material-symbols-outlined icon-24">search_off</span>
                 <h3>Không tìm thấy thiết bị phù hợp</h3>
-                <p>Không có thiết bị nào khớp với "@Model.TuKhoa". Hãy thử từ khóa khác.</p>
+                <p>Không có thiết bị nào khớp với các điều kiện đã chọn. Hãy thử bỏ bớt bộ lọc.</p>
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
             </div>
         </div>
     }
@@ -111,7 +190,7 @@ else
                                     <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
                                         <input type="hidden" name="tinhTrang"
                                                value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
-                                        <input type="hidden" name="tuKhoa" value="@Model.TuKhoa" />
+                                        <input type="hidden" name="returnUrl" value="@duongDanHienTai" />
                                         <button type="submit" class="btn btn-ghost btn-icon"
                                                 title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
                                             <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
@@ -127,7 +206,7 @@ else
                 <span>
                     @if (Model.CoBoLoc)
                     {
-                        <text>Tìm thấy @Model.Items.Count thiết bị cho từ khóa "@Model.TuKhoa"</text>
+                        <text>Tìm thấy @Model.Items.Count thiết bị phù hợp</text>
                     }
                     else
                     {
@@ -137,4 +216,11 @@ else
             </div>
         </div>
     }
+}
+
+@section Scripts {
+    <script>
+        var oSapXep = document.getElementById('SapXep');
+        if (oSapXep) oSapXep.addEventListener('change', function () { this.form.submit(); });
+    </script>
 }

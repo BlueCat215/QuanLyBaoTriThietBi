@@ -10,35 +10,21 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
 
 public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
 {
-    private const int SoTuKhoaToiDa = 5;
-
     public ThietBiRepository(AppDbContext context)
         : base(context) { }
 
-    public async Task<List<ThietBi>> TimKiemAsync(string? tuKhoa)
+    // Tìm kiếm, Lọc, Sắp xếp (xem ThietBiQueryExtensions)
+    public IQueryable<ThietBi> TruyVan(ThietBiBoLoc boLoc)
     {
         IQueryable<ThietBi> query = QueryNoTracking()
             .Include(t => t.LoaiThietBi)
             .Include(t => t.KhuVuc);
 
-        if (!string.IsNullOrWhiteSpace(tuKhoa))
-        {
-            // Tách thành nhiều từ: mỗi từ phải khớp Tên HOẶC Serial HOẶC Tên khu vực (AND giữa các từ, OR giữa các cột)
-            var cacTu = tuKhoa
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Take(SoTuKhoaToiDa);
-
-            foreach (var tu in cacTu)
-            {
-                query = query.Where(t =>
-                    t.TenThietBi.Contains(tu)
-                    || t.SoSerial.Contains(tu)
-                    || t.KhuVuc!.TenKhuVuc.Contains(tu)
-                );
-            }
-        }
-        return await query.OrderBy(t => t.TenThietBi).ThenBy(t => t.MaThietBi).ToListAsync();
+        // Thứ tự bắt buộc: Where -> OrderBy (-> Skip -> Take ở việc 28)
+        return query.ApDungLoc(boLoc, DateTime.Today).ApDungSapXep(boLoc.SapXep);
     }
+
+    public Task<List<ThietBi>> TimKiemAsync(ThietBiBoLoc boLoc) => TruyVan(boLoc).ToListAsync();
 
     public Task<ThietBi?> LayChiTietAsync(int maThietBi) =>
         QueryNoTracking()
@@ -66,6 +52,26 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
 
     public Task<bool> KhuVucDangHoatDongAsync(int maKhuVuc) =>
         _context.KhuVucs.AnyAsync(k => k.MaKhuVuc == maKhuVuc && k.TrangThai);
+
+    public async Task<List<(int Ma, string Ten)>> LayLoaiDeLocAsync()
+    {
+        var ds = await _context
+            .LoaiThietBis.AsNoTracking()
+            .OrderBy(l => l.TenLoaiThietBi)
+            .Select(l => new { l.MaLoaiThietBi, l.TenLoaiThietBi })
+            .ToListAsync();
+        return ds.Select(x => (x.MaLoaiThietBi, x.TenLoaiThietBi)).ToList();
+    }
+
+    public async Task<List<(int Ma, string Ten)>> LayKhuVucDeLocAsync()
+    {
+        var ds = await _context
+            .KhuVucs.AsNoTracking()
+            .OrderBy(k => k.TenKhuVuc)
+            .Select(k => new { k.MaKhuVuc, k.TenKhuVuc })
+            .ToListAsync();
+        return ds.Select(x => (x.MaKhuVuc, x.TenKhuVuc)).ToList();
+    }
 
     public async Task<List<(int Ma, string Ten)>> LayLoaiChoChonAsync(int? giuLaiMa)
     {

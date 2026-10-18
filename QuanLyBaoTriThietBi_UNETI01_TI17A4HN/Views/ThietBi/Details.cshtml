@@ -76,7 +76,7 @@
             <div class="card-body">
                 <h3 class="mb-3">Đổi tình trạng</h3>
                 <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
-                    <input type="hidden" name="quayLai" value="details" />
+                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
                     <label class="form-label" for="tinhTrang">Tình trạng mới</label>
                     <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
                         @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
@@ -102,39 +102,40 @@
                 @if (lienQuan.CoDuLieu)
                 {
                     <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
-                        <strong>Ngừng sử dụng</strong> để giữ lịch sử.</p>
-                    }
+                        <strong>Ngừng sử dụng</strong> để giữ lịch sử.
+                    </p>
+                }
                 else
-                    {
-                        <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
-                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
-                                data-bs-target="#modalXoa">Xóa thiết bị</button>
-                    }
-                </div>
+                {
+                    <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
+                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                            data-bs-target="#modalXoa">Xóa thiết bị</button>
+                }
             </div>
         </div>
     </div>
+</div>
 
-    @if (!lienQuan.CoDuLieu)
-    {
-        <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <form asp-action="Delete" asp-route-id="@tb.MaThietBi" method="post">
-                        <div class="modal-header">
-                            <h3 class="modal-title" id="modalXoaTitle">Xóa thiết bị</h3>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p>Bạn có chắc muốn xóa thiết bị <strong>@tb.TenThietBi</strong>? Hành động này không thể hoàn tác.
-                            </p>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-danger">Xóa thiết bị</button>
-                        </div>
-                    </form>
-                </div>
+@if (!lienQuan.CoDuLieu)
+{
+    <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Delete" asp-route-id="@tb.MaThietBi" method="post">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalXoaTitle">Xóa thiết bị</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn xóa thiết bị <strong>@tb.TenThietBi</strong>? Hành động này không thể hoàn tác.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xóa thiết bị</button>
+                    </div>
+                </form>
             </div>
         </div>
-    }
+    </div>
+}
