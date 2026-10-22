@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers
 {
     public class HomeController : Controller
     {
+        [Authorize]
         public IActionResult Index()
         {
             return View();

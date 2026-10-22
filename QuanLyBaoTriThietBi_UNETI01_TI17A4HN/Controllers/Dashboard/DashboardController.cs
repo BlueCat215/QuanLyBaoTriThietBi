@@ -4,10 +4,11 @@
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền, việc 23): thêm [Authorize(Roles = "Admin")] (Dashboard chỉ hiện trong menu Admin).
+[Authorize(Roles = "Admin")]
 public class DashboardController : Controller
 {
     private readonly IDashboardService _service;

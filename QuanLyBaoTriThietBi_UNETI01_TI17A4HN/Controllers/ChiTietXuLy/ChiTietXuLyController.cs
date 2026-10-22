@@ -7,11 +7,12 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền, việc 23): thêm [Authorize(Roles = "Admin,KyThuatVien")];
 // KTV chỉ được ghi chi tiết của phiếu mình đang được phân công (cùng việc 39 - Bắt đầu/cập nhật xử lý).
+[Authorize(Roles = "Admin,KyThuatVien")]
 public class ChiTietXuLyController : Controller
 {
     private readonly IChiTietXuLyService _service;

@@ -8,10 +8,11 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền): thêm [Authorize(Roles = "Admin")] khi SV1 hoàn thành đăng nhập (việc 12/23).
+[Authorize(Roles = "Admin")]
 public class KeHoachBaoTriController : Controller
 {
     private readonly IKeHoachBaoTriService _service;
