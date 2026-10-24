@@ -1,4 +1,5 @@
-// Repository Thiết bị (LINQ: tìm kiếm, kiểm tra trùng serial, đếm dữ liệu liên quan)
+// Họ tên: Nguyễn Minh Đức
+// Nội dung: Repository Thiết bị (LINQ: tìm kiếm, lọc, sắp xếp, tính hạn bảo trì dùng chung toàn hệ thống)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -20,11 +21,39 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
             .Include(t => t.LoaiThietBi)
             .Include(t => t.KhuVuc);
 
-        // Thứ tự bắt buộc: Where -> OrderBy (-> Skip -> Take ở việc 28)
+        // Thứ tự bắt buộc: Where -> OrderBy
         return query.ApDungLoc(boLoc, DateTime.Today).ApDungSapXep(boLoc.SapXep);
     }
 
     public Task<List<ThietBi>> TimKiemAsync(ThietBiBoLoc boLoc) => TruyVan(boLoc).ToListAsync();
+
+    /// Đếm số thiết bị sắp đến hạn bảo trì
+    public Task<int> DemSapDenHanAsync(DateTime? homNay = null) =>
+        QueryNoTracking().SapDenHanBaoTri(homNay).CountAsync();
+
+    /// Đếm số thiết bị đã quá hạn bảo trì
+    public Task<int> DemQuaHanAsync(DateTime? homNay = null) =>
+        QueryNoTracking().QuaHanBaoTri(homNay).CountAsync();
+
+    /// Lấy danh sách thiết bị sắp đến hạn bảo trì
+    public Task<List<ThietBi>> LayDanhSachSapDenHanAsync(int top = 5, DateTime? homNay = null) =>
+        QueryNoTracking()
+            .Include(t => t.LoaiThietBi)
+            .Include(t => t.KhuVuc)
+            .SapDenHanBaoTri(homNay)
+            .ApDungSapXep(ThietBiSapXep.BaoTriSomNhat)
+            .Take(top)
+            .ToListAsync();
+
+    /// Lấy danh sách thiết bị đã quá hạn bảo trì
+    public Task<List<ThietBi>> LayDanhSachQuaHanAsync(int top = 5, DateTime? homNay = null) =>
+        QueryNoTracking()
+            .Include(t => t.LoaiThietBi)
+            .Include(t => t.KhuVuc)
+            .QuaHanBaoTri(homNay)
+            .ApDungSapXep(ThietBiSapXep.BaoTriSomNhat)
+            .Take(top)
+            .ToListAsync();
 
     public Task<ThietBi?> LayChiTietAsync(int maThietBi) =>
         QueryNoTracking()
