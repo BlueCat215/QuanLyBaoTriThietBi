@@ -13,6 +13,16 @@ public class PagedResult<T>
     public bool HasPrevious => Page > 1;
     public bool HasNext => Page < TotalPages;
 
+    /// Chuyển đổi kiểu dữ liệu các phần tử trong trang nhưng giữ nguyên thông tin phân trang
+    public PagedResult<TResult> Map<TResult>(Func<T, TResult> selector) =>
+        new()
+        {
+            Items = Items.Select(selector).ToList(),
+            Page = Page,
+            PageSize = PageSize,
+            TotalItems = TotalItems,
+        };
+
     public static async Task<PagedResult<T>> CreateAsync(
         IQueryable<T> source,
         int page,
@@ -25,6 +35,12 @@ public class PagedResult<T>
             pageSize = 10;
 
         var total = await source.CountAsync();
+
+        // Tránh tình trạng trang vượt quá tổng số trang khi dữ liệu bị xóa bớt
+        var totalPages = pageSize <= 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+        if (page > totalPages && totalPages > 0)
+            page = totalPages;
+
         var items = await source.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return new PagedResult<T>
