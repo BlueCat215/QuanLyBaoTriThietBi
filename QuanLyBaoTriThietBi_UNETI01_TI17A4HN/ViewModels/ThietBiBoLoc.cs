@@ -1,4 +1,4 @@
-// Nội dung: Module 2 - Điều kiện Tìm kiếm + Lọc + Sắp xếp danh sách Thiết bị
+// Nội dung: Module 2 - Điều kiện Tìm kiếm + Lọc + Sắp xếp + Phân trang danh sách Thiết bị
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
@@ -35,7 +35,11 @@ public class ThietBiBoLoc
     public DateTime? NgaySuDungDen { get; set; }
     public ThietBiSapXep SapXep { get; set; } = ThietBiSapXep.TenAZ;
 
-    /// Có điều kiện LỌC nào đang bật không (không tính Sắp xếp).
+    // Phân trang
+    public int Trang { get; set; } = 1;
+    public int SoBanGhiMoiTrang { get; set; } = 10;
+
+    /// Có điều kiện LỌC nào đang bật không (không tính Sắp xếp và Phân trang).
     public bool CoBoLoc =>
         !string.IsNullOrWhiteSpace(TuKhoa)
         || MaLoaiThietBi.HasValue
@@ -50,6 +54,45 @@ public class ThietBiBoLoc
         NgaySuDungTu.HasValue
         && NgaySuDungDen.HasValue
         && NgaySuDungTu.Value.Date > NgaySuDungDen.Value.Date;
+
+    /// Tạo từ điển route values để gắn vào link phân trang, giữ nguyên các điều kiện tìm kiếm, lọc, sắp xếp
+    public Dictionary<string, string> ToRouteValues(int? trang = null)
+    {
+        var route = new Dictionary<string, string>();
+
+        if (!string.IsNullOrWhiteSpace(TuKhoa))
+            route[nameof(TuKhoa)] = TuKhoa;
+
+        if (MaLoaiThietBi.HasValue)
+            route[nameof(MaLoaiThietBi)] = MaLoaiThietBi.Value.ToString();
+
+        if (MaKhuVuc.HasValue)
+            route[nameof(MaKhuVuc)] = MaKhuVuc.Value.ToString();
+
+        if (TinhTrang.HasValue)
+            route[nameof(TinhTrang)] = TinhTrang.Value.ToString();
+
+        if (HanBaoTri.HasValue)
+            route[nameof(HanBaoTri)] = HanBaoTri.Value.ToString();
+
+        if (NgaySuDungTu.HasValue)
+            route[nameof(NgaySuDungTu)] = NgaySuDungTu.Value.ToString("yyyy-MM-dd");
+
+        if (NgaySuDungDen.HasValue)
+            route[nameof(NgaySuDungDen)] = NgaySuDungDen.Value.ToString("yyyy-MM-dd");
+
+        if (SapXep != ThietBiSapXep.TenAZ)
+            route[nameof(SapXep)] = SapXep.ToString();
+
+        if (SoBanGhiMoiTrang != 10)
+            route[nameof(SoBanGhiMoiTrang)] = SoBanGhiMoiTrang.ToString();
+
+        var p = trang ?? Trang;
+        if (p > 1)
+            route[nameof(Trang)] = p.ToString();
+
+        return route;
+    }
 }
 
 public static class ThietBiBoLocText

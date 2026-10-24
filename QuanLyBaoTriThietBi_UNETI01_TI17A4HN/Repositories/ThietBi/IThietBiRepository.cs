@@ -1,5 +1,6 @@
 //Interface Repository Thiết bị
 #nullable enable
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
@@ -12,6 +13,9 @@ public interface IThietBiRepository : IRepository<ThietBi>
 
     ///Tìm theo Tên / Số serial / Tên khu vực, Lọc, Sắp xếp rồi lấy toàn bộ kết quả.
     Task<List<ThietBi>> TimKiemAsync(ThietBiBoLoc boLoc);
+
+    ///Lấy danh sách thiết bị có phân trang bằng Skip/Take (thứ tự: Where -> OrderBy -> Skip -> Take).
+    Task<PagedResult<ThietBi>> LayPhanTrangAsync(ThietBiBoLoc boLoc);
 
     Task<ThietBi?> LayChiTietAsync(int maThietBi);
     Task<bool> SoSerialDaTonTaiAsync(string soSerial, int? boQuaId = null);
