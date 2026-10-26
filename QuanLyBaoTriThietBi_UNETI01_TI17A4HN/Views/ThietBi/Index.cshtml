@@ -1,4 +1,5 @@
 @* Danh sách Thiết bị: Tìm kiếm + Lọc + Sắp xếp + Phân trang *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiIndexViewModel
@@ -7,6 +8,7 @@
     var bl = Model.BoLoc;
     var duongDanHienTai = Context.Request.Path + Context.Request.QueryString;
     var coThayDoi = Model.CoBoLoc || bl.SapXep != ThietBiSapXep.TenAZ;
+    var coQuyenQuanLy = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.KyThuatVien);
 }
 
 <div class="page-header">
@@ -14,9 +16,12 @@
         <h1>Thiết bị</h1>
         <p>Quản lý danh sách thiết bị, tình trạng và hạn bảo trì.</p>
     </div>
-    <div class="page-actions">
-        <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
-    </div>
+    @if (coQuyenQuanLy)
+    {
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+        </div>
+    }
 </div>
 
 @if (Model.PagedItems.TotalItems == 0 && !coThayDoi)
@@ -26,7 +31,10 @@
             <span class="material-symbols-outlined icon-24">precision_manufacturing</span>
             <h3>Chưa có thiết bị nào</h3>
             <p>Hãy thêm thiết bị đầu tiên để bắt đầu theo dõi bảo trì.</p>
-            <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+            @if (coQuyenQuanLy)
+            {
+                <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+            }
         </div>
     </div>
 }
@@ -183,22 +191,25 @@ else
                                        title="Xem chi tiết">
                                         <span class="material-symbols-outlined">visibility</span>
                                     </a>
-                                    @if (!ngung)
+                                    @if (coQuyenQuanLy)
                                     {
-                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaThietBi"
-                                           title="Sửa thiết bị">
-                                            <span class="material-symbols-outlined">edit</span>
-                                        </a>
+                                        @if (!ngung)
+                                        {
+                                            <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaThietBi"
+                                               title="Sửa thiết bị">
+                                                <span class="material-symbols-outlined">edit</span>
+                                            </a>
+                                        }
+                                        <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
+                                            <input type="hidden" name="tinhTrang"
+                                                   value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
+                                            <input type="hidden" name="returnUrl" value="@duongDanHienTai" />
+                                            <button type="submit" class="btn btn-ghost btn-icon"
+                                                    title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
+                                                <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
+                                            </button>
+                                        </form>
                                     }
-                                    <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
-                                        <input type="hidden" name="tinhTrang"
-                                               value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
-                                        <input type="hidden" name="returnUrl" value="@duongDanHienTai" />
-                                        <button type="submit" class="btn btn-ghost btn-icon"
-                                                title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
-                                            <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
-                                        </button>
-                                    </form>
                                 </div>
                             </td>
                         </tr>
