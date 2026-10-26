@@ -1,4 +1,4 @@
-// Service Thiết bị (không trùng serial, ngày sử dụng <= hôm nay, chu kỳ > 0, đổi tình trạng, xóa an toàn)
+// Service Thiết bị (không trùng serial, ngày sử dụng <= hôm nay, chu kỳ > 0, đổi tình trạng, xóa an toàn, phân trang)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -21,26 +21,27 @@ public class ThietBiService : IThietBiService
     {
         boLoc.TuKhoa = boLoc.TuKhoa?.Trim();
 
-        var ds = await _repo.TimKiemAsync(boLoc);
+        var paged = await _repo.LayPhanTrangAsync(boLoc);
+
+        var pagedRows = paged.Map(t => new ThietBiRow(
+            t.MaThietBi,
+            t.TenThietBi,
+            t.SoSerial,
+            t.LoaiThietBi?.TenLoaiThietBi ?? "—",
+            t.KhuVuc?.TenKhuVuc ?? "—",
+            t.TinhTrang,
+            t.NgayBaoTriTiepTheo
+        ));
 
         return new ThietBiIndexViewModel
         {
             BoLoc = boLoc,
+            PagedItems = pagedRows,
             LoaiDeLoc = await _repo.LayLoaiDeLocAsync(),
             KhuVucDeLoc = await _repo.LayKhuVucDeLocAsync(),
             CanhBao = boLoc.KhoangNgayKhongHopLe
                 ? "Khoảng ngày không hợp lệ: \"Từ ngày\" lớn hơn \"Đến ngày\" nên khoảng ngày đã được bỏ qua."
                 : null,
-            Items = ds.Select(t => new ThietBiRow(
-                    t.MaThietBi,
-                    t.TenThietBi,
-                    t.SoSerial,
-                    t.LoaiThietBi?.TenLoaiThietBi ?? "—",
-                    t.KhuVuc?.TenKhuVuc ?? "—",
-                    t.TinhTrang,
-                    t.NgayBaoTriTiepTheo
-                ))
-                .ToList(),
         };
     }
 

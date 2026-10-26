@@ -1,4 +1,5 @@
-@* Danh sách Thiết bị: Tìm kiếm + Lọc + Sắp xếp *@
+@* Danh sách Thiết bị: Tìm kiếm + Lọc + Sắp xếp + Phân trang *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiIndexViewModel
@@ -7,6 +8,7 @@
     var bl = Model.BoLoc;
     var duongDanHienTai = Context.Request.Path + Context.Request.QueryString;
     var coThayDoi = Model.CoBoLoc || bl.SapXep != ThietBiSapXep.TenAZ;
+    var coQuyenQuanLy = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.KyThuatVien);
 }
 
 <div class="page-header">
@@ -14,25 +16,34 @@
         <h1>Thiết bị</h1>
         <p>Quản lý danh sách thiết bị, tình trạng và hạn bảo trì.</p>
     </div>
-    <div class="page-actions">
-        <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
-    </div>
+    @if (coQuyenQuanLy)
+    {
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+        </div>
+    }
 </div>
 
-@if (!Model.Items.Any() && !coThayDoi)
+@if (Model.PagedItems.TotalItems == 0 && !coThayDoi)
 {
     <div class="card">
         <div class="card-body empty-state">
             <span class="material-symbols-outlined icon-24">precision_manufacturing</span>
             <h3>Chưa có thiết bị nào</h3>
             <p>Hãy thêm thiết bị đầu tiên để bắt đầu theo dõi bảo trì.</p>
-            <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+            @if (coQuyenQuanLy)
+            {
+                <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
+            }
         </div>
     </div>
 }
 else
 {
     <form method="get" asp-action="Index" class="filter-bar">
+        @* Đặt lại trang về 1 khi bấm Tìm kiếm / Áp dụng bộ lọc mới *@
+        <input type="hidden" name="Trang" value="1" />
+
         <div class="search">
             <label class="form-label" for="TuKhoa">Tìm kiếm</label>
             <input id="TuKhoa" name="TuKhoa" value="@bl.TuKhoa" class="form-control"
@@ -180,22 +191,25 @@ else
                                        title="Xem chi tiết">
                                         <span class="material-symbols-outlined">visibility</span>
                                     </a>
-                                    @if (!ngung)
+                                    @if (coQuyenQuanLy)
                                     {
-                                        <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaThietBi"
-                                           title="Sửa thiết bị">
-                                            <span class="material-symbols-outlined">edit</span>
-                                        </a>
+                                        @if (!ngung)
+                                        {
+                                            <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaThietBi"
+                                               title="Sửa thiết bị">
+                                                <span class="material-symbols-outlined">edit</span>
+                                            </a>
+                                        }
+                                        <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
+                                            <input type="hidden" name="tinhTrang"
+                                                   value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
+                                            <input type="hidden" name="returnUrl" value="@duongDanHienTai" />
+                                            <button type="submit" class="btn btn-ghost btn-icon"
+                                                    title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
+                                                <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
+                                            </button>
+                                        </form>
                                     }
-                                    <form asp-action="DoiTinhTrang" asp-route-id="@item.MaThietBi" method="post" class="d-inline">
-                                        <input type="hidden" name="tinhTrang"
-                                               value="@(ngung ? nameof(TinhTrangThietBiEnum.DangHoatDong) : nameof(TinhTrangThietBiEnum.NgungSuDung))" />
-                                        <input type="hidden" name="returnUrl" value="@duongDanHienTai" />
-                                        <button type="submit" class="btn btn-ghost btn-icon"
-                                                title="@(ngung ? "Kích hoạt lại" : "Ngừng sử dụng")">
-                                            <span class="material-symbols-outlined">@(ngung ? "check_circle" : "block")</span>
-                                        </button>
-                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -203,16 +217,110 @@ else
                 </tbody>
             </table>
             <div class="table-footer">
-                <span>
-                    @if (Model.CoBoLoc)
+                <div>
+                    <span>
+                        @if (Model.CoBoLoc)
+                        {
+                            <text>Tìm thấy <strong>@Model.PagedItems.TotalItems</strong> thiết bị phù hợp</text>
+                        }
+                        else
+                        {
+                            <text>Tổng số: <strong>@Model.PagedItems.TotalItems</strong> thiết bị</text>
+                        }
+                    </span>
+                    @if (Model.PagedItems.TotalPages > 1)
                     {
-                        <text>Tìm thấy @Model.Items.Count thiết bị phù hợp</text>
+                        <span class="text-muted ms-2">(Trang @Model.PagedItems.Page / @Model.PagedItems.TotalPages)</span>
                     }
-                    else
-                    {
-                        <text>Tổng số: @Model.Items.Count thiết bị</text>
-                    }
-                </span>
+                </div>
+
+                @if (Model.PagedItems.TotalPages > 1)
+                {
+                    <nav aria-label="Phân trang thiết bị">
+                        <ul class="pagination">
+                            @* Nút Trang trước *@
+                            <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                                @if (Model.PagedItems.HasPrevious)
+                                {
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page - 1)"
+                                       aria-label="Trang trước">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">chevron_left</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="page-link" aria-hidden="true">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">chevron_left</span>
+                                    </span>
+                                }
+                            </li>
+
+                            @{
+                                var curPage = Model.PagedItems.Page;
+                                var totalP = Model.PagedItems.TotalPages;
+                                var startP = Math.Max(1, curPage - 2);
+                                var endP = Math.Min(totalP, curPage + 2);
+                            }
+
+                            @if (startP > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(1)">1</a>
+                                </li>
+                                @if (startP > 2)
+                                {
+                                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                }
+                            }
+
+                            @for (var p = startP; p <= endP; p++)
+                            {
+                                <li class="page-item @(p == curPage ? "active" : "")">
+                                    @if (p == curPage)
+                                    {
+                                        <span class="page-link">@p</span>
+                                    }
+                                    else
+                                    {
+                                        <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(p)">@p</a>
+                                    }
+                                </li>
+                            }
+
+                            @if (endP < totalP)
+                            {
+                                @if (endP < totalP - 1)
+                                {
+                                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                }
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(totalP)">@totalP</a>
+                                </li>
+                            }
+
+                            @* Nút Trang sau *@
+                            <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                                @if (Model.PagedItems.HasNext)
+                                {
+                                    <a class="page-link"
+                                       asp-action="Index"
+                                       asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page + 1)"
+                                       aria-label="Trang sau">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">chevron_right</span>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="page-link" aria-hidden="true">
+                                        <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">chevron_right</span>
+                                    </span>
+                                }
+                            </li>
+                        </ul>
+                    </nav>
+                }
             </div>
         </div>
     }
