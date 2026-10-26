@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
 // KTV chỉ được ghi chi tiết của phiếu mình đang được phân công 
-[CustomAuthorizationFilter(Roles = "Admin,KyThuatVien")]
+[Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
 public class ChiTietXuLyController : Controller
 {
     private readonly IChiTietXuLyService _service;

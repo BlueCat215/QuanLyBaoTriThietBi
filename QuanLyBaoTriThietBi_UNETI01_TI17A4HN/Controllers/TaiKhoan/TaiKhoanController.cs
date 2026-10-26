@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[CustomAuthorizationFilter(Roles = "Admin")]
+[Authorize(Roles = AppRoles.Admin)]
 public class TaiKhoanController : Controller
 {
     private readonly ITaiKhoanService _service;

@@ -9,7 +9,7 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[CustomAuthorizationFilter(Roles = "Admin")]
+[Authorize(Roles = AppRoles.Admin)]
 public class DashboardController : Controller
 {
     private readonly IDashboardService _service;
