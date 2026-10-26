@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền): thêm [Authorize(Roles = "Admin")] khi SV1 hoàn thành đăng nhập (việc 12).
+[Authorize(Roles = AppRoles.Admin)]
 public class KyThuatVienController : Controller
 {
     private readonly IKyThuatVienService _service;

@@ -8,10 +8,11 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền): thêm [Authorize(Roles = "Admin")] khi đã cấu hình đăng nhập (việc 12).
+[Authorize(Roles = AppRoles.Admin)]
 public class TaiKhoanController : Controller
 {
     private readonly ITaiKhoanService _service;

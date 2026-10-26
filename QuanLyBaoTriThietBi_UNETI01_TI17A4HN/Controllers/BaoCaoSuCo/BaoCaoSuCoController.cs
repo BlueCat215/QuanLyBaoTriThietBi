@@ -8,16 +8,15 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền): thêm [Authorize] và đặt DungTaiKhoanXemThuKhiChuaDangNhap = false
-// khi SV1 hoàn thành đăng nhập (việc 12). Index = Admin; Create/CuaToi/Details = mọi người đã đăng nhập.
+[Authorize]
 public class BaoCaoSuCoController : Controller
 {
-    /// TẠM THỜI để chạy thử khi CHƯA có đăng nhập: coi như Admin và gửi báo cáo bằng tài khoản Người sử dụng đầu tiên.
-    /// Đặt = false khi đăng nhập đã hoạt động (giống cờ XemTruocMenuAdminKhiChuaDangNhap ở _Sidebar).
-    private const bool DungTaiKhoanXemThuKhiChuaDangNhap = true;
+    
+    private const bool DungTaiKhoanXemThuKhiChuaDangNhap = false;
 
     private readonly IBaoCaoSuCoService _service;
 
