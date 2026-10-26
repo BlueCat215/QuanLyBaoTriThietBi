@@ -5,10 +5,11 @@
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using Microsoft.AspNetCore.Authorization;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[Authorize(Roles = "Admin")]
+[CustomAuthorizationFilter(Roles = "Admin")]
 public class DashboardController : Controller
 {
     private readonly IDashboardService _service;

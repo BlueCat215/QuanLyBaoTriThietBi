@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[Authorize(Roles = "Admin")]
+[CustomAuthorizationFilter(Roles = "Admin")]
 public class LoaiThietBiController : Controller
 {
     private const string FieldsBind = "MaLoaiThietBi,TenLoaiThietBi,ChuKyBaoTriMacDinhThang,MoTa,TrangThai";

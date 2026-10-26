@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[Authorize(Roles = "Admin")]
+[CustomAuthorizationFilter(Roles = "Admin,KyThuatVien")]
 public class KeHoachBaoTriController : Controller
 {
     private readonly IKeHoachBaoTriService _service;
@@ -26,6 +26,7 @@ public class KeHoachBaoTriController : Controller
     ) => View(await _service.LayDanhSachAsync(tuKhoa, trangThai, mucDo));
 
     [HttpGet]
+    [CustomAuthorizationFilter(Roles = "Admin")]
     public async Task<IActionResult> Create(int? maThietBi)
     {
         var vm = new KeHoachBaoTriFormViewModel { MaThietBi = maThietBi };
@@ -34,6 +35,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [CustomAuthorizationFilter(Roles = "Admin")]
     public async Task<IActionResult> Create(KeHoachBaoTriFormViewModel vm)
     {
         if (ModelState.IsValid)
@@ -52,6 +54,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpGet]
+    [CustomAuthorizationFilter(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
         var result = await _service.LayDeSuaAsync(id);
@@ -66,6 +69,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [CustomAuthorizationFilter(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id, KeHoachBaoTriFormViewModel vm)
     {
         if (id != vm.MaKeHoach)

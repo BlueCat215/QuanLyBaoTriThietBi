@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-[Authorize]
+[CustomAuthorizationFilter]
 public class BaoCaoSuCoController : Controller
 {
     
