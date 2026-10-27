@@ -1,6 +1,11 @@
+// Họ tên: Nguyễn Minh Đức
+// Nội dung: Module 2 - Entity ThietBi và logic tính NgayBaoTriTiepTheo + TrangThaiHanBaoTri
+#nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 
@@ -43,10 +48,20 @@ public class ThietBi
     [StringLength(255), Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
 
-    // cách tính: tính dòng, không lưu cột riêng (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKy thang
+    /// Ngày bảo trì tiếp theo (tính động, không lưu cột riêng theo mục 2.1 THIETKE.md).
+    /// Công thức: NgayBaoTriTiepTheo = (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKyBaoTriThang (tháng).
+    /// Quy định mốc đầu tiên từ NgayDuaVaoSuDung nếu chưa bảo trì lần nào.
     [NotMapped, Display(Name = "Ngày bảo trì tiếp theo")]
     public DateTime NgayBaoTriTiepTheo =>
         (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung).AddMonths(ChuKyBaoTriThang);
+
+    /// Phân loại hạn bảo trì (Chưa đến hạn / Sắp đến hạn / Quá hạn) theo ngưỡng dùng chung toàn hệ thống.
+    /// Thiết bị Ngừng sử dụng không tính hạn bảo trì.
+    [NotMapped, Display(Name = "Trạng thái hạn bảo trì")]
+    public TrangThaiHanBaoTriEnum? TrangThaiHanBaoTri =>
+        TinhTrang == TinhTrangThietBiEnum.NgungSuDung
+            ? null
+            : UiHelper.PhanLoaiHanBaoTri(NgayBaoTriTiepTheo);
 
     public LoaiThietBi? LoaiThietBi { get; set; }
     public KhuVuc? KhuVuc { get; set; }
