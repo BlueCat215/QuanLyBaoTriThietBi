@@ -1,11 +1,12 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, form Thêm/Sửa)
+// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, chi tiết vòng đời, form Thêm/Sửa)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -23,16 +24,19 @@ public record KeHoachRow(
 )
 {
     /// Kế hoạch còn "đang hoạt động" (chưa Hoàn thành / Đã hủy).
-    public bool DangHoatDong =>
-        TrangThai != TrangThaiKeHoachEnum.HoanThanh && TrangThai != TrangThaiKeHoachEnum.DaHuy;
+    public bool DangHoatDong => !KeHoachWorkflowHelper.IsLocked(TrangThai);
 
     public bool QuaHan => DangHoatDong && NgayDuKien.Date < DateTime.Today;
 
     public bool CoTheSua =>
-        TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
+        !KeHoachWorkflowHelper.IsLocked(TrangThai)
+        && TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
 
-    // Service kiểm tra lại đầy đủ (còn phiếu xử lý đang hoạt động thì không hủy được)
-    public bool CoTheHuy => TrangThai == TrangThaiKeHoachEnum.ChoThucHien;
+    // Cho phép hủy khi chưa hoàn thành/đã hủy (Service sẽ kiểm tra thêm phiếu xử lý con)
+    public bool CoTheHuy => KeHoachWorkflowHelper.CanTransitionTo(TrangThai, TrangThaiKeHoachEnum.DaHuy);
+
+    public IReadOnlyList<TrangThaiKeHoachEnum> CacTrangThaiCoTheChuyen =>
+        KeHoachWorkflowHelper.GetNextAllowedStatuses(TrangThai);
 }
 
 public class KeHoachBaoTriIndexViewModel
@@ -80,4 +84,47 @@ public class KeHoachBaoTriFormViewModel
 
     [BindNever, ValidateNever]
     public List<SelectListItem> ThietBiOptions { get; set; } = new();
+}
+
+public class KeHoachPhieuXuLyItem
+{
+    public int MaPhieuXuLy { get; set; }
+    public LoaiXuLyEnum LoaiXuLy { get; set; }
+    public DateTime NgayTao { get; set; }
+    public DateTime? NgayBatDau { get; set; }
+    public DateTime? NgayHoanThanh { get; set; }
+    public TrangThaiPhieuXuLyEnum TrangThai { get; set; }
+    public string? KetQuaXuLy { get; set; }
+    public string? KyThuatVienHienTai { get; set; }
+}
+
+public class KeHoachBaoTriChiTietViewModel
+{
+    public int MaKeHoach { get; set; }
+    public int MaThietBi { get; set; }
+    public string TenThietBi { get; set; } = string.Empty;
+    public string SoSerial { get; set; } = string.Empty;
+    public string TenLoaiThietBi { get; set; } = string.Empty;
+    public string TenKhuVuc { get; set; } = string.Empty;
+    public TinhTrangThietBiEnum TinhTrangThietBi { get; set; }
+    public DateTime? NgayBaoTriGanNhat { get; set; }
+    public DateTime NgayBaoTriTiepTheo { get; set; }
+
+    public DateTime NgayDuKien { get; set; }
+    public string NoiDungBaoTri { get; set; } = string.Empty;
+    public MucDoUuTienEnum MucDoUuTien { get; set; }
+    public TrangThaiKeHoachEnum TrangThai { get; set; }
+    public string? GhiChu { get; set; }
+
+    public bool DangHoatDong => !KeHoachWorkflowHelper.IsLocked(TrangThai);
+    public bool QuaHan => DangHoatDong && NgayDuKien.Date < DateTime.Today;
+    public bool CoTheSua =>
+        !KeHoachWorkflowHelper.IsLocked(TrangThai)
+        && TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
+    public bool CoTheHuy => KeHoachWorkflowHelper.CanTransitionTo(TrangThai, TrangThaiKeHoachEnum.DaHuy);
+
+    public IReadOnlyList<TrangThaiKeHoachEnum> CacTrangThaiCoTheChuyen =>
+        KeHoachWorkflowHelper.GetNextAllowedStatuses(TrangThai);
+
+    public List<KeHoachPhieuXuLyItem> DanhSachPhieuXuLy { get; set; } = new();
 }

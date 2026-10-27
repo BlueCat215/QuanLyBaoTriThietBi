@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì
+// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì (CRUD, Vòng đời trạng thái, Chuyển trạng thái, Chống trùng kế hoạch)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -15,6 +15,9 @@ public interface IKeHoachBaoTriService
         MucDoUuTienEnum? mucDo
     );
 
+    /// Lấy chi tiết kế hoạch theo id kèm thông tin thiết bị và danh sách phiếu xử lý
+    Task<ServiceResult<KeHoachBaoTriChiTietViewModel>> LayChiTietAsync(int id);
+
     /// Fail nếu không tìm thấy hoặc kế hoạch không còn sửa được (Đang thực hiện/Chờ nghiệm thu/Hoàn thành/Đã hủy).
     Task<ServiceResult<KeHoachBaoTriFormViewModel>> LayDeSuaAsync(int id);
 
@@ -27,8 +30,16 @@ public interface IKeHoachBaoTriService
     /// Chuyển sang Đã hủy (giữ lịch sử, không xóa vật lý).
     Task<ServiceResult> HuyAsync(int id);
 
+    /// Chuyển đổi trạng thái theo đúng vòng đời nghiệp vụ:
+    /// Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành / Đã hủy.
+    /// Chặn cập nhật khi đã Hoàn thành hoặc Đã hủy.
+    Task<ServiceResult> ChuyenTrangThaiAsync(
+        int id,
+        TrangThaiKeHoachEnum trangThaiMoi,
+        string? ghiChu = null
+    );
+
     /// Business rule chống trùng: không có 2 kế hoạch đang hoạt động cho cùng thiết bị & cùng kỳ (tháng-năm).
-    /// Public để các chức năng khác (vòng đời trạng thái - việc 31) dùng lại.
     Task<ServiceResult> KiemTraTrungKeHoachAsync(
         int maThietBi,
         DateTime ngayDuKien,
