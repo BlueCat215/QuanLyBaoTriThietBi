@@ -1,4 +1,4 @@
-@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Danh sách Kế hoạch bảo trì, tìm kiếm, lọc, hủy *@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Danh sách Kế hoạch bảo trì, tìm kiếm, lọc, vòng đời và hủy *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriIndexViewModel
 @{
@@ -8,7 +8,7 @@
 <div class="page-header">
     <div>
         <h1>Kế hoạch bảo trì</h1>
-        <p>Lập và theo dõi kế hoạch bảo trì định kỳ cho thiết bị.</p>
+        <p>Lập và theo dõi kế hoạch bảo trì định kỳ cho thiết bị theo vòng đời chuẩn.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn-primary" asp-action="Create">Thêm kế hoạch</a>
@@ -86,14 +86,18 @@ else
                         <th>Nội dung bảo trì</th>
                         <th>Ưu tiên</th>
                         <th>Trạng thái</th>
-                        <th></th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Items)
                     {
                         <tr class="@(item.TrangThai == TrangThaiKeHoachEnum.DaHuy ? "is-muted" : "")">
-                            <td class="mono">@UiHelper.Ma("KH", item.MaKeHoach)</td>
+                            <td class="mono">
+                                <a asp-action="Details" asp-route-id="@item.MaKeHoach" class="fw-bold">
+                                    @UiHelper.Ma("KH", item.MaKeHoach)
+                                </a>
+                            </td>
                             <td>
                                 <div class="cell-title">@item.TenThietBi</div>
                                 <div class="cell-sub mono">@item.SoSerial</div>
@@ -103,7 +107,7 @@ else
                                 <div>@UiHelper.Ngay(item.NgayDuKien)</div>
                                 @if (item.QuaHan)
                                 {
-                                    <div class="cell-sub">Quá hạn</div>
+                                    <div class="cell-sub text-danger font-semibold">Quá hạn</div>
                                 }
                             </td>
                             <td>@(item.NoiDungBaoTri.Length > 60 ? item.NoiDungBaoTri[..60] + "…" : item.NoiDungBaoTri)</td>
@@ -111,6 +115,9 @@ else
                             <td><partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" /></td>
                             <td>
                                 <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Details" asp-route-id="@item.MaKeHoach" title="Xem chi tiết & Vòng đời">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
                                     @if (item.CoTheSua)
                                     {
                                         <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaKeHoach" title="Sửa kế hoạch">
