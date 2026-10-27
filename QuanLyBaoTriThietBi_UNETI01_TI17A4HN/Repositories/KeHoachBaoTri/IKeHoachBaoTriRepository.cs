@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Interface Repository Kế hoạch bảo trì
+// Nội dung: Module 3 - Interface Repository Kế hoạch bảo trì (truy vấn danh sách, chi tiết, liên kết Phiếu xử lý)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -20,6 +20,18 @@ public interface IKeHoachBaoTriRepository : IRepository<KeHoachBaoTri>
         TrangThaiKeHoachEnum? trangThai,
         MucDoUuTienEnum? mucDo
     );
+
+    /// Lấy chi tiết kế hoạch kèm thông tin thiết bị, loại thiết bị và khu vực
+    Task<KeHoachBaoTri?> LayChiTietAsync(int maKeHoach);
+
+    /// Lấy danh sách phiếu xử lý phát sinh từ kế hoạch này kèm thông tin KTV phụ trách và tổng chi phí
+    Task<List<PhieuXuLyLienKetRow>> LayPhieuXuLyTheoKeHoachAsync(int maKeHoach);
+
+    /// Kiểm tra kế hoạch có phiếu xử lý nào đang hoạt động không (chưa Hoàn thành và chưa Đã hủy)
+    Task<bool> CoPhieuDangHoatDongAsync(int maKeHoach);
+
+    /// Thêm phiếu xử lý mới vào CSDL
+    Task ThemPhieuXuLyAsync(PhieuXuLy phieu);
 
     Task<ThietBi?> LayThietBiAsync(int maThietBi);
 

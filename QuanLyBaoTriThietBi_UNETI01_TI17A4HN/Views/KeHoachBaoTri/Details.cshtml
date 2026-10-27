@@ -1,0 +1,287 @@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Chi tiết Kế hoạch bảo trì, liên kết Phiếu xử lý định kỳ *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriDetailsViewModel
+@{
+    var kh = Model.KeHoach;
+    var tb = kh.ThietBi;
+    ViewData["Title"] = "Kế hoạch bảo trì " + UiHelper.Ma("KH", kh.MaKeHoach);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Kế hoạch bảo trì <span class="mono">@UiHelper.Ma("KH", kh.MaKeHoach)</span></h1>
+        <p>Lập cho thiết bị: <strong>@(tb?.TenThietBi ?? "—")</strong> · Dự kiến thực hiện: @UiHelper.Ngay(kh.NgayDuKien)</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
+        @if (Model.CoTheSua)
+        {
+            <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@kh.MaKeHoach">Sửa kế hoạch</a>
+        }
+        @if (Model.CoTheTaoPhieu)
+        {
+            <form asp-action="TaoPhieuXuLy" asp-route-id="@kh.MaKeHoach" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn phát sinh Phiếu xử lý bảo trì định kỳ cho kế hoạch này?');">
+                    <span class="material-symbols-outlined icon-20">assignment_add</span> Phát sinh phiếu xử lý
+                </button>
+            </form>
+        }
+        @if (Model.CoTheHoanThanh)
+        {
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalHoanThanh"
+                    data-id="@kh.MaKeHoach" data-ten="@UiHelper.Ma("KH", kh.MaKeHoach) - @tb?.TenThietBi">
+                <span class="material-symbols-outlined icon-20">task_alt</span> Nghiệm thu đạt
+            </button>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        @* Card Thông tin kế hoạch *@
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="mb-3">Thông tin kế hoạch</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Trạng thái kế hoạch</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(kh.TrangThai)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Mức độ ưu tiên</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(kh.MucDoUuTien)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Thiết bị bảo trì</dt>
+                    <dd class="col-sm-8">
+                        @if (tb != null)
+                        {
+                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@tb.MaThietBi">
+                                <strong>@tb.TenThietBi</strong>
+                            </a>
+                            <span class="text-muted">· Serial: <span class="mono">@tb.SoSerial</span></span>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Loại thiết bị / Khu vực</dt>
+                    <dd class="col-sm-8">
+                        @(tb?.LoaiThietBi?.TenLoaiThietBi ?? "—") · @(tb?.KhuVuc?.TenKhuVuc ?? "—")
+                    </dd>
+
+                    <dt class="col-sm-4">Ngày dự kiến bảo trì</dt>
+                    <dd class="col-sm-8">
+                        @UiHelper.Ngay(kh.NgayDuKien)
+                        @if (kh.TrangThai != TrangThaiKeHoachEnum.HoanThanh && kh.TrangThai != TrangThaiKeHoachEnum.DaHuy && kh.NgayDuKien.Date < DateTime.Today)
+                        {
+                            <span class="badge is-danger ms-1">Đã quá hạn</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Nội dung bảo trì</dt>
+                    <dd class="col-sm-8" style="white-space: pre-line">@kh.NoiDungBaoTri</dd>
+
+                    <dt class="col-sm-4">Ghi chú & Nghiệm thu</dt>
+                    <dd class="col-sm-8" style="white-space: pre-line">@(string.IsNullOrWhiteSpace(kh.GhiChu) ? "—" : kh.GhiChu)</dd>
+                </dl>
+            </div>
+        </div>
+
+        @* Card Danh sách phiếu xử lý liên kết *@
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="m-0">Phiếu xử lý phát sinh (Bảo trì định kỳ)</h3>
+                    @if (Model.CoTheTaoPhieu)
+                    {
+                        <form asp-action="TaoPhieuXuLy" asp-route-id="@kh.MaKeHoach" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">add</span> Tạo phiếu mới
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                @if (!Model.PhieuXuLys.Any())
+                {
+                    <div class="empty-state p-3 text-center">
+                        <span class="material-symbols-outlined icon-24 text-muted">assignment_late</span>
+                        <p class="text-muted mt-2 mb-0">Chưa có phiếu xử lý nào được phát sinh từ kế hoạch này.</p>
+                        @if (Model.CoTheTaoPhieu)
+                        {
+                            <p class="small text-muted">Bấm nút "Phát sinh phiếu xử lý" để giao việc xử lý bảo trì định kỳ cho Kỹ thuật viên.</p>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã phiếu</th>
+                                <th>Kỹ thuật viên phụ trách</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Chi phí vật tư</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.PhieuXuLys)
+                            {
+                                <tr>
+                                    <td class="mono fw-bold">@UiHelper.Ma("PX", p.MaPhieuXuLy)</td>
+                                    <td>@(p.TenKyThuatVien ?? "Chưa phân công")</td>
+                                    <td><partial name="_StatusBadge" model="UiHelper.Badge(p.TrangThai)" /></td>
+                                    <td>@UiHelper.NgayGio(p.NgayTao)</td>
+                                    <td class="num">@UiHelper.Tien(p.TongChiPhi)</td>
+                                    <td>
+                                        <div class="row-actions">
+                                            <a class="btn btn-ghost btn-sm" asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@p.MaPhieuXuLy" title="Xem chi tiết vật tư & xử lý">
+                                                <span class="material-symbols-outlined">inventory_2</span> Chi tiết
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Cột phụ bên phải *@
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="card-title mb-3">Thông số bảo trì</h4>
+                <div class="mb-3">
+                    <span class="text-muted d-block small">Tổng chi phí vật tư phát sinh:</span>
+                    <span class="fs-4 fw-bold text-primary">@UiHelper.Tien(Model.TongChiPhiKeHoach)</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted d-block small">Số phiếu xử lý liên kết:</span>
+                    <span class="fw-semibold">@Model.PhieuXuLys.Count phiếu</span>
+                    @if (Model.SoPhieuHoatDong > 0)
+                    {
+                        <span class="badge is-yellow ms-1">@Model.SoPhieuHoatDong đang chạy</span>
+                    }
+                </div>
+                <hr />
+                @if (tb != null)
+                {
+                    <div class="mb-2">
+                        <span class="text-muted d-block small">Chu kỳ bảo trì thiết bị:</span>
+                        <span class="fw-semibold">@tb.ChuKyBaoTriThang tháng</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted d-block small">Ngày đưa vào sử dụng:</span>
+                        <span>@UiHelper.Ngay(tb.NgayDuaVaoSuDung)</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted d-block small">Mốc bảo trì gần nhất:</span>
+                        <span>@(tb.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(tb.NgayBaoTriGanNhat.Value) : "Chưa bảo trì lần nào")</span>
+                    </div>
+                    <div>
+                        <span class="text-muted d-block small">Mốc bảo trì tiếp theo:</span>
+                        <span class="fw-semibold text-info">@UiHelper.Ngay(tb.NgayBaoTriTiepTheo)</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.CoTheHuy)
+        {
+            <div class="card border-danger-subtle">
+                <div class="card-body">
+                    <h5 class="text-danger">Hủy kế hoạch</h5>
+                    <p class="small text-muted">Kế hoạch chưa có phiếu xử lý hoạt động có thể hủy an toàn.</p>
+                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#modalHuy"
+                            data-id="@kh.MaKeHoach" data-ten="@UiHelper.Ma("KH", kh.MaKeHoach) - @tb?.TenThietBi">
+                        <span class="material-symbols-outlined icon-20">event_busy</span> Hủy kế hoạch này
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@* Modal Hủy kế hoạch *@
+<div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Huy" method="post">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalHuyTitle">Hủy kế hoạch bảo trì</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn hủy kế hoạch <strong id="huyTen"></strong>? Kế hoạch vẫn được lưu để giữ lịch sử.</p>
+                    <input type="hidden" name="id" id="huyId" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
+                    <button type="submit" class="btn btn-danger">Hủy kế hoạch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Modal Nghiệm thu / Hoàn thành kế hoạch *@
+<div class="modal fade" id="modalHoanThanh" tabindex="-1" aria-labelledby="modalHoanThanhTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="HoanThanh" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalHoanThanhTitle">Nghiệm thu hoàn thành kế hoạch</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Xác nhận nghiệm thu đạt cho kế hoạch: <strong id="hoanThanhTen"></strong>.</p>
+                    <p class="text-muted small">Sau khi hoàn thành, hệ thống sẽ tự động cập nhật Ngày bảo trì gần nhất và tính lại mốc Ngày bảo trì tiếp theo cho thiết bị.</p>
+                    
+                    <input type="hidden" name="MaKeHoach" id="hoanThanhId" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ngayHoanThanh">Ngày hoàn thành thực tế <span class="text-danger">*</span></label>
+                        <input type="date" id="ngayHoanThanh" name="NgayHoanThanh" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ghiChuHoanThanh">Ghi chú nghiệm thu</label>
+                        <textarea id="ghiChuHoanThanh" name="GhiChu" class="form-control" rows="3" placeholder="Nhập tóm tắt kết quả nghiệm thu bảo trì..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">Xác nhận hoàn thành</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('modalHuy')?.addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('huyId').value = nut.getAttribute('data-id');
+            document.getElementById('huyTen').textContent = nut.getAttribute('data-ten');
+        });
+
+        document.getElementById('modalHoanThanh')?.addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('hoanThanhId').value = nut.getAttribute('data-id');
+            document.getElementById('hoanThanhTen').textContent = nut.getAttribute('data-ten');
+        });
+    </script>
+}

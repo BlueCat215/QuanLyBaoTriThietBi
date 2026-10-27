@@ -9,7 +9,25 @@
 <div class="page-header">
     <div>
         <h1>Chi tiết xử lý <span class="mono">@UiHelper.Ma("PX", phieu.MaPhieuXuLy)</span></h1>
-        <p>@(phieu.TenThietBi ?? "—") · <span class="mono">@phieu.SoSerial</span> · @phieu.NguonText</p>
+        <p>
+            @(phieu.TenThietBi ?? "—") · <span class="mono">@phieu.SoSerial</span> ·
+            @if (phieu.LoaiXuLy == LoaiXuLyEnum.BaoTriDinhKy && phieu.MaKeHoach.HasValue)
+            {
+                <a asp-controller="KeHoachBaoTri" asp-action="Details" asp-route-id="@phieu.MaKeHoach" class="text-decoration-none">
+                    @phieu.NguonText
+                </a>
+            }
+            else if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.MaBaoCao.HasValue)
+            {
+                <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@phieu.MaBaoCao" class="text-decoration-none">
+                    @phieu.NguonText
+                </a>
+            }
+            else
+            {
+                @phieu.NguonText
+            }
+        </p>
     </div>
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="Index">Danh sách phiếu</a>

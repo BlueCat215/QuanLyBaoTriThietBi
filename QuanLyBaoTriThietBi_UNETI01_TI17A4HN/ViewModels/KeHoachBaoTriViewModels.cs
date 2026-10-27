@@ -1,12 +1,13 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, tìm kiếm + lọc + sắp xếp + phân trang, form Thêm/Sửa/Nghiệm thu)
+// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, tìm kiếm + lọc + sắp xếp + phân trang, form Thêm/Sửa/Nghiệm thu, Chi tiết liên kết Phiếu xử lý)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -108,7 +109,8 @@ public record KeHoachRow(
     DateTime NgayDuKien,
     string NoiDungBaoTri,
     MucDoUuTienEnum MucDoUuTien,
-    TrangThaiKeHoachEnum TrangThai
+    TrangThaiKeHoachEnum TrangThai,
+    int SoPhieuXuLy = 0
 )
 {
     /// Kế hoạch còn "đang hoạt động" (chưa Hoàn thành / Đã hủy).
@@ -121,7 +123,7 @@ public record KeHoachRow(
         TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
 
     // Service kiểm tra lại đầy đủ (còn phiếu xử lý đang hoạt động thì không hủy được)
-    public bool CoTheHuy => TrangThai == TrangThaiKeHoachEnum.ChoThucHien;
+    public bool CoTheHuy => TrangThai == TrangThaiKeHoachEnum.ChoThucHien && SoPhieuXuLy == 0;
 
     // Có thể thực hiện nghiệm thu / hoàn thành kế hoạch
     public bool CoTheHoanThanh =>
@@ -150,6 +152,45 @@ public class KeHoachBaoTriIndexViewModel
 
     /// Thông báo khi có điều kiện lọc không hợp lệ (ví dụ: khoảng ngày bị đảo).
     public string? CanhBao { get; set; }
+}
+
+/// Dòng tóm tắt Phiếu xử lý liên kết với Kế hoạch bảo trì
+public record PhieuXuLyLienKetRow(
+    int MaPhieuXuLy,
+    LoaiXuLyEnum LoaiXuLy,
+    TrangThaiPhieuXuLyEnum TrangThai,
+    DateTime NgayTao,
+    DateTime? NgayBatDau,
+    DateTime? NgayHoanThanh,
+    string? TenKyThuatVien,
+    string? KetQuaXuLy,
+    decimal TongChiPhi
+);
+
+public class KeHoachBaoTriDetailsViewModel
+{
+    public required KeHoachBaoTri KeHoach { get; init; }
+    public List<PhieuXuLyLienKetRow> PhieuXuLys { get; init; } = new();
+
+    public decimal TongChiPhiKeHoach => PhieuXuLys.Sum(p => p.TongChiPhi);
+
+    public int SoPhieuHoatDong => PhieuXuLys.Count(p =>
+        p.TrangThai != TrangThaiPhieuXuLyEnum.HoanThanh && p.TrangThai != TrangThaiPhieuXuLyEnum.DaHuy);
+
+    /// Cho phép tạo phiếu khi: Kế hoạch chưa kết thúc và chưa có phiếu nào đang chạy
+    public bool CoTheTaoPhieu =>
+        KeHoach.TrangThai != TrangThaiKeHoachEnum.HoanThanh
+        && KeHoach.TrangThai != TrangThaiKeHoachEnum.DaHuy
+        && SoPhieuHoatDong == 0;
+
+    public bool CoTheSua =>
+        KeHoach.TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
+
+    public bool CoTheHuy =>
+        KeHoach.TrangThai == TrangThaiKeHoachEnum.ChoThucHien && SoPhieuHoatDong == 0;
+
+    public bool CoTheHoanThanh =>
+        KeHoach.TrangThai is TrangThaiKeHoachEnum.DangThucHien or TrangThaiKeHoachEnum.ChoNghiemThu;
 }
 
 public class HoanThanhKeHoachViewModel

@@ -123,10 +123,20 @@ else
                     @foreach (var item in Model.Items)
                     {
                         <tr class="@(item.TrangThai == TrangThaiKeHoachEnum.DaHuy ? "is-muted" : "")">
-                            <td class="mono">@UiHelper.Ma("KH", item.MaKeHoach)</td>
+                            <td class="mono">
+                                <a asp-action="Details" asp-route-id="@item.MaKeHoach" class="fw-semibold">
+                                    @UiHelper.Ma("KH", item.MaKeHoach)
+                                </a>
+                            </td>
                             <td>
-                                <div class="cell-title">@item.TenThietBi</div>
+                                <a asp-action="Details" asp-route-id="@item.MaKeHoach" class="cell-title text-decoration-none">
+                                    @item.TenThietBi
+                                </a>
                                 <div class="cell-sub mono">@item.SoSerial</div>
+                                @if (item.SoPhieuXuLy > 0)
+                                {
+                                    <span class="badge is-purple" style="font-size: 10px;">@item.SoPhieuXuLy phiếu</span>
+                                }
                             </td>
                             <td>@item.TenKhuVuc</td>
                             <td>
@@ -141,6 +151,9 @@ else
                             <td><partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" /></td>
                             <td>
                                 <div class="row-actions">
+                                    <a class="btn btn-ghost btn-icon" asp-action="Details" asp-route-id="@item.MaKeHoach" title="Xem chi tiết & phiếu xử lý">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
                                     @if (item.CoTheHoanThanh)
                                     {
                                         <button type="button" class="btn btn-ghost btn-icon text-success" title="Nghiệm thu hoàn thành"

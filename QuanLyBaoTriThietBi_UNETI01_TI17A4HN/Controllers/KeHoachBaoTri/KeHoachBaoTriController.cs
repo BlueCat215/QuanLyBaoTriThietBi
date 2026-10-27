@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Controller CRUD Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
+// Nội dung: Module 3 - Controller CRUD Kế hoạch bảo trì (danh sách, chi tiết, phát sinh Phiếu xử lý, hủy & nghiệm thu)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -21,6 +21,33 @@ public class KeHoachBaoTriController : Controller
 
     public async Task<IActionResult> Index(KeHoachBaoTriBoLoc boLoc) =>
         View(await _service.LayDanhSachAsync(boLoc));
+
+    [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        var result = await _service.LayChiTietAsync(id);
+        if (!result.Succeeded)
+        {
+            TempData["Loi"] = result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
+        }
+        return View(result.Data);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> TaoPhieuXuLy(int id)
+    {
+        var result = await _service.TaoPhieuXuLyDinhKyAsync(id);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã phát sinh phiếu xử lý bảo trì định kỳ {UiHelper.Ma("PX", result.Data)} thành công.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        TempData["Loi"] = result.ErrorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
 
     [HttpGet]
     [Authorize(Roles = AppRoles.Admin)]
