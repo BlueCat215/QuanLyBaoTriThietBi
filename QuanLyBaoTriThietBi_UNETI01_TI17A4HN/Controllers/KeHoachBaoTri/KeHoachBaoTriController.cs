@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Controller CRUD Kế hoạch bảo trì (chỉ nhận request, gọi Service, trả View)
+// Nội dung: Module 3 - Controller CRUD Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,11 +19,8 @@ public class KeHoachBaoTriController : Controller
 
     public KeHoachBaoTriController(IKeHoachBaoTriService service) => _service = service;
 
-    public async Task<IActionResult> Index(
-        string? tuKhoa,
-        TrangThaiKeHoachEnum? trangThai,
-        MucDoUuTienEnum? mucDo
-    ) => View(await _service.LayDanhSachAsync(tuKhoa, trangThai, mucDo));
+    public async Task<IActionResult> Index(KeHoachBaoTriBoLoc boLoc) =>
+        View(await _service.LayDanhSachAsync(boLoc));
 
     [HttpGet]
     [Authorize(Roles = AppRoles.Admin)]
@@ -99,6 +96,28 @@ public class KeHoachBaoTriController : Controller
             TempData["ThanhCong"] = "Đã hủy kế hoạch bảo trì.";
         else
             TempData["Loi"] = result.ErrorMessage;
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> HoanThanh(HoanThanhKeHoachViewModel vm)
+    {
+        if (ModelState.IsValid)
+        {
+            var result = await _service.HoanThanhAsync(vm.MaKeHoach, vm.NgayHoanThanh, vm.GhiChu);
+            if (result.Succeeded)
+            {
+                TempData["ThanhCong"] = "Đã nghiệm thu hoàn thành kế hoạch và cập nhật mốc bảo trì cho thiết bị thành công.";
+                return RedirectToAction(nameof(Index));
+            }
+            TempData["Loi"] = result.ErrorMessage;
+        }
+        else
+        {
+            TempData["Loi"] = "Dữ liệu ngày hoàn thành không hợp lệ.";
+        }
 
         return RedirectToAction(nameof(Index));
     }

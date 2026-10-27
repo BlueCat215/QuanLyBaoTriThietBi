@@ -9,6 +9,9 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 public interface IKeHoachBaoTriService
 {
+    /// Lấy danh sách kế hoạch đầy đủ tiêu chí: tìm kiếm, lọc trạng thái/ưu tiên/khoảng ngày, sắp xếp, phân trang
+    Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(KeHoachBaoTriBoLoc boLoc);
+
     Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(
         string? tuKhoa,
         TrangThaiKeHoachEnum? trangThai,
@@ -27,8 +30,18 @@ public interface IKeHoachBaoTriService
     /// Chuyển sang Đã hủy (giữ lịch sử, không xóa vật lý).
     Task<ServiceResult> HuyAsync(int id);
 
+    /// Nghiệm thu / Hoàn thành kế hoạch:
+    /// - Chuyển trạng thái kế hoạch = Hoàn thành
+    /// - Cập nhật NgayBaoTriGanNhat của Thiết bị = ngày hoàn thành thực tế
+    /// - NgayBaoTriTiepTheo tự động tính lại từ mốc mới qua công thức động
+    /// - Bảo toàn lịch sử các lần bảo trì trước
+    Task<ServiceResult> HoanThanhAsync(
+        int maKeHoach,
+        DateTime ngayHoanThanh,
+        string? ghiChu = null
+    );
+
     /// Business rule chống trùng: không có 2 kế hoạch đang hoạt động cho cùng thiết bị & cùng kỳ (tháng-năm).
-    /// Public để các chức năng khác (vòng đời trạng thái - việc 31) dùng lại.
     Task<ServiceResult> KiemTraTrungKeHoachAsync(
         int maThietBi,
         DateTime ngayDuKien,

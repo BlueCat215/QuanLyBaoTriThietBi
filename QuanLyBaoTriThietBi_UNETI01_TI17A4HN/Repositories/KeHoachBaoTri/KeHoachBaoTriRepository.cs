@@ -1,9 +1,10 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc, chống trùng kế hoạch cùng kỳ)
+// Nội dung: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc ngày/ưu tiên/trạng thái, sắp xếp, phân trang, chống trùng kỳ)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -17,22 +18,30 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
     public KeHoachBaoTriRepository(AppDbContext context)
         : base(context) { }
 
-    public async Task<List<KeHoachRow>> TimKiemAsync(
-        string? tuKhoa,
-        TrangThaiKeHoachEnum? trangThai,
-        MucDoUuTienEnum? mucDo
-    )
+    /// Lấy danh sách kế hoạch có phân trang bằng Skip/Take (thứ tự: Where -> OrderBy -> Skip -> Take)
+    public async Task<PagedResult<KeHoachRow>> LayPhanTrangAsync(KeHoachBaoTriBoLoc boLoc)
     {
         IQueryable<KeHoachBaoTri> query = QueryNoTracking();
 
-        if (trangThai is { } tt)
+        // 1. Where - Bộ lọc
+        if (boLoc.TrangThai is { } tt)
             query = query.Where(k => k.TrangThai == tt);
-        if (mucDo is { } md)
+
+        if (boLoc.MucDo is { } md)
             query = query.Where(k => k.MucDoUuTien == md);
 
-        if (!string.IsNullOrWhiteSpace(tuKhoa))
+        if (!boLoc.KhoangNgayKhongHopLe)
         {
-            var cacTu = tuKhoa
+            if (boLoc.TuNgay is { } tu)
+                query = query.Where(k => k.NgayDuKien >= tu.Date);
+
+            if (boLoc.DenNgay is { } den)
+                query = query.Where(k => k.NgayDuKien <= den.Date);
+        }
+
+        if (!string.IsNullOrWhiteSpace(boLoc.TuKhoa))
+        {
+            var cacTu = boLoc.TuKhoa
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Take(SoTuKhoaToiDa);
 
@@ -47,16 +56,60 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
             }
         }
 
+        // 2. OrderBy - Sắp xếp linh hoạt
+        query = boLoc.SapXep switch
+        {
+            KeHoachBaoTriSapXep.NgayDuKienXaNhat => query
+                .OrderByDescending(k => k.NgayDuKien)
+                .ThenByDescending(k => k.MaKeHoach),
+
+            KeHoachBaoTriSapXep.UuTienCaoNhat => query
+                .OrderByDescending(k => k.MucDoUuTien)
+                .ThenBy(k => k.NgayDuKien)
+                .ThenBy(k => k.MaKeHoach),
+
+            KeHoachBaoTriSapXep.UuTienThapNhat => query
+                .OrderBy(k => k.MucDoUuTien)
+                .ThenBy(k => k.NgayDuKien)
+                .ThenBy(k => k.MaKeHoach),
+
+            KeHoachBaoTriSapXep.TenThietBiAZ => query
+                .OrderBy(k => k.ThietBi!.TenThietBi)
+                .ThenBy(k => k.NgayDuKien)
+                .ThenBy(k => k.MaKeHoach),
+
+            KeHoachBaoTriSapXep.TenThietBiZA => query
+                .OrderByDescending(k => k.ThietBi!.TenThietBi)
+                .ThenBy(k => k.NgayDuKien)
+                .ThenBy(k => k.MaKeHoach),
+
+            KeHoachBaoTriSapXep.MaKeHoachMoiNhat => query
+                .OrderByDescending(k => k.MaKeHoach),
+
+            _ => query
+                // Mặc định: Kế hoạch đã Hoàn thành/Đã hủy xuống cuối, còn lại theo ngày dự kiến gần nhất
+                .OrderBy(k =>
+                    k.TrangThai == TrangThaiKeHoachEnum.HoanThanh
+                    || k.TrangThai == TrangThaiKeHoachEnum.DaHuy
+                        ? 1
+                        : 0
+                )
+                .ThenBy(k => k.NgayDuKien)
+                .ThenBy(k => k.MaKeHoach),
+        };
+
+        // 3. Phân trang
+        var page = boLoc.Trang < 1 ? 1 : boLoc.Trang;
+        var pageSize = boLoc.SoBanGhiMoiTrang < 1 ? 10 : boLoc.SoBanGhiMoiTrang;
+        var total = await query.CountAsync();
+
+        var totalPages = pageSize <= 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+        if (page > totalPages && totalPages > 0)
+            page = totalPages;
+
         var ds = await query
-            // Kế hoạch đã Hoàn thành/Đã hủy xuống cuối, còn lại theo ngày dự kiến gần nhất
-            .OrderBy(k =>
-                k.TrangThai == TrangThaiKeHoachEnum.HoanThanh
-                || k.TrangThai == TrangThaiKeHoachEnum.DaHuy
-                    ? 1
-                    : 0
-            )
-            .ThenBy(k => k.NgayDuKien)
-            .ThenBy(k => k.MaKeHoach)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(k => new
             {
                 k.MaKeHoach,
@@ -71,22 +124,46 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
             })
             .ToListAsync();
 
-        return ds.Select(x => new KeHoachRow(
-                x.MaKeHoach,
-                x.MaThietBi,
-                x.TenThietBi,
-                x.SoSerial,
-                x.TenKhuVuc,
-                x.NgayDuKien,
-                x.NoiDungBaoTri,
-                x.MucDoUuTien,
-                x.TrangThai
-            ))
-            .ToList();
+        var items = ds.Select(x => new KeHoachRow(
+            x.MaKeHoach,
+            x.MaThietBi,
+            x.TenThietBi,
+            x.SoSerial,
+            x.TenKhuVuc,
+            x.NgayDuKien,
+            x.NoiDungBaoTri,
+            x.MucDoUuTien,
+            x.TrangThai
+        )).ToList();
+
+        return new PagedResult<KeHoachRow>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = total,
+        };
+    }
+
+    public async Task<List<KeHoachRow>> TimKiemAsync(
+        string? tuKhoa,
+        TrangThaiKeHoachEnum? trangThai,
+        MucDoUuTienEnum? mucDo
+    )
+    {
+        var boLoc = new KeHoachBaoTriBoLoc
+        {
+            TuKhoa = tuKhoa,
+            TrangThai = trangThai,
+            MucDo = mucDo,
+            SoBanGhiMoiTrang = 1000,
+        };
+        var paged = await LayPhanTrangAsync(boLoc);
+        return paged.Items;
     }
 
     public Task<ThietBi?> LayThietBiAsync(int maThietBi) =>
-        _context.ThietBis.AsNoTracking().FirstOrDefaultAsync(t => t.MaThietBi == maThietBi);
+        _context.ThietBis.FirstOrDefaultAsync(t => t.MaThietBi == maThietBi);
 
     public async Task<List<(int Ma, string Ten)>> LayThietBiChoChonAsync(int? giuLaiMa)
     {

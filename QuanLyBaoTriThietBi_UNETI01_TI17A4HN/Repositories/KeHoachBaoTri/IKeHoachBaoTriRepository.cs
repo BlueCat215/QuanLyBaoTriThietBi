@@ -2,6 +2,7 @@
 // MSSV: 23103100207
 // Nội dung: Module 3 - Interface Repository Kế hoạch bảo trì
 #nullable enable
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -10,6 +11,9 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
 
 public interface IKeHoachBaoTriRepository : IRepository<KeHoachBaoTri>
 {
+    /// Lấy danh sách kế hoạch có phân trang, lọc (trạng thái, ưu tiên, khoảng ngày), sắp xếp
+    Task<PagedResult<KeHoachRow>> LayPhanTrangAsync(KeHoachBaoTriBoLoc boLoc);
+
     /// Tìm theo tên/serial thiết bị, tên khu vực, nội dung bảo trì + lọc trạng thái, mức ưu tiên.
     Task<List<KeHoachRow>> TimKiemAsync(
         string? tuKhoa,

@@ -1,19 +1,29 @@
-@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Danh sách Kế hoạch bảo trì, tìm kiếm, lọc, hủy *@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Danh sách Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, sắp xếp, phân trang, hủy & nghiệm thu) *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriIndexViewModel
 @{
     ViewData["Title"] = "Kế hoạch bảo trì";
+    var bl = Model.BoLoc;
 }
 
 <div class="page-header">
     <div>
         <h1>Kế hoạch bảo trì</h1>
-        <p>Lập và theo dõi kế hoạch bảo trì định kỳ cho thiết bị.</p>
+        <p>Lập, theo dõi và nghiệm thu kế hoạch bảo trì định kỳ cho thiết bị.</p>
     </div>
     <div class="page-actions">
         <a class="btn btn-primary" asp-action="Create">Thêm kế hoạch</a>
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(Model.CanhBao))
+{
+    <div class="alert alert-warning mb-3">
+        <span class="material-symbols-outlined icon-20">warning</span>
+        @Model.CanhBao
+    </div>
+}
 
 @if (!Model.Items.Any() && !Model.CoBoLoc)
 {
@@ -29,28 +39,48 @@
 else
 {
     <form method="get" asp-action="Index" class="filter-bar">
+        @* Reset về trang 1 khi lọc mới *@
+        <input type="hidden" name="Trang" value="1" />
+
         <div class="search">
             <label class="form-label" for="tuKhoa">Tìm kiếm</label>
-            <input id="tuKhoa" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+            <input id="tuKhoa" name="TuKhoa" value="@bl.TuKhoa" class="form-control"
                    placeholder="Tên/serial thiết bị, khu vực hoặc nội dung bảo trì" />
         </div>
         <div>
             <label class="form-label" for="trangThai">Trạng thái</label>
-            <select id="trangThai" name="trangThai" class="form-select">
+            <select id="trangThai" name="TrangThai" class="form-select">
                 <option value="">Tất cả</option>
                 @foreach (var v in Enum.GetValues<TrangThaiKeHoachEnum>())
                 {
-                    <option value="@v" selected="@(Model.TrangThai == v)">@UiHelper.Badge(v).Text</option>
+                    <option value="@v" selected="@(bl.TrangThai == v)">@UiHelper.Badge(v).Text</option>
                 }
             </select>
         </div>
         <div>
             <label class="form-label" for="mucDo">Ưu tiên</label>
-            <select id="mucDo" name="mucDo" class="form-select">
+            <select id="mucDo" name="MucDo" class="form-select">
                 <option value="">Tất cả</option>
                 @foreach (var v in Enum.GetValues<MucDoUuTienEnum>())
                 {
-                    <option value="@v" selected="@(Model.MucDo == v)">@UiHelper.Badge(v).Text</option>
+                    <option value="@v" selected="@(bl.MucDo == v)">@UiHelper.Badge(v).Text</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="tuNgay">Dự kiến từ</label>
+            <input type="date" id="tuNgay" name="TuNgay" value="@(bl.TuNgay?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div>
+            <label class="form-label" for="denNgay">Đến ngày</label>
+            <input type="date" id="denNgay" name="DenNgay" value="@(bl.DenNgay?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div>
+            <label class="form-label" for="sapXep">Sắp xếp</label>
+            <select id="sapXep" name="SapXep" class="form-select">
+                @foreach (var s in Enum.GetValues<KeHoachBaoTriSapXep>())
+                {
+                    <option value="@s" selected="@(bl.SapXep == s)">@KeHoachBaoTriBoLocText.SapXep(s)</option>
                 }
             </select>
         </div>
@@ -86,7 +116,7 @@ else
                         <th>Nội dung bảo trì</th>
                         <th>Ưu tiên</th>
                         <th>Trạng thái</th>
-                        <th></th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -103,7 +133,7 @@ else
                                 <div>@UiHelper.Ngay(item.NgayDuKien)</div>
                                 @if (item.QuaHan)
                                 {
-                                    <div class="cell-sub">Quá hạn</div>
+                                    <span class="badge is-danger">Quá hạn</span>
                                 }
                             </td>
                             <td>@(item.NoiDungBaoTri.Length > 60 ? item.NoiDungBaoTri[..60] + "…" : item.NoiDungBaoTri)</td>
@@ -111,6 +141,14 @@ else
                             <td><partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" /></td>
                             <td>
                                 <div class="row-actions">
+                                    @if (item.CoTheHoanThanh)
+                                    {
+                                        <button type="button" class="btn btn-ghost btn-icon text-success" title="Nghiệm thu hoàn thành"
+                                                data-bs-toggle="modal" data-bs-target="#modalHoanThanh"
+                                                data-id="@item.MaKeHoach" data-ten="@UiHelper.Ma("KH", item.MaKeHoach) - @item.TenThietBi">
+                                            <span class="material-symbols-outlined">task_alt</span>
+                                        </button>
+                                    }
                                     @if (item.CoTheSua)
                                     {
                                         <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaKeHoach" title="Sửa kế hoạch">
@@ -131,13 +169,69 @@ else
                     }
                 </tbody>
             </table>
-            <div class="table-footer">
-                <span>Tổng số: @Model.Items.Count kế hoạch</span>
+
+            <div class="table-footer d-flex justify-content-between align-items-center p-3">
+                <span>Tổng số: <strong>@Model.PagedItems.TotalItems</strong> kế hoạch</span>
+
+                @if (Model.PagedItems.TotalPages > 1)
+                {
+                    <ul class="pagination pagination-sm m-0">
+                        @* Nút Trang trước *@
+                        <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                            @if (Model.PagedItems.HasPrevious)
+                            {
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page - 1)">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="page-link"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span></span>
+                            }
+                        </li>
+
+                        @{
+                            var curPage = Model.PagedItems.Page;
+                            var totalP = Model.PagedItems.TotalPages;
+                            var startP = Math.Max(1, curPage - 2);
+                            var endP = Math.Min(totalP, curPage + 2);
+                        }
+
+                        @for (var p = startP; p <= endP; p++)
+                        {
+                            <li class="page-item @(p == curPage ? "active" : "")">
+                                @if (p == curPage)
+                                {
+                                    <span class="page-link">@p</span>
+                                }
+                                else
+                                {
+                                    <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(p)">@p</a>
+                                }
+                            </li>
+                        }
+
+                        @* Nút Trang sau *@
+                        <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                            @if (Model.PagedItems.HasNext)
+                            {
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page + 1)">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="page-link"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span></span>
+                            }
+                        </li>
+                    </ul>
+                }
             </div>
         </div>
     }
 }
 
+@* Modal Hủy kế hoạch *@
 <div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -159,12 +253,53 @@ else
     </div>
 </div>
 
+@* Modal Nghiệm thu / Hoàn thành kế hoạch *@
+<div class="modal fade" id="modalHoanThanh" tabindex="-1" aria-labelledby="modalHoanThanhTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="HoanThanh" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modalHoanThanhTitle">Nghiệm thu hoàn thành kế hoạch</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Xác nhận nghiệm thu đạt cho kế hoạch: <strong id="hoanThanhTen"></strong>.</p>
+                    <p class="text-muted small">Sau khi hoàn thành, hệ thống sẽ tự động cập nhật Ngày bảo trì gần nhất và tính lại mốc Ngày bảo trì tiếp theo cho thiết bị.</p>
+                    
+                    <input type="hidden" name="MaKeHoach" id="hoanThanhId" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ngayHoanThanh">Ngày hoàn thành thực tế <span class="text-danger">*</span></label>
+                        <input type="date" id="ngayHoanThanh" name="NgayHoanThanh" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ghiChuHoanThanh">Ghi chú nghiệm thu</label>
+                        <textarea id="ghiChuHoanThanh" name="GhiChu" class="form-control" rows="3" placeholder="Nhập tóm tắt kết quả nghiệm thu bảo trì..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">Xác nhận hoàn thành</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        document.getElementById('modalHuy').addEventListener('show.bs.modal', function (e) {
+        document.getElementById('modalHuy')?.addEventListener('show.bs.modal', function (e) {
             var nut = e.relatedTarget;
             document.getElementById('huyId').value = nut.getAttribute('data-id');
             document.getElementById('huyTen').textContent = nut.getAttribute('data-ten');
+        });
+
+        document.getElementById('modalHoanThanh')?.addEventListener('show.bs.modal', function (e) {
+            var nut = e.relatedTarget;
+            document.getElementById('hoanThanhId').value = nut.getAttribute('data-id');
+            document.getElementById('hoanThanhTen').textContent = nut.getAttribute('data-ten');
         });
     </script>
 }
