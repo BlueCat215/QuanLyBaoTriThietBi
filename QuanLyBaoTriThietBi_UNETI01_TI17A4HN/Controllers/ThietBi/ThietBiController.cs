@@ -6,10 +6,11 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// (Người sử dụng chỉ thấy thiết bị thuộc TaiKhoan.MaKhuVuc của mình).
+[Authorize]
 public class ThietBiController : Controller
 {
     private readonly IThietBiService _service;
@@ -36,6 +37,7 @@ public class ThietBiController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Create()
     {
         var vm = new ThietBiFormViewModel();
@@ -44,6 +46,7 @@ public class ThietBiController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Create(ThietBiFormViewModel vm)
     {
         if (ModelState.IsValid)
@@ -62,6 +65,7 @@ public class ThietBiController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Edit(int id)
     {
         var vm = await _service.LayDeSuaAsync(id);
@@ -73,6 +77,7 @@ public class ThietBiController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Edit(int id, ThietBiFormViewModel vm)
     {
         if (id != vm.MaThietBi)
@@ -95,6 +100,7 @@ public class ThietBiController : Controller
 
     /// <param name="returnUrl">Địa chỉ nội bộ để quay về sau khi đổi (danh sách giữ nguyên Tìm kiếm/Lọc/Sắp xếp, hoặc trang chi tiết).</param>
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> DoiTinhTrang(
         int id,
         TinhTrangThietBiEnum tinhTrang,
@@ -116,6 +122,7 @@ public class ThietBiController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _service.XoaAsync(id);

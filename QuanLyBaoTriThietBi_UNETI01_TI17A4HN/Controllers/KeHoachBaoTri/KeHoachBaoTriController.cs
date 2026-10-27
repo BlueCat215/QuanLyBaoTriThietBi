@@ -8,10 +8,11 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
-// TODO tuần 3 (phân quyền): thêm [Authorize(Roles = "Admin")] khi SV1 hoàn thành đăng nhập (việc 12/23).
+[Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
 public class KeHoachBaoTriController : Controller
 {
     private readonly IKeHoachBaoTriService _service;
@@ -25,6 +26,7 @@ public class KeHoachBaoTriController : Controller
     ) => View(await _service.LayDanhSachAsync(tuKhoa, trangThai, mucDo));
 
     [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create(int? maThietBi)
     {
         var vm = new KeHoachBaoTriFormViewModel { MaThietBi = maThietBi };
@@ -33,6 +35,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create(KeHoachBaoTriFormViewModel vm)
     {
         if (ModelState.IsValid)
@@ -51,6 +54,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Edit(int id)
     {
         var result = await _service.LayDeSuaAsync(id);
@@ -65,6 +69,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Edit(int id, KeHoachBaoTriFormViewModel vm)
     {
         if (id != vm.MaKeHoach)
@@ -86,6 +91,7 @@ public class KeHoachBaoTriController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Huy(int id)
     {
         var result = await _service.HuyAsync(id);

@@ -3,6 +3,7 @@
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -21,7 +22,7 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
             .Include(t => t.LoaiThietBi)
             .Include(t => t.KhuVuc);
 
-        // Thứ tự bắt buộc: Where -> OrderBy
+        // Thứ tự bắt buộc: Where -> OrderBy (-> Skip -> Take ở phân trang)
         return query.ApDungLoc(boLoc, DateTime.Today).ApDungSapXep(boLoc.SapXep);
     }
 
@@ -54,6 +55,12 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
             .ApDungSapXep(ThietBiSapXep.BaoTriSomNhat)
             .Take(top)
             .ToListAsync();
+    /// Lấy danh sách phân trang bằng Skip/Take (thứ tự thực hiện: Where -> OrderBy -> Skip -> Take)
+    public Task<PagedResult<ThietBi>> LayPhanTrangAsync(ThietBiBoLoc boLoc)
+    {
+        var query = TruyVan(boLoc);
+        return PagedResult<ThietBi>.CreateAsync(query, boLoc.Trang, boLoc.SoBanGhiMoiTrang);
+    }
 
     public Task<ThietBi?> LayChiTietAsync(int maThietBi) =>
         QueryNoTracking()

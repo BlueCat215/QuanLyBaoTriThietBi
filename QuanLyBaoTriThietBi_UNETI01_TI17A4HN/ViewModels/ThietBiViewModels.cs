@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
@@ -27,9 +28,13 @@ public record ThietBiRow(
 
 public class ThietBiIndexViewModel
 {
-    public List<ThietBiRow> Items { get; set; } = new();
+    /// Danh sách kết quả theo phân trang (chứa cả metadata Page, TotalPages, TotalItems)
+    public PagedResult<ThietBiRow> PagedItems { get; set; } = new();
 
-    ///Điều kiện Tìm kiếm + Lọc + Sắp xếp hiện tại (đổ lại vào form để giữ nguyên điều kiện).
+    /// Danh sách phần tử của trang hiện tại (tương thích với Model.Items)
+    public List<ThietBiRow> Items => PagedItems.Items;
+
+    ///Điều kiện Tìm kiếm + Lọc + Sắp xếp + Phân trang hiện tại (đổ lại vào form để giữ nguyên điều kiện).
     public ThietBiBoLoc BoLoc { get; set; } = new();
 
     public List<(int Ma, string Ten)> LoaiDeLoc { get; set; } = new();
