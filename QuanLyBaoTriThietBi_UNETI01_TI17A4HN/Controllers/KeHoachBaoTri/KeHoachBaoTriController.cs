@@ -1,6 +1,7 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Controller CRUD & Vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy)
+// Nội dung 1: Module 3 - Controller CRUD & Vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy)
+// Nội dung 2: Module 3 - Controller CRUD Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,11 +20,8 @@ public class KeHoachBaoTriController : Controller
 
     public KeHoachBaoTriController(IKeHoachBaoTriService service) => _service = service;
 
-    public async Task<IActionResult> Index(
-        string? tuKhoa,
-        TrangThaiKeHoachEnum? trangThai,
-        MucDoUuTienEnum? mucDo
-    ) => View(await _service.LayDanhSachAsync(tuKhoa, trangThai, mucDo));
+    public async Task<IActionResult> Index(KeHoachBaoTriBoLoc boLoc) =>
+        View(await _service.LayDanhSachAsync(boLoc));
 
     [HttpGet]
     public async Task<IActionResult> Details(int id)
@@ -141,6 +139,27 @@ public class KeHoachBaoTriController : Controller
             return Redirect(returnUrl);
 
         return RedirectToAction(nameof(Details), new { id });
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> HoanThanh(HoanThanhKeHoachViewModel vm)
+    {
+        if (ModelState.IsValid)
+        {
+            var result = await _service.HoanThanhAsync(vm.MaKeHoach, vm.NgayHoanThanh, vm.GhiChu);
+            if (result.Succeeded)
+            {
+                TempData["ThanhCong"] = "Đã nghiệm thu hoàn thành kế hoạch và cập nhật mốc bảo trì cho thiết bị thành công.";
+                return RedirectToAction(nameof(Index));
+            }
+            TempData["Loi"] = result.ErrorMessage;
+        }
+        else
+        {
+            TempData["Loi"] = "Dữ liệu ngày hoàn thành không hợp lệ.";
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     private async Task NapThietBiAsync(KeHoachBaoTriFormViewModel vm)
