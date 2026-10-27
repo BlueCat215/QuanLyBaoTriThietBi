@@ -1,3 +1,5 @@
+// Họ tên: Nguyễn Minh Đức
+// Nội dung: Service Thiết bị (Module 2: CRUD, SFSP, hạn bảo trì)
 // Service Thiết bị (không trùng serial, ngày sử dụng <= hôm nay, chu kỳ > 0, đổi tình trạng, xóa an toàn, phân trang)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +45,41 @@ public class ThietBiService : IThietBiService
                 ? "Khoảng ngày không hợp lệ: \"Từ ngày\" lớn hơn \"Đến ngày\" nên khoảng ngày đã được bỏ qua."
                 : null,
         };
+    }
+
+    public async Task<(int SapDenHan, int QuaHan)> DemHanBaoTriAsync(DateTime? homNay = null)
+    {
+        var sapDenHan = await _repo.DemSapDenHanAsync(homNay);
+        var quaHan = await _repo.DemQuaHanAsync(homNay);
+        return (sapDenHan, quaHan);
+    }
+
+    public async Task<List<ThietBiRow>> LayDanhSachSapDenHanAsync(int top = 5, DateTime? homNay = null)
+    {
+        var ds = await _repo.LayDanhSachSapDenHanAsync(top, homNay);
+        return ds.Select(t => new ThietBiRow(
+            t.MaThietBi,
+            t.TenThietBi,
+            t.SoSerial,
+            t.LoaiThietBi?.TenLoaiThietBi ?? "—",
+            t.KhuVuc?.TenKhuVuc ?? "—",
+            t.TinhTrang,
+            t.NgayBaoTriTiepTheo
+        )).ToList();
+    }
+
+    public async Task<List<ThietBiRow>> LayDanhSachQuaHanAsync(int top = 5, DateTime? homNay = null)
+    {
+        var ds = await _repo.LayDanhSachQuaHanAsync(top, homNay);
+        return ds.Select(t => new ThietBiRow(
+            t.MaThietBi,
+            t.TenThietBi,
+            t.SoSerial,
+            t.LoaiThietBi?.TenLoaiThietBi ?? "—",
+            t.KhuVuc?.TenKhuVuc ?? "—",
+            t.TinhTrang,
+            t.NgayBaoTriTiepTheo
+        )).ToList();
     }
 
     public async Task<ThietBiDetailsViewModel?> LayChiTietAsync(int id)
