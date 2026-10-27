@@ -1,0 +1,201 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - View Danh sách Phiếu xử lý  *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.PhieuXuLyIndexViewModel
+@{
+    var laAdmin = User.IsInRole("Admin");
+    ViewData["Title"] = "Danh sách phiếu xử lý";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Quản lý Phiếu xử lý</h1>
+        <p>Theo dõi quá trình xử lý sự cố và bảo trì định kỳ cho các thiết bị.</p>
+    </div>
+    @if (laAdmin)
+    {
+        <div class="page-actions">
+            <a class="btn btn-primary" asp-action="Create">
+                <span class="material-symbols-outlined icon-20">add</span> Tạo phiếu mới
+            </a>
+        </div>
+    }
+</div>
+
+@* Bộ lọc *@
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="filter-form">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-small">Từ khóa tìm kiếm</label>
+                    <input type="text" name="TuKhoa" value="@Model.BoLoc.TuKhoa" class="form-control form-control-sm"
+                           placeholder="Mã, thiết bị, Serial, nội dung..." />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-small">Loại xử lý</label>
+                    <select name="LoaiXuLy" class="form-select form-select-sm"
+                            asp-items="Html.GetEnumSelectList<LoaiXuLyEnum>()">
+                        <option value="">-- Tất cả loại --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-small">Trạng thái</label>
+                    <select name="TrangThai" class="form-select form-select-sm"
+                            asp-items="Html.GetEnumSelectList<TrangThaiPhieuXuLyEnum>()">
+                        <option value="">-- Tất cả trạng thái --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-small">Kỹ thuật viên</label>
+                    <select name="MaKyThuatVien" class="form-select form-select-sm" asp-items="Model.KtvOptions">
+                        <option value="">-- Tất cả KTV --</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-secondary btn-sm flex-grow-1">
+                        <span class="material-symbols-outlined icon-16">filter_alt</span> Lọc
+                    </button>
+                    @if (Model.BoLoc.CoBoLoc)
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm" title="Xóa bộ lọc">
+                            <span class="material-symbols-outlined icon-16">close</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Danh sách phiếu *@
+<div class="card">
+    <div class="card-body p-0">
+        @if (!Model.PagedItems.Items.Any())
+        {
+            <div class="empty-state p-4 text-center">
+                <span class="material-symbols-outlined icon-32 text-muted">assignment_late</span>
+                <p class="text-muted mt-2 mb-0">Không tìm thấy phiếu xử lý nào phù hợp.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Nguồn công việc</th>
+                            <th>Thiết bị</th>
+                            <th>Kỹ thuật viên phụ trách</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th class="num">Chi phí</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PagedItems.Items)
+                        {
+                            <tr>
+                                <td class="mono fw-bold">
+                                    <a asp-action="Details" asp-route-id="@item.MaPhieuXuLy">
+                                        @UiHelper.Ma("PX", item.MaPhieuXuLy)
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (item.LoaiXuLy == LoaiXuLyEnum.XuLySuCo)
+                                    {
+                                        <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@item.MaBaoCao"
+                                           class="text-decoration-none">
+                                            <span class="badge is-warning">@item.NguonText</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="KeHoachBaoTri" asp-action="Details" asp-route-id="@item.MaKeHoach"
+                                           class="text-decoration-none">
+                                            <span class="badge is-info">@item.NguonText</span>
+                                        </a>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@item.TenThietBi</strong>
+                                    <div class="text-small text-muted mono">@item.SoSerial · @(item.TenKhuVuc ?? "—")</div>
+                                </td>
+                                <td>
+                                    @if (string.IsNullOrEmpty(item.TenKtvHienTai))
+                                    {
+                                        <span class="badge is-warning">Chưa phân công</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="material-symbols-outlined text-primary"
+                                                  style="font-size: 16px;">person</span>
+                                            <span>@item.TenKtvHienTai</span>
+                                        </div>
+                                    }
+                                </td>
+                                <td>
+                                    <partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" />
+                                </td>
+                                <td>
+                                    @UiHelper.NgayGio(item.NgayTao)
+                                </td>
+                                <td class="num">
+                                    @UiHelper.Tien(item.TongChiPhi)
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.MaPhieuXuLy" class="btn btn-ghost"
+                                           title="Chi tiết phiếu">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </a>
+                                        <a asp-controller="ChiTietXuLy" asp-action="TheoPhieu"
+                                           asp-route-maPhieu="@item.MaPhieuXuLy" class="btn btn-ghost"
+                                           title="Vật tư & Công việc">
+                                            <span class="material-symbols-outlined">build</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @* Phân trang *@
+            @if (Model.PagedItems.TotalPages > 1)
+            {
+                <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-muted text-small">
+                        Hiển thị <strong>@Model.PagedItems.Items.Count</strong> / <strong>@Model.PagedItems.TotalItems</strong>
+                        phiếu
+                    </span>
+                    <ul class="pagination pagination-sm m-0">
+                        <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-Page="@(Model.PagedItems.Page - 1)"
+                               asp-route-TuKhoa="@Model.BoLoc.TuKhoa" asp-route-LoaiXuLy="@Model.BoLoc.LoaiXuLy"
+                               asp-route-TrangThai="@Model.BoLoc.TrangThai"
+                               asp-route-MaKyThuatVien="@Model.BoLoc.MaKyThuatVien">Trước</a>
+                        </li>
+                        @for (int p = 1; p <= Model.PagedItems.TotalPages; p++)
+                        {
+                            <li class="page-item @(p == Model.PagedItems.Page ? "active" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-Page="@p" asp-route-TuKhoa="@Model.BoLoc.TuKhoa"
+                                   asp-route-LoaiXuLy="@Model.BoLoc.LoaiXuLy" asp-route-TrangThai="@Model.BoLoc.TrangThai"
+                                   asp-route-MaKyThuatVien="@Model.BoLoc.MaKyThuatVien">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-Page="@(Model.PagedItems.Page + 1)"
+                               asp-route-TuKhoa="@Model.BoLoc.TuKhoa" asp-route-LoaiXuLy="@Model.BoLoc.LoaiXuLy"
+                               asp-route-TrangThai="@Model.BoLoc.TrangThai"
+                               asp-route-MaKyThuatVien="@Model.BoLoc.MaKyThuatVien">Sau</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+    </div>
+</div>

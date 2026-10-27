@@ -1,0 +1,137 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - View Việc của tôi (Kỹ thuật viên) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.PhieuXuLyIndexViewModel
+@{
+    ViewData["Title"] = "Công việc của tôi";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Việc của tôi</h1>
+        <p>Danh sách các phiếu xử lý bảo trì & sự cố bạn đang được phân công phụ trách.</p>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" asp-action="ViecCuaToi" class="filter-form">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label text-small">Từ khóa tìm kiếm</label>
+                    <input type="text" name="TuKhoa" value="@Model.BoLoc.TuKhoa" class="form-control form-control-sm"
+                           placeholder="Mã phiếu, thiết bị, serial..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-small">Trạng thái phiếu</label>
+                    <select name="TrangThai" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<TrangThaiPhieuXuLyEnum>()">
+                        <option value="">-- Tất cả trạng thái --</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-secondary btn-sm flex-grow-1">
+                        <span class="material-symbols-outlined icon-16">filter_alt</span> Lọc công việc
+                    </button>
+                    @if (Model.BoLoc.CoBoLoc)
+                    {
+                        <a asp-action="ViecCuaToi" class="btn btn-outline-secondary btn-sm" title="Xóa bộ lọc">
+                            <span class="material-symbols-outlined icon-16">close</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (!Model.PagedItems.Items.Any())
+        {
+            <div class="empty-state p-4 text-center">
+                <span class="material-symbols-outlined icon-32 text-muted">task_alt</span>
+                <p class="text-muted mt-2 mb-0">Bạn hiện không có công việc nào đang được phân công hoặc khớp với bộ lọc.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="data-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Nguồn công việc</th>
+                            <th>Thiết bị &amp; Vị trí</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày phân công / tạo</th>
+                            <th class="num">Chi phí vật tư</th>
+                            <th class="text-end">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PagedItems.Items)
+                        {
+                            <tr>
+                                <td class="mono fw-bold">
+                                    <a asp-action="Details" asp-route-id="@item.MaPhieuXuLy">
+                                        @UiHelper.Ma("PX", item.MaPhieuXuLy)
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge @(item.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "is-warning" : "is-info")">
+                                        @item.NguonText
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>@item.TenThietBi</strong>
+                                    <div class="text-small text-muted">@item.SoSerial · @(item.TenKhuVuc ?? "—")</div>
+                                </td>
+                                <td>
+                                    <partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThai)" />
+                                </td>
+                                <td>
+                                    @UiHelper.NgayGio(item.NgayTao)
+                                </td>
+                                <td class="num">
+                                    @UiHelper.Tien(item.TongChiPhi)
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.MaPhieuXuLy" class="btn btn-outline-secondary btn-sm" title="Xem chi tiết">
+                                            Xem
+                                        </a>
+                                        <a asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@item.MaPhieuXuLy" class="btn btn-primary btn-sm" title="Vật tư & Nội dung xử lý">
+                                            <span class="material-symbols-outlined icon-16">build</span> Xử lý
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.PagedItems.TotalPages > 1)
+            {
+                <div class="p-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="text-muted text-small">
+                        Hiển thị <strong>@Model.PagedItems.Items.Count</strong> / <strong>@Model.PagedItems.TotalItems</strong> công việc
+                    </span>
+                    <ul class="pagination pagination-sm m-0">
+                        <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                            <a class="page-link" asp-action="ViecCuaToi" asp-route-Page="@(Model.PagedItems.Page - 1)">Trước</a>
+                        </li>
+                        @for (int p = 1; p <= Model.PagedItems.TotalPages; p++)
+                        {
+                            <li class="page-item @(p == Model.PagedItems.Page ? "active" : "")">
+                                <a class="page-link" asp-action="ViecCuaToi" asp-route-Page="@p">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                            <a class="page-link" asp-action="ViecCuaToi" asp-route-Page="@(Model.PagedItems.Page + 1)">Sau</a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        }
+    </div>
+</div>

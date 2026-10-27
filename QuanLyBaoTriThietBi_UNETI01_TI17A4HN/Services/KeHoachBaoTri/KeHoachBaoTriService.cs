@@ -1,6 +1,6 @@
-// Họ tên: Phạm Việt Hoàn
+﻿// Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Service Kế hoạch bảo trì (validate thiết bị/ngày/nội dung/ưu tiên, chống trùng kế hoạch cùng kỳ, hủy an toàn, nghiệm thu hoàn thành & cập nhật mốc bảo trì)
+// Nội dung: Module 3 - Service Kế hoạch bảo trì (validate thiết bị/ngày/nội dung/ưu tiên, chống trùng kế hoạch cùng kỳ, hủy an toàn, nghiệm thu hoàn thành, liên kết & phát sinh Phiếu xử lý)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -52,14 +52,16 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             }
         );
 
-    public async Task<ServiceResult<KeHoachBaoTriChiTietViewModel>> LayChiTietAsync(int id)
+    public async Task<ServiceResult<KeHoachBaoTriDetailsViewModel>> LayChiTietAsync(int id)
     {
-        var kh = await _repo.LayChiTietTheoIdAsync(id);
+        var kh = await _repo.LayChiTietAsync(id);
         if (kh is null)
-            return ServiceResult<KeHoachBaoTriChiTietViewModel>.Fail(KhongTimThay);
+            return ServiceResult<KeHoachBaoTriDetailsViewModel>.Fail(KhongTimThay);
 
         var thietBi = kh.ThietBi;
-        var vm = new KeHoachBaoTriChiTietViewModel
+        var phieuLienKet = await _repo.LayPhieuXuLyTheoKeHoachAsync(id);
+
+        var vm = new KeHoachBaoTriDetailsViewModel
         {
             MaKeHoach = kh.MaKeHoach,
             MaThietBi = kh.MaThietBi,
@@ -68,6 +70,8 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             TenLoaiThietBi = thietBi?.LoaiThietBi?.TenLoaiThietBi ?? string.Empty,
             TenKhuVuc = thietBi?.KhuVuc?.TenKhuVuc ?? string.Empty,
             TinhTrangThietBi = thietBi?.TinhTrang ?? TinhTrangThietBiEnum.DangHoatDong,
+            ChuKyBaoTriThang = thietBi?.ChuKyBaoTriThang ?? 0,
+            NgayDuaVaoSuDung = thietBi?.NgayDuaVaoSuDung,
             NgayBaoTriGanNhat = thietBi?.NgayBaoTriGanNhat,
             NgayBaoTriTiepTheo = thietBi != null ? thietBi.NgayBaoTriTiepTheo : kh.NgayDuKien,
             NgayDuKien = kh.NgayDuKien,
@@ -75,23 +79,10 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             MucDoUuTien = kh.MucDoUuTien,
             TrangThai = kh.TrangThai,
             GhiChu = kh.GhiChu,
-            DanhSachPhieuXuLy = kh.PhieuXuLys.Select(p => new KeHoachPhieuXuLyItem
-            {
-                MaPhieuXuLy = p.MaPhieuXuLy,
-                LoaiXuLy = p.LoaiXuLy,
-                NgayTao = p.NgayTao,
-                NgayBatDau = p.NgayBatDau,
-                NgayHoanThanh = p.NgayHoanThanh,
-                TrangThai = p.TrangThai,
-                KetQuaXuLy = p.KetQuaXuLy,
-                KyThuatVienHienTai = p.PhanCongXuLys
-                    .Where(pc => pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc)
-                    .Select(pc => pc.KyThuatVien != null ? pc.KyThuatVien.HoTen : null)
-                    .FirstOrDefault(),
-            }).ToList(),
+            PhieuXuLys = phieuLienKet,
         };
 
-        return ServiceResult<KeHoachBaoTriChiTietViewModel>.Ok(vm);
+        return ServiceResult<KeHoachBaoTriDetailsViewModel>.Ok(vm);
     }
 
     public async Task<ServiceResult<KeHoachBaoTriFormViewModel>> LayDeSuaAsync(int id)
@@ -233,7 +224,7 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         // 4. Quy tắc khi ĐANG THỰC HIỆN: Cập nhật thiết bị sang Đang bảo trì nếu đang hoạt động bình thường
         if (trangThaiMoi == TrangThaiKeHoachEnum.DangThucHien)
         {
-            var thietBi = await _repo.LayThietBiCoTheoDoiAsync(kh.MaThietBi);
+            var thietBi = await _repo.LayThietBiAsync(kh.MaThietBi);
             if (thietBi != null && thietBi.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
             {
                 thietBi.TinhTrang = TinhTrangThietBiEnum.DangBaoTri;
@@ -244,7 +235,7 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         // Cập nhật NgayBaoTriGanNhat = ngày hoàn thành (hôm nay), chuyển thiết bị về Đang hoạt động
         if (trangThaiMoi == TrangThaiKeHoachEnum.HoanThanh)
         {
-            var thietBi = await _repo.LayThietBiCoTheoDoiAsync(kh.MaThietBi);
+            var thietBi = await _repo.LayThietBiAsync(kh.MaThietBi);
             if (thietBi != null)
             {
                 thietBi.NgayBaoTriGanNhat = DateTime.Today;
@@ -265,6 +256,60 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         kh.TrangThai = trangThaiMoi;
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
+    }
+
+    // ---------------- Phát sinh Phiếu xử lý định kỳ (Liên kết Kế hoạch <-> Phiếu xử lý) ----------------
+    public async Task<ServiceResult<int>> TaoPhieuXuLyDinhKyAsync(int maKeHoach)
+    {
+        var kh = await _repo.GetByIdAsync(maKeHoach);
+        if (kh is null)
+            return ServiceResult<int>.Fail(KhongTimThay);
+
+        if (kh.TrangThai == TrangThaiKeHoachEnum.HoanThanh)
+            return ServiceResult<int>.Fail("Kế hoạch này đã hoàn thành, không thể phát sinh thêm phiếu xử lý.");
+
+        if (kh.TrangThai == TrangThaiKeHoachEnum.DaHuy)
+            return ServiceResult<int>.Fail("Kế hoạch này đã bị hủy, không thể phát sinh phiếu xử lý.");
+
+        var tb = await _repo.LayThietBiAsync(kh.MaThietBi);
+        if (tb is null)
+            return ServiceResult<int>.Fail("Không tìm thấy thông tin thiết bị tương ứng.");
+
+        if (tb.TinhTrang == TinhTrangThietBiEnum.NgungSuDung)
+            return ServiceResult<int>.Fail("Thiết bị đã ngừng sử dụng, không thể phát sinh phiếu xử lý bảo trì.");
+
+        var coPhieuDangChay = await _repo.CoPhieuDangHoatDongAsync(maKeHoach);
+        if (coPhieuDangChay)
+            return ServiceResult<int>.Fail(
+                "Kế hoạch này hiện đang có phiếu xử lý đang trong quá trình thực hiện. Mỗi kế hoạch chỉ có tối đa 1 phiếu xử lý hoạt động tại một thời điểm."
+            );
+
+        // Tạo phiếu xử lý dạng bảo trì định kỳ
+        var phieu = new PhieuXuLy
+        {
+            LoaiXuLy = LoaiXuLyEnum.BaoTriDinhKy,
+            MaKeHoach = maKeHoach,
+            MaBaoCao = null, // Đúng ràng buộc CK_Phieu_Nguon
+            NgayTao = DateTime.Now,
+            TrangThai = TrangThaiPhieuXuLyEnum.ChoPhanCong,
+        };
+
+        await _repo.ThemPhieuXuLyAsync(phieu);
+
+        // Chuyển trạng thái kế hoạch sang Đang thực hiện nếu đang ở Chờ thực hiện
+        if (kh.TrangThai == TrangThaiKeHoachEnum.ChoThucHien)
+        {
+            kh.TrangThai = TrangThaiKeHoachEnum.DangThucHien;
+        }
+
+        // Chuyển tình trạng thiết bị sang Đang bảo trì nếu đang ở trạng thái Hoạt động
+        if (tb.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
+        {
+            tb.TinhTrang = TinhTrangThietBiEnum.DangBaoTri;
+        }
+
+        await _repo.SaveChangesAsync();
+        return ServiceResult<int>.Ok(phieu.MaPhieuXuLy);
     }
 
     // ---------------- Nghiệm thu / Hoàn thành kế hoạch & Cập nhật mốc bảo trì ----------------

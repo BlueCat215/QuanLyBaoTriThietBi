@@ -1,0 +1,125 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - View Tạo Phiếu xử lý  *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.TaoPhieuXuLyViewModel
+@{
+    ViewData["Title"] = "Tạo phiếu xử lý";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Tạo phiếu xử lý mới</h1>
+        <p>Phát sinh phiếu xử lý từ Báo cáo sự cố hoặc Kế hoạch bảo trì định kỳ.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="LoaiXuLy" class="form-label required"></label>
+                        <select asp-for="LoaiXuLy" class="form-select" id="selectLoaiXuLy">
+                            <option value="@((int)LoaiXuLyEnum.XuLySuCo)">Xử lý sự cố</option>
+                            <option value="@((int)LoaiXuLyEnum.BaoTriDinhKy)">Bảo trì định kỳ</option>
+                        </select>
+                        <span asp-validation-for="LoaiXuLy" class="text-danger"></span>
+                    </div>
+
+                    @* Khối chọn Báo cáo sự cố *@
+                    <div class="mb-3" id="groupBaoCao">
+                        <label asp-for="MaBaoCao" class="form-label required"></label>
+                        <select asp-for="MaBaoCao" class="form-select" asp-items="Model.BaoCaoOptions">
+                            <option value="">-- Chọn báo cáo sự cố cần xử lý --</option>
+                        </select>
+                        <span asp-validation-for="MaBaoCao" class="text-danger"></span>
+                        <div class="form-text">Chỉ các báo cáo Mới báo hoặc Đã tiếp nhận chưa có phiếu hoạt động mới
+                            xuất hiện ở đây.</div>
+                        </div>
+
+                        @* Khối chọn Kế hoạch bảo trì *@
+                        <div class="mb-3 d-none" id="groupKeHoach">
+                            <label asp-for="MaKeHoach" class="form-label required"></label>
+                            <select asp-for="MaKeHoach" class="form-select" asp-items="Model.KeHoachOptions">
+                                <option value="">-- Chọn kế hoạch bảo trì cần phát sinh phiếu --</option>
+                            </select>
+                            <span asp-validation-for="MaKeHoach" class="text-danger"></span>
+                            <div class="form-text">Chỉ các kế hoạch Chờ thực hiện / Đã phân công chưa có phiếu hoạt động mới
+                                xuất hiện ở đây.</div>
+                            </div>
+
+                            @* Phân công kỹ thuật viên (tùy chọn) *@
+                            <div class="card bg-light border-0 mb-3 p-3">
+                                <h4 class="mb-3 fs-6 fw-bold">Phân công kỹ thuật viên (Tùy chọn)</h4>
+                                <div class="mb-3">
+                                    <label asp-for="MaKyThuatVien" class="form-label"></label>
+                                    <select asp-for="MaKyThuatVien" class="form-select" asp-items="Model.KtvOptions">
+                                        <option value="">-- Để trống nếu muốn phân công sau --</option>
+                                    </select>
+                                    <span asp-validation-for="MaKyThuatVien" class="text-danger"></span>
+                                </div>
+                                <div class="mb-0">
+                                    <label asp-for="NoiDungPhanCong" class="form-label"></label>
+                                    <textarea asp-for="NoiDungPhanCong" class="form-control" rows="2"
+                                              placeholder="Nội dung, ghi chú hoặc yêu cầu chỉ đạo cho kỹ thuật viên..."></textarea>
+                                    <span asp-validation-for="NoiDungPhanCong" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            @* Quy tắc chuyển trạng thái thiết bị sang Tạm ngừng do sự cố *@
+                            <div class="mb-4 form-check" id="groupTamNgung">
+                                <input asp-for="TamNgungThietBi" class="form-check-input" />
+                                <label asp-for="TamNgungThietBi" class="form-check-label fw-semibold text-warning">
+                                    Chuyển thiết bị sang trạng thái "Tạm ngừng do sự cố"
+                                </label>
+                                <div class="form-text">
+                                    (Khuyến nghị kích hoạt đối với các sự cố mức độ Cao hoặc Khẩn cấp nhằm đảm bảo an toàn vận
+                                    hành).
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="material-symbols-outlined icon-20">assignment_turned_in</span> Tạo phiếu xử lý
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <partial name="_ValidationScriptsPartial" />
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const selectLoai = document.getElementById('selectLoaiXuLy');
+                    const groupBaoCao = document.getElementById('groupBaoCao');
+                    const groupKeHoach = document.getElementById('groupKeHoach');
+                    const groupTamNgung = document.getElementById('groupTamNgung');
+
+                    function toggleFields() {
+                        const val = selectLoai.value;
+                        if (val === '@((int)LoaiXuLyEnum.XuLySuCo)' || val === 'XuLySuCo') {
+                            groupBaoCao.classList.remove('d-none');
+                            groupKeHoach.classList.add('d-none');
+                            groupTamNgung.classList.remove('d-none');
+                        } else {
+                            groupBaoCao.classList.add('d-none');
+                            groupKeHoach.classList.remove('d-none');
+                            groupTamNgung.classList.add('d-none');
+                        }
+                    }
+
+                    selectLoai.addEventListener('change', toggleFields);
+                    toggleFields();
+                });
+            </script>
+        }

@@ -1,7 +1,7 @@
-@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Chi tiết Kế hoạch bảo trì & Quản lý vòng đời trạng thái *@
+@* Họ tên: Phạm Việt Hoàn | MSSV: 23103100207 | Nội dung: Module 3 - Chi tiết Kế hoạch bảo trì, Vòng đời trạng thái & Liên kết Phiếu xử lý *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
-@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriChiTietViewModel
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.KeHoachBaoTriDetailsViewModel
 @{
     ViewData["Title"] = $"Chi tiết kế hoạch {UiHelper.Ma("KH", Model.MaKeHoach)}";
 
@@ -32,14 +32,33 @@
                 <span class="badge bg-danger">Quá hạn dự kiến</span>
             }
         </div>
-        <p class="text-muted mb-0">Quản lý quy trình và theo dõi tiến độ bảo trì định kỳ cho thiết bị.</p>
+        <p class="text-muted mb-0">Lập cho thiết bị: <strong>@Model.TenThietBi</strong> · Dự kiến thực hiện: @UiHelper.Ngay(Model.NgayDuKien)</p>
     </div>
     <div class="page-actions d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <span class="material-symbols-outlined icon-sm">list</span> Danh sách
+        </a>
         @if (Model.CoTheSua)
         {
             <a asp-action="Edit" asp-route-id="@Model.MaKeHoach" class="btn btn-outline-primary">
                 <span class="material-symbols-outlined icon-sm">edit</span> Sửa thông tin
             </a>
+        }
+        @if (Model.CoTheTaoPhieu)
+        {
+            <form asp-action="TaoPhieuXuLy" asp-route-id="@Model.MaKeHoach" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn phát sinh Phiếu xử lý bảo trì định kỳ cho kế hoạch này?');">
+                    <span class="material-symbols-outlined icon-sm">assignment_add</span> Phát sinh phiếu xử lý
+                </button>
+            </form>
+        }
+        @if (Model.CoTheHoanThanh)
+        {
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalHoanThanh"
+                    data-id="@Model.MaKeHoach" data-ten="@UiHelper.Ma("KH", Model.MaKeHoach) - @Model.TenThietBi">
+                <span class="material-symbols-outlined icon-sm">task_alt</span> Nghiệm thu đạt
+            </button>
         }
         @if (Model.CoTheHuy)
         {
@@ -47,7 +66,6 @@
                 <span class="material-symbols-outlined icon-sm">event_busy</span> Hủy kế hoạch
             </button>
         }
-        <a asp-action="Index" class="btn btn-outline-secondary">Danh sách</a>
     </div>
 </div>
 
@@ -117,8 +135,9 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <!-- CỘT TRÁI: THÔNG TIN CHI TIẾT -->
+    <!-- CỘT TRÁI: THÔNG TIN CHI TIẾT & DANH SÁCH PHIẾU XỬ LÝ -->
     <div class="col-lg-8">
+        <!-- NỘI DUNG KẾ HOẠCH BẢO TRÌ -->
         <div class="card mb-4">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 d-flex align-items-center gap-2">
@@ -137,12 +156,27 @@
                         <div><partial name="_StatusBadge" model="UiHelper.Badge(Model.MucDoUuTien)" /></div>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label text-muted small mb-1">Thiết bị bảo trì</label>
+                        <div>
+                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@Model.MaThietBi" class="fw-bold text-decoration-none">
+                                @Model.TenThietBi
+                            </a>
+                            <span class="text-muted">· Serial: <span class="mono">@Model.SoSerial</span></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small mb-1">Loại thiết bị / Khu vực</label>
+                        <div class="fw-semibold">
+                            @(string.IsNullOrEmpty(Model.TenLoaiThietBi) ? "—" : Model.TenLoaiThietBi) · @(string.IsNullOrEmpty(Model.TenKhuVuc) ? "—" : Model.TenKhuVuc)
+                        </div>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label text-muted small mb-1">Ngày dự kiến bảo trì</label>
                         <div class="fw-semibold fs-6">
                             @UiHelper.Ngay(Model.NgayDuKien)
                             @if (Model.QuaHan)
                             {
-                                <span class="text-danger small ms-1">(Quá hạn)</span>
+                                <span class="badge bg-danger ms-1">Đã quá hạn</span>
                             }
                         </div>
                     </div>
@@ -152,7 +186,7 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label text-muted small mb-1">Nội dung công việc bảo trì</label>
-                        <div class="p-3 bg-light rounded border text-dark">
+                        <div class="p-3 bg-light rounded border text-dark" style="white-space: pre-line;">
                             @Model.NoiDungBaoTri
                         </div>
                     </div>
@@ -169,23 +203,32 @@
             </div>
         </div>
 
-        <!-- DANH SÁCH PHIẾU XỬ LÝ LIÊN QUAN -->
+        <!-- DANH SÁCH PHIẾU XỬ LÝ LIÊN KẾT -->
         <div class="card">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0 d-flex align-items-center gap-2">
                     <span class="material-symbols-outlined text-primary">handyman</span>
-                    Phiếu xử lý bảo trì liên kết (@Model.DanhSachPhieuXuLy.Count)
+                    Phiếu xử lý bảo trì liên kết (@Model.PhieuXuLys.Count)
                 </h5>
+                @if (Model.CoTheTaoPhieu)
+                {
+                    <form asp-action="TaoPhieuXuLy" asp-route-id="@Model.MaKeHoach" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Bạn có chắc muốn phát sinh Phiếu xử lý bảo trì định kỳ cho kế hoạch này?');">
+                            <span class="material-symbols-outlined icon-sm">add</span> Tạo phiếu mới
+                        </button>
+                    </form>
+                }
             </div>
             <div class="card-body p-0">
-                @if (!Model.DanhSachPhieuXuLy.Any())
+                @if (!Model.PhieuXuLys.Any())
                 {
                     <div class="p-4 text-center text-muted">
                         <span class="material-symbols-outlined fs-2 text-secondary mb-2">assignment_late</span>
-                        <p class="mb-0">Chưa có phiếu xử lý nào được khởi tạo từ kế hoạch này.</p>
-                        @if (Model.TrangThai == TrangThaiKeHoachEnum.ChoThucHien)
+                        <p class="mb-0 fw-semibold">Chưa có phiếu xử lý nào được phát sinh từ kế hoạch này.</p>
+                        @if (Model.CoTheTaoPhieu)
                         {
-                            <small class="text-muted">Khi phân công xử lý, hệ thống sẽ tự động liên kết phiếu xử lý tại đây.</small>
+                            <small class="text-muted">Bấm nút "Phát sinh phiếu xử lý" để giao việc xử lý bảo trì định kỳ cho Kỹ thuật viên.</small>
                         }
                     </div>
                 }
@@ -196,35 +239,37 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th>Kỹ thuật viên</th>
-                                    <th>Ngày tạo</th>
+                                    <th>Kỹ thuật viên phụ trách</th>
                                     <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Chi phí vật tư</th>
                                     <th>Kết quả</th>
-                                    <th></th>
+                                    <th class="text-end">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var phieu in Model.DanhSachPhieuXuLy)
+                                @foreach (var phieu in Model.PhieuXuLys)
                                 {
                                     <tr>
-                                        <td class="mono fw-bold">@UiHelper.Ma("PXL", phieu.MaPhieuXuLy)</td>
+                                        <td class="mono fw-bold">@UiHelper.Ma("PX", phieu.MaPhieuXuLy)</td>
                                         <td>
-                                            @if (!string.IsNullOrEmpty(phieu.KyThuatVienHienTai))
+                                            @if (!string.IsNullOrEmpty(phieu.TenKyThuatVien))
                                             {
-                                                <span class="badge bg-info-subtle text-info border">@phieu.KyThuatVienHienTai</span>
+                                                <span class="badge bg-info-subtle text-info border">@phieu.TenKyThuatVien</span>
                                             }
                                             else
                                             {
                                                 <span class="text-muted small">Chưa phân công</span>
                                             }
                                         </td>
-                                        <td>@UiHelper.NgayGio(phieu.NgayTao)</td>
                                         <td><partial name="_StatusBadge" model="UiHelper.Badge(phieu.TrangThai)" /></td>
+                                        <td>@UiHelper.NgayGio(phieu.NgayTao)</td>
+                                        <td class="fw-semibold">@UiHelper.Tien(phieu.TongChiPhi)</td>
                                         <td>@(string.IsNullOrEmpty(phieu.KetQuaXuLy) ? "-" : phieu.KetQuaXuLy)</td>
-                                        <td>
+                                        <td class="text-end">
                                             <a asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@phieu.MaPhieuXuLy"
-                                               class="btn btn-sm btn-outline-secondary" title="Xem chi tiết thực hiện">
-                                                Chi tiết
+                                               class="btn btn-sm btn-outline-secondary" title="Xem chi tiết vật tư & xử lý">
+                                                <span class="material-symbols-outlined icon-sm">inventory_2</span> Chi tiết
                                             </a>
                                         </td>
                                     </tr>
@@ -291,8 +336,32 @@
             </div>
         </div>
 
+        <!-- THÔNG SỐ BẢO TRÌ & CHI PHÍ -->
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0 d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">analytics</span>
+                    Thông số bảo trì
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="text-muted d-block small">Tổng chi phí vật tư phát sinh:</span>
+                    <span class="fs-4 fw-bold text-primary">@UiHelper.Tien(Model.TongChiPhiKeHoach)</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted d-block small">Số phiếu xử lý liên kết:</span>
+                    <span class="fw-semibold">@Model.PhieuXuLys.Count phiếu</span>
+                    @if (Model.SoPhieuHoatDong > 0)
+                    {
+                        <span class="badge bg-warning text-dark ms-1">@Model.SoPhieuHoatDong đang chạy</span>
+                    }
+                </div>
+            </div>
+        </div>
+
         <!-- THÔNG TIN THIẾT BỊ ĐƯỢC BẢO TRÌ -->
-        <div class="card">
+        <div class="card mb-4">
             <div class="card-header bg-white py-3">
                 <h6 class="card-title mb-0 d-flex align-items-center gap-2">
                     <span class="material-symbols-outlined text-primary">devices</span>
@@ -317,6 +386,17 @@
                         <partial name="_StatusBadge" model="UiHelper.Badge(Model.TinhTrangThietBi)" />
                     </div>
                     <hr class="my-1" />
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Chu kỳ bảo trì:</span>
+                        <span class="fw-semibold">@Model.ChuKyBaoTriThang tháng</span>
+                    </div>
+                    @if (Model.NgayDuaVaoSuDung.HasValue)
+                    {
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Đưa vào sử dụng:</span>
+                            <span>@UiHelper.Ngay(Model.NgayDuaVaoSuDung.Value)</span>
+                        </div>
+                    }
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">Bảo trì gần nhất:</span>
                         <span class="fw-semibold">@(Model.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(Model.NgayBaoTriGanNhat.Value) : "Chưa bảo trì")</span>
@@ -397,6 +477,41 @@
     </div>
 </div>
 
+<!-- MODAL NGHIỆM THU HOÀN THÀNH KẾ HOẠCH -->
+<div class="modal fade" id="modalHoanThanh" tabindex="-1" aria-labelledby="modalHoanThanhTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="HoanThanh" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalHoanThanhTitle">Nghiệm thu hoàn thành kế hoạch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Xác nhận nghiệm thu đạt cho kế hoạch: <strong id="hoanThanhTen">@UiHelper.Ma("KH", Model.MaKeHoach) - @Model.TenThietBi</strong>.</p>
+                    <p class="text-muted small">Sau khi hoàn thành, hệ thống sẽ tự động cập nhật Ngày bảo trì gần nhất và tính lại mốc Ngày bảo trì tiếp theo cho thiết bị.</p>
+                    
+                    <input type="hidden" name="MaKeHoach" id="hoanThanhId" value="@Model.MaKeHoach" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ngayHoanThanh">Ngày hoàn thành thực tế <span class="text-danger">*</span></label>
+                        <input type="date" id="ngayHoanThanh" name="NgayHoanThanh" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ghiChuHoanThanh">Ghi chú nghiệm thu</label>
+                        <textarea id="ghiChuHoanThanh" name="GhiChu" class="form-control" rows="3" placeholder="Nhập tóm tắt kết quả nghiệm thu bảo trì..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-success">Xác nhận hoàn thành</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         var modalChuyen = document.getElementById('modalChuyenTrangThai');
@@ -408,6 +523,19 @@
                 document.getElementById('inputTrangThaiMoi').value = tt;
                 document.getElementById('tenTrangThaiMoi').textContent = ten;
                 document.getElementById('modalGhiChu').value = '';
+            });
+        }
+
+        var modalHoanThanh = document.getElementById('modalHoanThanh');
+        if (modalHoanThanh) {
+            modalHoanThanh.addEventListener('show.bs.modal', function (e) {
+                var btn = e.relatedTarget;
+                if (btn) {
+                    var id = btn.getAttribute('data-id');
+                    var ten = btn.getAttribute('data-ten');
+                    if (id) document.getElementById('hoanThanhId').value = id;
+                    if (ten) document.getElementById('hoanThanhTen').textContent = ten;
+                }
             });
         }
     </script>

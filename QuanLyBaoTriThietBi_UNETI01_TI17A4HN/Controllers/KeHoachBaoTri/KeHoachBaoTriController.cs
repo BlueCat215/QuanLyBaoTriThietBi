@@ -1,7 +1,7 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
 // Nội dung 1: Module 3 - Controller CRUD & Vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy)
-// Nội dung 2: Module 3 - Controller CRUD Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
+// Nội dung 2: Module 3 - Controller CRUD Kế hoạch bảo trì (danh sách, chi tiết, phát sinh Phiếu xử lý,tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -32,8 +32,22 @@ public class KeHoachBaoTriController : Controller
             TempData["Loi"] = result.ErrorMessage;
             return RedirectToAction(nameof(Index));
         }
-
         return View(result.Data);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> TaoPhieuXuLy(int id)
+    {
+        var result = await _service.TaoPhieuXuLyDinhKyAsync(id);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã phát sinh phiếu xử lý bảo trì định kỳ {UiHelper.Ma("PX", result.Data)} thành công.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        TempData["Loi"] = result.ErrorMessage;
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     [HttpGet]
