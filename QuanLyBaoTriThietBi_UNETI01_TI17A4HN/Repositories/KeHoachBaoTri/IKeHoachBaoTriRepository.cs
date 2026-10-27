@@ -35,6 +35,8 @@ public interface IKeHoachBaoTriRepository : IRepository<KeHoachBaoTri>
 
     Task<ThietBi?> LayThietBiAsync(int maThietBi);
 
+    Task<ThietBi?> LayThietBiCoTheoDoiAsync(int maThietBi);
+
     /// Thiết bị chưa Ngừng sử dụng (luôn giữ lại giuLaiMa để hiển thị khi sửa).
     Task<List<(int Ma, string Ten)>> LayThietBiChoChonAsync(int? giuLaiMa);
 

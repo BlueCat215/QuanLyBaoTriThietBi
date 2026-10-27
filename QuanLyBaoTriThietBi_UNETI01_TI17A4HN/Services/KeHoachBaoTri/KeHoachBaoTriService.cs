@@ -75,6 +75,11 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         if (kh is null)
             return ServiceResult<KeHoachBaoTriFormViewModel>.Fail(KhongTimThay);
 
+        if (KeHoachWorkflowHelper.IsLocked(kh.TrangThai))
+            return ServiceResult<KeHoachBaoTriFormViewModel>.Fail(
+                $"Kế hoạch đã {KeHoachWorkflowHelper.GetDisplayName(kh.TrangThai).ToLower()} (bị khóa), không thể chỉnh sửa."
+            );
+
         if (!CoTheSua(kh))
             return ServiceResult<KeHoachBaoTriFormViewModel>.Fail(
                 "Chỉ sửa được kế hoạch ở trạng thái Chờ thực hiện hoặc Đã phân công."
@@ -111,7 +116,7 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             NgayDuKien = vm.NgayDuKien!.Value.Date,
             NoiDungBaoTri = vm.NoiDungBaoTri,
             MucDoUuTien = vm.MucDoUuTien!.Value,
-            TrangThai = TrangThaiKeHoachEnum.ChoThucHien, // luôn bắt đầu ở Chờ thực hiện
+            TrangThai = TrangThaiKeHoachEnum.ChoThucHien, // luôn bắt đầu ở Chờ thực hiện theo đúng vòng đời
             GhiChu = vm.GhiChu,
         };
 
@@ -126,6 +131,12 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         var kh = await _repo.GetByIdAsync(vm.MaKeHoach);
         if (kh is null)
             return ServiceResult.Fail(KhongTimThay);
+
+        // Khóa chặn cập nhật khi kế hoạch đã Hoàn thành hoặc Đã hủy (STT 31)
+        if (KeHoachWorkflowHelper.IsLocked(kh.TrangThai))
+            return ServiceResult.Fail(
+                $"Kế hoạch đã {KeHoachWorkflowHelper.GetDisplayName(kh.TrangThai).ToLower()} (bị khóa), không thể chỉnh sửa."
+            );
 
         if (!CoTheSua(kh))
             return ServiceResult.Fail(
@@ -151,25 +162,82 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
     // ---------------- Hủy ----------------
     public async Task<ServiceResult> HuyAsync(int id)
     {
+        return await ChuyenTrangThaiAsync(id, TrangThaiKeHoachEnum.DaHuy, "Hủy kế hoạch bảo trì");
+    }
+
+    // ---------------- Vòng đời trạng thái Kế hoạch bảo trì (STT 31) ----------------
+    public async Task<ServiceResult> ChuyenTrangThaiAsync(
+        int id,
+        TrangThaiKeHoachEnum trangThaiMoi,
+        string? ghiChu = null
+    )
+    {
         var kh = await _repo.GetByIdAsync(id);
         if (kh is null)
             return ServiceResult.Fail(KhongTimThay);
 
-        if (kh.TrangThai == TrangThaiKeHoachEnum.DaHuy)
-            return ServiceResult.Fail("Kế hoạch này đã được hủy trước đó.");
+        if (kh.TrangThai == trangThaiMoi)
+            return ServiceResult.Ok();
 
-        if (!CoTheSua(kh))
+        // 1. Kiểm tra trạng thái hiện tại đã bị khóa chưa (Hoàn thành hoặc Đã hủy)
+        if (KeHoachWorkflowHelper.IsLocked(kh.TrangThai))
             return ServiceResult.Fail(
-                "Chỉ hủy được kế hoạch ở trạng thái Chờ thực hiện hoặc Đã phân công (chưa bắt đầu thực hiện)."
+                $"Kế hoạch đã {KeHoachWorkflowHelper.GetDisplayName(kh.TrangThai).ToLower()} (bị khóa), không thể thay đổi trạng thái."
             );
 
-        var soPhieu = await _repo.DemPhieuConHieuLucAsync(id);
-        if (soPhieu > 0)
+        // 2. Kiểm tra điều kiện chuyển đổi trạng thái hợp lệ theo đúng luồng
+        // Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành / Đã hủy
+        if (!KeHoachWorkflowHelper.CanTransitionTo(kh.TrangThai, trangThaiMoi))
+        {
             return ServiceResult.Fail(
-                $"Không thể hủy vì kế hoạch đang có {soPhieu} phiếu xử lý chưa hủy. Hãy hủy phiếu xử lý trước."
+                $"Không thể chuyển trạng thái từ '{KeHoachWorkflowHelper.GetDisplayName(kh.TrangThai)}' " +
+                $"sang '{KeHoachWorkflowHelper.GetDisplayName(trangThaiMoi)}' theo quy trình nghiệp vụ."
             );
+        }
 
-        kh.TrangThai = TrangThaiKeHoachEnum.DaHuy;
+        // 3. Quy tắc riêng khi HỦY: Không hủy nếu còn phiếu xử lý đang hoạt động
+        if (trangThaiMoi == TrangThaiKeHoachEnum.DaHuy)
+        {
+            var soPhieu = await _repo.DemPhieuConHieuLucAsync(id);
+            if (soPhieu > 0)
+                return ServiceResult.Fail(
+                    $"Không thể hủy vì kế hoạch đang có {soPhieu} phiếu xử lý chưa hủy. Hãy hủy phiếu xử lý trước."
+                );
+        }
+
+        // 4. Quy tắc khi ĐANG THỰC HIỆN: Cập nhật thiết bị sang Đang bảo trì nếu đang hoạt động bình thường
+        if (trangThaiMoi == TrangThaiKeHoachEnum.DangThucHien)
+        {
+            var thietBi = await _repo.LayThietBiCoTheoDoiAsync(kh.MaThietBi);
+            if (thietBi != null && thietBi.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
+            {
+                thietBi.TinhTrang = TinhTrangThietBiEnum.DangBaoTri;
+            }
+        }
+
+        // 5. Quy tắc khi HOÀN THÀNH (STT 31 + STT 32):
+        // Cập nhật NgayBaoTriGanNhat = ngày hoàn thành (hôm nay), chuyển thiết bị về Đang hoạt động
+        if (trangThaiMoi == TrangThaiKeHoachEnum.HoanThanh)
+        {
+            var thietBi = await _repo.LayThietBiCoTheoDoiAsync(kh.MaThietBi);
+            if (thietBi != null)
+            {
+                thietBi.NgayBaoTriGanNhat = DateTime.Today;
+                if (thietBi.TinhTrang == TinhTrangThietBiEnum.DangBaoTri)
+                {
+                    thietBi.TinhTrang = TinhTrangThietBiEnum.DangHoatDong;
+                }
+            }
+        }
+
+        // 6. Ghi nhận nhật ký trạng thái vào Ghi chú nếu có
+        if (!string.IsNullOrWhiteSpace(ghiChu))
+        {
+            var dongNhatKy = $"[{DateTime.Now:dd/MM/yyyy HH:mm} - {KeHoachWorkflowHelper.GetDisplayName(trangThaiMoi)}]: {ghiChu.Trim()}";
+            kh.GhiChu = string.IsNullOrWhiteSpace(kh.GhiChu) ? dongNhatKy : $"{kh.GhiChu}\n{dongNhatKy}";
+        }
+
+        kh.TrangThai = trangThaiMoi;
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
     }
@@ -311,7 +379,8 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
 
     // ---------------- Hàm nội bộ ----------------
     private static bool CoTheSua(KeHoachBaoTri kh) =>
-        kh.TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
+        !KeHoachWorkflowHelper.IsLocked(kh.TrangThai)
+        && kh.TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
 
     private static void ChuanHoa(KeHoachBaoTriFormViewModel vm)
     {
@@ -336,71 +405,54 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         int? boQuaMaKeHoach
     )
     {
-        var kq = ServiceResult.Ok();
+        if (maThietBi is not { } id || id <= 0)
+            return ServiceResult.Fail(
+                "Vui lòng chọn thiết bị hợp lệ.",
+                nameof(KeHoachBaoTriFormViewModel.MaThietBi)
+            );
 
-        // Nội dung + mức ưu tiên
-        if (vm.NoiDungBaoTri.Length == 0)
-            kq.AddError("Vui lòng nhập nội dung bảo trì", nameof(KeHoachBaoTriFormViewModel.NoiDungBaoTri));
-        else if (vm.NoiDungBaoTri.Length > 500)
-            kq.AddError("Nội dung bảo trì tối đa 500 ký tự", nameof(KeHoachBaoTriFormViewModel.NoiDungBaoTri));
+        var thietBi = await _repo.LayThietBiAsync(id);
+        if (thietBi is null)
+            return ServiceResult.Fail(
+                "Thiết bị được chọn không tồn tại trên hệ thống.",
+                nameof(KeHoachBaoTriFormViewModel.MaThietBi)
+            );
 
-        if (vm.MucDoUuTien is not { } uuTien || !Enum.IsDefined(uuTien))
-            kq.AddError("Mức độ ưu tiên không hợp lệ", nameof(KeHoachBaoTriFormViewModel.MucDoUuTien));
+        if (thietBi.TinhTrang == TinhTrangThietBiEnum.NgungSuDung)
+            return ServiceResult.Fail(
+                $"Thiết bị '{thietBi.TenThietBi}' đã ngừng sử dụng, không thể lập/sửa kế hoạch bảo trì.",
+                nameof(KeHoachBaoTriFormViewModel.MaThietBi)
+            );
 
-        // Thiết bị: tồn tại và chưa Ngừng sử dụng
-        ThietBi? tb = null;
-        if (maThietBi is not { } maTb)
+        if (vm.NgayDuKien is not { } ngay)
+            return ServiceResult.Fail(
+                "Vui lòng chọn ngày dự kiến bảo trì.",
+                nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
+            );
+
+        var homNay = DateTime.Today;
+        var gioiHanTren = homNay.AddYears(SoNamToiDa);
+
+        if (ngay.Date > gioiHanTren)
+            return ServiceResult.Fail(
+                $"Ngày dự kiến không được vượt quá {SoNamToiDa} năm ({gioiHanTren:dd/MM/yyyy}).",
+                nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
+            );
+
+        var thayDoiNgay = ngayCu is null || ngay.Date != ngayCu.Value.Date;
+        if (thayDoiNgay && ngay.Date < homNay)
+            return ServiceResult.Fail(
+                "Ngày dự kiến bảo trì không thể ở quá khứ.",
+                nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
+            );
+
+        if (thayDoiNgay)
         {
-            kq.AddError("Vui lòng chọn thiết bị", nameof(KeHoachBaoTriFormViewModel.MaThietBi));
-        }
-        else
-        {
-            tb = await _repo.LayThietBiAsync(maTb);
-            if (tb is null)
-                kq.AddError("Thiết bị không tồn tại", nameof(KeHoachBaoTriFormViewModel.MaThietBi));
-            else if (tb.TinhTrang == TinhTrangThietBiEnum.NgungSuDung)
-                kq.AddError(
-                    "Thiết bị đã ngừng sử dụng, không thể lập hoặc sửa kế hoạch bảo trì (hãy hủy kế hoạch nếu không còn cần)",
-                    nameof(KeHoachBaoTriFormViewModel.MaThietBi)
-                );
-        }
-
-        // Ngày dự kiến hợp lệ
-        DateTime? ngay = null;
-        if (vm.NgayDuKien is not { } n)
-        {
-            kq.AddError("Vui lòng chọn ngày dự kiến", nameof(KeHoachBaoTriFormViewModel.NgayDuKien));
-        }
-        else
-        {
-            ngay = n.Date;
-            var homNay = DateTime.Today;
-
-            // Sửa mà không đổi ngày thì cho giữ nguyên (kể cả đã quá hạn)
-            var daDoiNgay = ngayCu is null || ngayCu.Value.Date != ngay.Value;
-
-            if (daDoiNgay && ngay < homNay)
-                kq.AddError("Ngày dự kiến không được ở trong quá khứ", nameof(KeHoachBaoTriFormViewModel.NgayDuKien));
-            else if (ngay > homNay.AddYears(SoNamToiDa))
-                kq.AddError(
-                    $"Ngày dự kiến không được quá {SoNamToiDa} năm kể từ hôm nay",
-                    nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
-                );
-            else if (tb is not null && ngay < tb.NgayDuaVaoSuDung.Date)
-                kq.AddError(
-                    $"Ngày dự kiến không được trước ngày đưa thiết bị vào sử dụng ({UiHelper.Ngay(tb.NgayDuaVaoSuDung)})",
-                    nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
-                );
-        }
-
-        // Chống trùng kế hoạch: chỉ kiểm tra khi thiết bị + ngày đã hợp lệ (tránh báo lỗi chồng lỗi)
-        if (kq.Succeeded && maThietBi is { } id && ngay is { } d)
-        {
-            var trung = await KiemTraTrungKeHoachAsync(id, d, boQuaMaKeHoach);
+            var trung = await KiemTraTrungKeHoachAsync(id, ngay, boQuaMaKeHoach);
             if (!trung.Succeeded)
                 return trung;
         }
 
-        return kq;
+        return ServiceResult.Ok();
     }
 }

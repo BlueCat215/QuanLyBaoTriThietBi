@@ -1,6 +1,6 @@
-// Họ tên: Phạm Việt Hoàn
+// Họ tên: Phạm Việt Hoàn, Trịnh Trung Hoàng
 // MSSV: 23103100207
-// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì (danh sách, chi tiết, phát sinh Phiếu xử lý định kỳ)
+// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì (danh sách, chi tiết, phát sinh Phiếu xử lý định kỳ,CRUD, Vòng đời trạng thái, Chuyển trạng thái, Chống trùng kế hoạch)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;

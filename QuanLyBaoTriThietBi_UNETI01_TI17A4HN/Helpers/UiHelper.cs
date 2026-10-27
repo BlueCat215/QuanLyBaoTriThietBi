@@ -1,6 +1,7 @@
 #nullable enable
 using System.Globalization;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 
@@ -48,7 +49,24 @@ public static class UiHelper
         return string.Concat(char.ToUpperInvariant(tu[^2][0]), char.ToUpperInvariant(tu[^1][0]));
     }
 
-    // HẠN BẢO TRÌ (tính động, không lưu DB)
+    // HẠN BẢO TRÌ (tính động, không lưu DB - Module 2 Việc 29)
+
+    /// Phân loại hạn bảo trì (ChuaDenHan, SapDenHan, QuaHan) dùng thống nhất toàn hệ thống.
+    public static TrangThaiHanBaoTriEnum PhanLoaiHanBaoTri(
+        DateTime ngayBaoTriTiepTheo,
+        DateTime? homNay = null
+    )
+    {
+        var soNgay = (ngayBaoTriTiepTheo.Date - (homNay ?? DateTime.Today).Date).Days;
+
+        if (soNgay < 0)
+            return TrangThaiHanBaoTriEnum.QuaHan;
+
+        if (soNgay <= NgayCanhBaoSapDenHan)
+            return TrangThaiHanBaoTriEnum.SapDenHan;
+
+        return TrangThaiHanBaoTriEnum.ChuaDenHan;
+    }
 
     /// Badge "Chưa đến hạn / Sắp đến hạn / Quá hạn" + dòng ghi chú nhỏ ("còn 5 ngày" / "quá 12 ngày").
     public static (BadgeInfo Badge, string Note) HanBaoTri(
@@ -57,18 +75,27 @@ public static class UiHelper
     )
     {
         var soNgay = (ngayBaoTriTiepTheo.Date - (homNay ?? DateTime.Today).Date).Days;
+        var loai = PhanLoaiHanBaoTri(ngayBaoTriTiepTheo, homNay);
 
-        if (soNgay < 0)
-            return (new BadgeInfo("Quá hạn", "is-danger"), $"quá {-soNgay} ngày");
-
-        if (soNgay <= NgayCanhBaoSapDenHan)
-            return (
+        return loai switch
+        {
+            TrangThaiHanBaoTriEnum.QuaHan => (new BadgeInfo("Quá hạn", "is-danger"), $"quá {-soNgay} ngày"),
+            TrangThaiHanBaoTriEnum.SapDenHan => (
                 new BadgeInfo("Sắp đến hạn", "is-warning"),
                 soNgay == 0 ? "hôm nay" : $"còn {soNgay} ngày"
-            );
-
-        return (new BadgeInfo("Chưa đến hạn", "is-success"), $"còn {soNgay} ngày");
+            ),
+            _ => (new BadgeInfo("Chưa đến hạn", "is-success"), $"còn {soNgay} ngày"),
+        };
     }
+
+    public static BadgeInfo Badge(TrangThaiHanBaoTriEnum v) =>
+        v switch
+        {
+            TrangThaiHanBaoTriEnum.QuaHan => new("Quá hạn", "is-danger"),
+            TrangThaiHanBaoTriEnum.SapDenHan => new("Sắp đến hạn", "is-warning"),
+            TrangThaiHanBaoTriEnum.ChuaDenHan => new("Chưa đến hạn", "is-success"),
+            _ => new(v.ToString(), "is-muted"),
+        };
 
     // BADGE THEO ENUM
 
