@@ -1,4 +1,5 @@
-// Nội dung: Module 2 - LINQ Lọc + Sắp xếp Thiết bị, chạy hoàn toàn trên SQL; LocTheoHanBaoTri dùng chung cho Dashboard
+// Họ tên: Nguyễn Minh Đức
+// Nội dung: Module 2 - LINQ Lọc + Sắp xếp Thiết bị, tính hạn bảo trì và phân loại thống nhất toàn hệ thống (Việc 15, 27, 28, 29)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -7,7 +8,10 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
 
-/// Ngày bảo trì tiếp theo = (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKyBaoTriThang tháng (giống ThietBi.NgayBaoTriTiepTheo).
+/// Mở rộng LINQ cho Thiết bị:
+/// - Ngày bảo trì tiếp theo = (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKyBaoTriThang (tháng).
+/// - Phân loại hạn bảo trì: Quá hạn, Sắp đến hạn (ngưỡng 7 ngày), Chưa đến hạn.
+/// - Áp dụng thống nhất cho Module 2, Dashboard (Module 5) và Báo cáo Thống kê.
 public static class ThietBiQueryExtensions
 {
     private const int SoTuKhoaToiDa = 5;
@@ -105,6 +109,27 @@ public static class ThietBiQueryExtensions
             ),
         };
     }
+
+    /// Lọc thiết bị sắp đến hạn bảo trì (trong vòng UiHelper.NgayCanhBaoSapDenHan ngày).
+    /// Dùng thống nhất cho Module 2, Dashboard (Module 5) và Thống kê.
+    public static IQueryable<ThietBi> SapDenHanBaoTri(
+        this IQueryable<ThietBi> query,
+        DateTime? homNay = null
+    ) => query.LocTheoHanBaoTri(TrangThaiHanBaoTriEnum.SapDenHan, homNay ?? DateTime.Today);
+
+    /// Lọc thiết bị đã quá hạn bảo trì.
+    /// Dùng thống nhất cho Module 2, Dashboard (Module 5) và Thống kê.
+    public static IQueryable<ThietBi> QuaHanBaoTri(
+        this IQueryable<ThietBi> query,
+        DateTime? homNay = null
+    ) => query.LocTheoHanBaoTri(TrangThaiHanBaoTriEnum.QuaHan, homNay ?? DateTime.Today);
+
+    /// Lọc thiết bị chưa đến hạn bảo trì.
+    /// Dùng thống nhất cho Module 2, Dashboard (Module 5) và Thống kê.
+    public static IQueryable<ThietBi> ChuaDenHanBaoTri(
+        this IQueryable<ThietBi> query,
+        DateTime? homNay = null
+    ) => query.LocTheoHanBaoTri(TrangThaiHanBaoTriEnum.ChuaDenHan, homNay ?? DateTime.Today);
 
     /// Luôn kèm khóa phụ (tên, mã) để thứ tự ổn định.
     public static IQueryable<ThietBi> ApDungSapXep(

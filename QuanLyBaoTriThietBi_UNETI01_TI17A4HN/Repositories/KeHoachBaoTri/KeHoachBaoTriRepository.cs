@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc ngày/ưu tiên/trạng thái, sắp xếp, phân trang, chống trùng kỳ)
+// Nội dung: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc ngày/ưu tiên/trạng thái, sắp xếp, phân trang, chống trùng kỳ, nạp chi tiết vòng đời)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -162,7 +162,21 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
         return paged.Items;
     }
 
+    public Task<KeHoachBaoTri?> LayChiTietTheoIdAsync(int id) =>
+        _context.KeHoachBaoTris
+            .Include(k => k.ThietBi)
+                .ThenInclude(t => t!.LoaiThietBi)
+            .Include(k => k.ThietBi)
+                .ThenInclude(t => t!.KhuVuc)
+            .Include(k => k.PhieuXuLys)
+                .ThenInclude(p => p.PhanCongXuLys)
+                    .ThenInclude(pc => pc.KyThuatVien)
+            .FirstOrDefaultAsync(k => k.MaKeHoach == id);
+
     public Task<ThietBi?> LayThietBiAsync(int maThietBi) =>
+        _context.ThietBis.FirstOrDefaultAsync(t => t.MaThietBi == maThietBi);
+
+    public Task<ThietBi?> LayThietBiCoTheoDoiAsync(int maThietBi) =>
         _context.ThietBis.FirstOrDefaultAsync(t => t.MaThietBi == maThietBi);
 
     public async Task<List<(int Ma, string Ten)>> LayThietBiChoChonAsync(int? giuLaiMa)

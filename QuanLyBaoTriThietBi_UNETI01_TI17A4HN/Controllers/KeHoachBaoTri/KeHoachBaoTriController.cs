@@ -1,6 +1,7 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
 // Nội dung: Module 3 - Controller CRUD Kế hoạch bảo trì (tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
+// CRUD & Vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,6 +24,19 @@ public class KeHoachBaoTriController : Controller
         View(await _service.LayDanhSachAsync(boLoc));
 
     [HttpGet]
+    public async Task<IActionResult> Details(int id)
+    {
+        var result = await _service.LayChiTietAsync(id);
+        if (!result.Succeeded)
+        {
+            TempData["Loi"] = result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(result.Data);
+    }
+
+    [HttpGet]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create(int? maThietBi)
     {
@@ -41,7 +55,7 @@ public class KeHoachBaoTriController : Controller
             if (result.Succeeded)
             {
                 TempData["ThanhCong"] = "Đã thêm kế hoạch bảo trì thành công.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = result.Data });
             }
             ModelState.AddServiceErrors(result);
         }
@@ -78,7 +92,7 @@ public class KeHoachBaoTriController : Controller
             if (result.Succeeded)
             {
                 TempData["ThanhCong"] = "Đã cập nhật kế hoạch bảo trì thành công.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id });
             }
             ModelState.AddServiceErrors(result);
         }
@@ -120,6 +134,31 @@ public class KeHoachBaoTriController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    /// <summary>
+    /// Chuyển trạng thái kế hoạch theo vòng đời (STT 31)
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChuyenTrangThai(
+        int id,
+        TrangThaiKeHoachEnum trangThaiMoi,
+        string? ghiChu,
+        string? returnUrl
+    )
+    {
+        var result = await _service.ChuyenTrangThaiAsync(id, trangThaiMoi, ghiChu);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã chuyển trạng thái kế hoạch sang '{KeHoachWorkflowHelper.GetDisplayName(trangThaiMoi)}'.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return Redirect(returnUrl);
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     private async Task NapThietBiAsync(KeHoachBaoTriFormViewModel vm)

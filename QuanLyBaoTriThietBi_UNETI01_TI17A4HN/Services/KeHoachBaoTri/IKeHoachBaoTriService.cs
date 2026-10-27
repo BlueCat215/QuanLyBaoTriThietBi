@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì
+// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì (CRUD, Vòng đời trạng thái, Chuyển trạng thái, Chống trùng kế hoạch)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -17,6 +17,9 @@ public interface IKeHoachBaoTriService
         TrangThaiKeHoachEnum? trangThai,
         MucDoUuTienEnum? mucDo
     );
+
+    /// Lấy chi tiết kế hoạch theo id kèm thông tin thiết bị và danh sách phiếu xử lý
+    Task<ServiceResult<KeHoachBaoTriChiTietViewModel>> LayChiTietAsync(int id);
 
     /// Fail nếu không tìm thấy hoặc kế hoạch không còn sửa được (Đang thực hiện/Chờ nghiệm thu/Hoàn thành/Đã hủy).
     Task<ServiceResult<KeHoachBaoTriFormViewModel>> LayDeSuaAsync(int id);
