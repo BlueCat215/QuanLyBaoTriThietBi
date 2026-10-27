@@ -1,6 +1,7 @@
 // Họ tên: Nguyễn Minh Đức
 // Nội dung: Interface Repository Thiết bị (Module 2: CRUD, SFSP, hạn bảo trì)
 #nullable enable
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
@@ -25,6 +26,8 @@ public interface IThietBiRepository : IRepository<ThietBi>
 
     ///Lấy danh sách thiết bị đã quá hạn bảo trì (sắp xếp theo hạn sớm nhất).
     Task<List<ThietBi>> LayDanhSachQuaHanAsync(int top = 5, DateTime? homNay = null);
+    ///Lấy danh sách thiết bị có phân trang bằng Skip/Take (thứ tự: Where -> OrderBy -> Skip -> Take).
+    Task<PagedResult<ThietBi>> LayPhanTrangAsync(ThietBiBoLoc boLoc);
 
     Task<ThietBi?> LayChiTietAsync(int maThietBi);
     Task<bool> SoSerialDaTonTaiAsync(string soSerial, int? boQuaId = null);

@@ -1,10 +1,13 @@
 @* Chi tiết Thiết bị, đổi tình trạng, xóa an toàn *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiDetailsViewModel
 @{
     var tb = Model.ThietBi;
     var lienQuan = Model.DuLieuLienQuan;
     var ngung = tb.TinhTrang == TinhTrangThietBiEnum.NgungSuDung;
+    var coQuyenQuanLy = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.KyThuatVien);
+    var laAdmin = User.IsInRole(AppRoles.Admin);
     ViewData["Title"] = tb.TenThietBi;
 }
 
@@ -16,7 +19,7 @@
     </div>
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
-        @if (!ngung)
+        @if (coQuyenQuanLy && !ngung)
         {
             <a class="btn btn-primary" asp-action="Edit" asp-route-id="@tb.MaThietBi">Sửa thiết bị</a>
         }
@@ -72,22 +75,25 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h3 class="mb-3">Đổi tình trạng</h3>
-                <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
-                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
-                    <label class="form-label" for="tinhTrang">Tình trạng mới</label>
-                    <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
-                        @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
-                        {
-                            <option value="@v" selected="@(tb.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
-                        }
-                    </select>
-                    <button type="submit" class="btn btn-outline-secondary w-100">Cập nhật tình trạng</button>
-                </form>
+        @if (coQuyenQuanLy)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="mb-3">Đổi tình trạng</h3>
+                    <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
+                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
+                        <label class="form-label" for="tinhTrang">Tình trạng mới</label>
+                        <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
+                            @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
+                            {
+                                <option value="@v" selected="@(tb.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary w-100">Cập nhật tình trạng</button>
+                    </form>
+                </div>
             </div>
-        </div>
+        }
 
         <div class="card">
             <div class="card-body">
@@ -99,24 +105,27 @@
                     <li>Tệp đính kèm: <strong>@lienQuan.SoTepDinhKem</strong></li>
                 </ul>
 
-                @if (lienQuan.CoDuLieu)
+                @if (laAdmin)
                 {
-                    <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
-                        <strong>Ngừng sử dụng</strong> để giữ lịch sử.
-                    </p>
-                }
-                else
-                {
-                    <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
-                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
-                            data-bs-target="#modalXoa">Xóa thiết bị</button>
+                    @if (lienQuan.CoDuLieu)
+                    {
+                        <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
+                            <strong>Ngừng sử dụng</strong> để giữ lịch sử.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                                data-bs-target="#modalXoa">Xóa thiết bị</button>
+                    }
                 }
             </div>
         </div>
     </div>
 </div>
 
-@if (!lienQuan.CoDuLieu)
+@if (laAdmin && !lienQuan.CoDuLieu)
 {
     <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
