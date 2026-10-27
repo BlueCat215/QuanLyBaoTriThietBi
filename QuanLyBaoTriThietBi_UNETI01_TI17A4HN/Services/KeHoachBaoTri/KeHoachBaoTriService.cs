@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - Service Kế hoạch bảo trì (validate thiết bị/ngày/nội dung/ưu tiên, chống trùng kế hoạch cùng kỳ, vòng đời trạng thái và chuyển trạng thái nghiêm ngặt)
+// Nội dung: Module 3 - Service Kế hoạch bảo trì (validate thiết bị/ngày/nội dung/ưu tiên, chống trùng kế hoạch cùng kỳ, hủy an toàn, nghiệm thu hoàn thành & cập nhật mốc bảo trì)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -20,18 +20,37 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
     public KeHoachBaoTriService(IKeHoachBaoTriRepository repo) => _repo = repo;
 
     // ---------------- Truy vấn ----------------
-    public async Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(
+    public async Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(KeHoachBaoTriBoLoc boLoc)
+    {
+        string? canhBao = null;
+        if (boLoc.KhoangNgayKhongHopLe)
+        {
+            canhBao = "Khoảng ngày lọc không hợp lệ (Từ ngày lớn hơn Đến ngày) nên điều kiện ngày đã được bỏ qua.";
+        }
+
+        var paged = await _repo.LayPhanTrangAsync(boLoc);
+
+        return new KeHoachBaoTriIndexViewModel
+        {
+            PagedItems = paged,
+            BoLoc = boLoc,
+            CanhBao = canhBao,
+        };
+    }
+
+    public Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(
         string? tuKhoa,
         TrangThaiKeHoachEnum? trangThai,
         MucDoUuTienEnum? mucDo
     ) =>
-        new()
-        {
-            TuKhoa = tuKhoa?.Trim(),
-            TrangThai = trangThai,
-            MucDo = mucDo,
-            Items = await _repo.TimKiemAsync(tuKhoa, trangThai, mucDo),
-        };
+        LayDanhSachAsync(
+            new KeHoachBaoTriBoLoc
+            {
+                TuKhoa = tuKhoa?.Trim(),
+                TrangThai = trangThai,
+                MucDo = mucDo,
+            }
+        );
 
     public async Task<ServiceResult<KeHoachBaoTriChiTietViewModel>> LayChiTietAsync(int id)
     {
@@ -244,6 +263,68 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         }
 
         kh.TrangThai = trangThaiMoi;
+        await _repo.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
+    // ---------------- Nghiệm thu / Hoàn thành kế hoạch & Cập nhật mốc bảo trì ----------------
+    public async Task<ServiceResult> HoanThanhAsync(
+        int maKeHoach,
+        DateTime ngayHoanThanh,
+        string? ghiChu = null
+    )
+    {
+        var kh = await _repo.GetByIdAsync(maKeHoach);
+        if (kh is null)
+            return ServiceResult.Fail(KhongTimThay);
+
+        if (kh.TrangThai == TrangThaiKeHoachEnum.HoanThanh)
+            return ServiceResult.Fail("Kế hoạch này đã được hoàn thành trước đó.");
+
+        if (kh.TrangThai == TrangThaiKeHoachEnum.DaHuy)
+            return ServiceResult.Fail("Kế hoạch đã bị hủy, không thể nghiệm thu hoàn thành.");
+
+        var tb = await _repo.LayThietBiAsync(kh.MaThietBi);
+        if (tb is null)
+            return ServiceResult.Fail("Không tìm thấy thiết bị tương ứng của kế hoạch.");
+
+        var ngayHt = ngayHoanThanh.Date;
+        if (ngayHt < tb.NgayDuaVaoSuDung.Date)
+            return ServiceResult.Fail(
+                $"Ngày hoàn thành ({UiHelper.Ngay(ngayHt)}) không được trước ngày đưa vào sử dụng ({UiHelper.Ngay(tb.NgayDuaVaoSuDung)}).",
+                nameof(HoanThanhKeHoachViewModel.NgayHoanThanh)
+            );
+
+        if (ngayHt > DateTime.Today)
+            return ServiceResult.Fail(
+                "Ngày hoàn thành thực tế không được ở trong tương lai.",
+                nameof(HoanThanhKeHoachViewModel.NgayHoanThanh)
+            );
+
+        // 1. Chuyển trạng thái kế hoạch sang Hoàn thành (bảo toàn lịch sử bản ghi)
+        kh.TrangThai = TrangThaiKeHoachEnum.HoanThanh;
+        if (!string.IsNullOrWhiteSpace(ghiChu))
+        {
+            var dongLog = $"[Nghiệm thu {UiHelper.Ngay(ngayHt)}]: {ghiChu.Trim()}";
+            kh.GhiChu = string.IsNullOrWhiteSpace(kh.GhiChu)
+                ? dongLog
+                : $"{kh.GhiChu}\n{dongLog}";
+        }
+
+        // 2. Cập nhật mốc bảo trì gần nhất của thiết bị
+        // NgayBaoTriTiepTheo là NotMapped property sẽ tự động tính lại theo mốc mới:
+        // (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung).AddMonths(ChuKyBaoTriThang)
+        if (tb.NgayBaoTriGanNhat == null || ngayHt >= tb.NgayBaoTriGanNhat.Value.Date)
+        {
+            tb.NgayBaoTriGanNhat = ngayHt;
+        }
+
+        // 3. Nếu thiết bị đang ở trạng thái DangBaoTri, phục hồi về DangHoatDong
+        if (tb.TinhTrang == TinhTrangThietBiEnum.DangBaoTri)
+        {
+            tb.TinhTrang = TinhTrangThietBiEnum.DangHoatDong;
+        }
+
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
     }

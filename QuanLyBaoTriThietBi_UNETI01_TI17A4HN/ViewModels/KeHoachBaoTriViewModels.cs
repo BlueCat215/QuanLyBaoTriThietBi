@@ -1,6 +1,6 @@
 // Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
-// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, chi tiết vòng đời, form Thêm/Sửa)
+// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, tìm kiếm + lọc + sắp xếp + phân trang, form Thêm/Sửa/Nghiệm thu)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -10,6 +10,94 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
+
+public enum KeHoachBaoTriSapXep
+{
+    NgayDuKienGanNhat,
+    NgayDuKienXaNhat,
+    UuTienCaoNhat,
+    UuTienThapNhat,
+    TenThietBiAZ,
+    TenThietBiZA,
+    MaKeHoachMoiNhat,
+}
+
+public class KeHoachBaoTriBoLoc
+{
+    public string? TuKhoa { get; set; }
+    public TrangThaiKeHoachEnum? TrangThai { get; set; }
+    public MucDoUuTienEnum? MucDo { get; set; }
+    public DateTime? TuNgay { get; set; }
+    public DateTime? DenNgay { get; set; }
+    public KeHoachBaoTriSapXep SapXep { get; set; } = KeHoachBaoTriSapXep.NgayDuKienGanNhat;
+
+    // Phân trang
+    public int Trang { get; set; } = 1;
+    public int SoBanGhiMoiTrang { get; set; } = 10;
+
+    /// Có điều kiện LỌC nào đang bật không (không tính Sắp xếp và Phân trang).
+    public bool CoBoLoc =>
+        !string.IsNullOrWhiteSpace(TuKhoa)
+        || TrangThai.HasValue
+        || MucDo.HasValue
+        || TuNgay.HasValue
+        || DenNgay.HasValue;
+
+    /// "Từ ngày" lớn hơn "Đến ngày": khoảng ngày bị bỏ qua và trang hiện cảnh báo.
+    public bool KhoangNgayKhongHopLe =>
+        TuNgay.HasValue
+        && DenNgay.HasValue
+        && TuNgay.Value.Date > DenNgay.Value.Date;
+
+    /// Tạo từ điển route values để gắn vào link phân trang, giữ nguyên các điều kiện tìm kiếm, lọc, sắp xếp
+    public Dictionary<string, string> ToRouteValues(int? trang = null)
+    {
+        var route = new Dictionary<string, string>();
+
+        if (!string.IsNullOrWhiteSpace(TuKhoa))
+            route[nameof(TuKhoa)] = TuKhoa;
+
+        if (TrangThai.HasValue)
+            route[nameof(TrangThai)] = TrangThai.Value.ToString();
+
+        if (MucDo.HasValue)
+            route[nameof(MucDo)] = MucDo.Value.ToString();
+
+        if (TuNgay.HasValue)
+            route[nameof(TuNgay)] = TuNgay.Value.ToString("yyyy-MM-dd");
+
+        if (DenNgay.HasValue)
+            route[nameof(DenNgay)] = DenNgay.Value.ToString("yyyy-MM-dd");
+
+        if (SapXep != KeHoachBaoTriSapXep.NgayDuKienGanNhat)
+            route[nameof(SapXep)] = SapXep.ToString();
+
+        if (SoBanGhiMoiTrang != 10)
+            route[nameof(SoBanGhiMoiTrang)] = SoBanGhiMoiTrang.ToString();
+
+        var p = trang ?? Trang;
+        if (p > 1)
+            route[nameof(Trang)] = p.ToString();
+
+        return route;
+    }
+}
+
+public static class KeHoachBaoTriBoLocText
+{
+    public static string SapXep(KeHoachBaoTriSapXep v) =>
+        v switch
+        {
+            KeHoachBaoTriSapXep.NgayDuKienGanNhat => "Ngày dự kiến: gần nhất",
+            KeHoachBaoTriSapXep.NgayDuKienXaNhat => "Ngày dự kiến: xa nhất",
+            KeHoachBaoTriSapXep.UuTienCaoNhat => "Ưu tiên: cao → thấp",
+            KeHoachBaoTriSapXep.UuTienThapNhat => "Ưu tiên: thấp → cao",
+            KeHoachBaoTriSapXep.TenThietBiAZ => "Thiết bị A → Z",
+            KeHoachBaoTriSapXep.TenThietBiZA => "Thiết bị Z → A",
+            KeHoachBaoTriSapXep.MaKeHoachMoiNhat => "Mã KH mới nhất",
+            _ => v.ToString(),
+        };
+}
 
 public record KeHoachRow(
     int MaKeHoach,
@@ -32,22 +120,50 @@ public record KeHoachRow(
         !KeHoachWorkflowHelper.IsLocked(TrangThai)
         && TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;
 
-    // Cho phép hủy khi chưa hoàn thành/đã hủy (Service sẽ kiểm tra thêm phiếu xử lý con)
-    public bool CoTheHuy => KeHoachWorkflowHelper.CanTransitionTo(TrangThai, TrangThaiKeHoachEnum.DaHuy);
+    // Service kiểm tra lại đầy đủ (còn phiếu xử lý đang hoạt động thì không hủy được)
+    public bool CoTheHuy => TrangThai == TrangThaiKeHoachEnum.ChoThucHien;
 
-    public IReadOnlyList<TrangThaiKeHoachEnum> CacTrangThaiCoTheChuyen =>
-        KeHoachWorkflowHelper.GetNextAllowedStatuses(TrangThai);
+    // Có thể thực hiện nghiệm thu / hoàn thành kế hoạch
+    public bool CoTheHoanThanh =>
+        TrangThai is TrangThaiKeHoachEnum.DangThucHien or TrangThaiKeHoachEnum.ChoNghiemThu;
 }
 
 public class KeHoachBaoTriIndexViewModel
 {
-    public List<KeHoachRow> Items { get; set; } = new();
-    public string? TuKhoa { get; set; }
-    public TrangThaiKeHoachEnum? TrangThai { get; set; }
-    public MucDoUuTienEnum? MucDo { get; set; }
+    /// Danh sách kết quả theo phân trang (chứa metadata Page, TotalPages, TotalItems)
+    public PagedResult<KeHoachRow> PagedItems { get; set; } = new();
 
-    public bool CoBoLoc =>
-        !string.IsNullOrWhiteSpace(TuKhoa) || TrangThai.HasValue || MucDo.HasValue;
+    /// Danh sách phần tử của trang hiện tại (tương thích với Model.Items)
+    public List<KeHoachRow> Items => PagedItems.Items;
+
+    /// Điều kiện Tìm kiếm + Lọc + Sắp xếp + Phân trang hiện tại
+    public KeHoachBaoTriBoLoc BoLoc { get; set; } = new();
+
+    public string? TuKhoa => BoLoc.TuKhoa;
+    public TrangThaiKeHoachEnum? TrangThai => BoLoc.TrangThai;
+    public MucDoUuTienEnum? MucDo => BoLoc.MucDo;
+    public DateTime? TuNgay => BoLoc.TuNgay;
+    public DateTime? DenNgay => BoLoc.DenNgay;
+    public KeHoachBaoTriSapXep SapXep => BoLoc.SapXep;
+
+    public bool CoBoLoc => BoLoc.CoBoLoc;
+
+    /// Thông báo khi có điều kiện lọc không hợp lệ (ví dụ: khoảng ngày bị đảo).
+    public string? CanhBao { get; set; }
+}
+
+public class HoanThanhKeHoachViewModel
+{
+    public int MaKeHoach { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng chọn ngày hoàn thành thực tế")]
+    [DataType(DataType.Date)]
+    [Display(Name = "Ngày hoàn thành thực tế")]
+    public DateTime NgayHoanThanh { get; set; } = DateTime.Today;
+
+    [StringLength(500, ErrorMessage = "Ghi chú tối đa 500 ký tự")]
+    [Display(Name = "Ghi chú")]
+    public string? GhiChu { get; set; }
 }
 
 public class KeHoachBaoTriFormViewModel
