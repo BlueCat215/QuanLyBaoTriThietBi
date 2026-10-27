@@ -1,0 +1,372 @@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - View Chi tiết Phiếu xử lý, Phân công & Đổi KTV  *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.PhieuXuLyDetailsViewModel
+@{
+    ViewData["Title"] = "Phiếu xử lý " + UiHelper.Ma("PX", Model.MaPhieuXuLy);
+    var laAdmin = Model.LaAdmin;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Phiếu xử lý <span class="mono">@UiHelper.Ma("PX", Model.MaPhieuXuLy)</span></h1>
+        <p>
+            Loại: <strong>@(Model.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</strong>
+            · Thiết bị: <strong>@Model.TenThietBi</strong> (@Model.SoSerial)
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="@(laAdmin ? "Index" : "ViecCuaToi")">Quay lại danh sách</a>
+
+        <a class="btn btn-primary" asp-controller="ChiTietXuLy" asp-action="TheoPhieu"
+           asp-route-maPhieu="@Model.MaPhieuXuLy">
+            <span class="material-symbols-outlined icon-20">build</span> Chi tiết công việc &amp; Vật tư
+        </a>
+
+        @if (Model.CoThePhanCong)
+        {
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalPhanCong">
+                <span class="material-symbols-outlined icon-20">person_add</span> Phân công KTV
+            </button>
+        }
+        else if (Model.CoTheDoiKtv)
+        {
+            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalDoiKtv">
+                <span class="material-symbols-outlined icon-20">swap_horiz</span> Đổi Kỹ thuật viên
+            </button>
+        }
+
+        @if (Model.CoTheHuy)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHuyPhieu">
+                <span class="material-symbols-outlined icon-20">cancel</span> Hủy phiếu
+            </button>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+    @* Cột chính bên trái *@
+    <div class="col-lg-8">
+        @* Card Thông tin chung *@
+        <div class="card mb-3">
+            <div class="card-body">
+                <h3 class="mb-3">Thông tin phiếu xử lý</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Trạng thái phiếu</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(Model.TrangThai)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Ngày tạo</dt>
+                    <dd class="col-sm-8">@UiHelper.NgayGio(Model.NgayTao)</dd>
+
+                    <dt class="col-sm-4">Thời gian xử lý</dt>
+                    <dd class="col-sm-8">
+                        @(Model.NgayBatDau.HasValue ? UiHelper.NgayGio(Model.NgayBatDau) : "Chưa bắt đầu")
+                        <span class="mx-1">→</span>
+                        @(Model.NgayHoanThanh.HasValue ? UiHelper.NgayGio(Model.NgayHoanThanh) : "Chưa hoàn thành")
+                    </dd>
+
+                    <dt class="col-sm-4">Tổng chi phí vật tư</dt>
+                    <dd class="col-sm-8 fw-bold text-primary">@UiHelper.Tien(Model.TongChiPhi)</dd>
+
+                    <dt class="col-sm-4">Kết quả xử lý</dt>
+                    <dd class="col-sm-8" style="white-space: pre-line">@(string.IsNullOrWhiteSpace(Model.KetQuaXuLy) ?
+                                               "—" : Model.KetQuaXuLy)</dd>
+                    </dl>
+                </div>
+            </div>
+
+            @* Card Nguồn công việc phát sinh *@
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="mb-3">Nguồn công việc</h3>
+                    @if (Model.LoaiXuLy == LoaiXuLyEnum.XuLySuCo)
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Báo cáo sự cố</dt>
+                            <dd class="col-sm-8">
+                                <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@Model.MaBaoCao">
+                                    <strong>@UiHelper.Ma("SC", Model.MaBaoCao ?? 0)</strong>
+                                </a>
+                                @if (Model.MucDoSuCo.HasValue)
+                                {
+                                    <span class="ms-2">
+                                        <partial name="_StatusBadge" model="UiHelper.Badge(Model.MucDoSuCo.Value)" />
+                                    </span>
+                                }
+                            </dd>
+                            <dt class="col-sm-4">Người báo cáo</dt>
+                            <dd class="col-sm-8">@(Model.NguoiBaoCao ?? "—")</dd>
+                            <dt class="col-sm-4">Mô tả sự cố</dt>
+                            <dd class="col-sm-8" style="white-space: pre-line">@Model.MoTaSuCo</dd>
+                        </dl>
+                    }
+                    else
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Kế hoạch bảo trì</dt>
+                            <dd class="col-sm-8">
+                                <a asp-controller="KeHoachBaoTri" asp-action="Details" asp-route-id="@Model.MaKeHoach">
+                                    <strong>@UiHelper.Ma("KH", Model.MaKeHoach ?? 0)</strong>
+                                </a>
+                                @if (Model.MucDoUuTien.HasValue)
+                                {
+                                    <span class="ms-2">
+                                        <partial name="_StatusBadge" model="UiHelper.Badge(Model.MucDoUuTien.Value)" />
+                                    </span>
+                                }
+                            </dd>
+                            <dt class="col-sm-4">Ngày dự kiến</dt>
+                            <dd class="col-sm-8">@UiHelper.Ngay(Model.NgayDuKienBaoTri)</dd>
+                            <dt class="col-sm-4">Nội dung bảo trì</dt>
+                            <dd class="col-sm-8" style="white-space: pre-line">@Model.NoiDungBaoTri</dd>
+                        </dl>
+                    }
+                </div>
+            </div>
+
+            @*Card Lịch sử phân công (Bảo toàn lịch sử khi đổi KTV) *@
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="m-0">Lịch sử phân công kỹ thuật viên</h3>
+                        @if (Model.CoTheDoiKtv)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                    data-bs-target="#modalDoiKtv">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">swap_horiz</span> Đổi KTV
+                            </button>
+                        }
+                    </div>
+
+                    @if (!Model.LichSuPhanCong.Any())
+                    {
+                        <div class="empty-state p-3 text-center">
+                            <span class="material-symbols-outlined icon-24 text-muted">person_off</span>
+                            <p class="text-muted mt-2 mb-0">Phiếu chưa từng được phân công cho kỹ thuật viên nào.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Kỹ thuật viên</th>
+                                    <th>Liên hệ</th>
+                                    <th>Ngày phân công</th>
+                                    <th>Ngày kết thúc</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ghi chú / Lý do</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pc in Model.LichSuPhanCong)
+                                {
+                                    <tr
+                                        class="@(pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc ? "table-light fw-semibold" : "text-muted")">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-1">
+                                                @if (pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc)
+                                                {
+                                                    <span class="material-symbols-outlined text-success"
+                                                          style="font-size: 16px;">check_circle</span>
+                                                }
+                                                <span>@pc.TenKyThuatVien</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(pc.ChuyenMon))
+                                            {
+                                                <div class="small text-muted">@pc.ChuyenMon</div>
+                                            }
+                                        </td>
+                                        <td class="small">
+                                            <div>@pc.SoDienThoai</div>
+                                            <div class="text-muted">@pc.Email</div>
+                                        </td>
+                                        <td>@UiHelper.NgayGio(pc.NgayPhanCong)</td>
+                                        <td>@(pc.NgayKetThucPhanCong.HasValue ? UiHelper.NgayGio(pc.NgayKetThucPhanCong) : "—")</td>
+                                        <td>
+                                            <partial name="_StatusBadge" model="UiHelper.Badge(pc.TrangThai)" />
+                                        </td>
+                                        <td class="small" style="max-width: 250px;">@(pc.NoiDungPhanCong ?? "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* Cột phụ bên phải *@
+        <div class="col-lg-4">
+            @* Card Kỹ thuật viên phụ trách hiện tại *@
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="mb-3">Kỹ thuật viên phụ trách</h3>
+                    @if (Model.KtvHienTai == null)
+                    {
+                        <div class="alert alert-warning mb-0">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="material-symbols-outlined">warning</span>
+                                <span>Chưa có kỹ thuật viên nhận phiếu này.</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        var ktv = Model.KtvHienTai;
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <span class="avatar avatar-lg">@UiHelper.VietTat(ktv.TenKyThuatVien)</span>
+                            <div>
+                                <h4 class="m-0 fs-6 fw-bold">@ktv.TenKyThuatVien</h4>
+                                <div class="text-muted small">@(ktv.ChuyenMon ?? "Kỹ thuật viên")</div>
+                            </div>
+                        </div>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-1"><strong>SĐT:</strong> @(ktv.SoDienThoai ?? "—")</li>
+                            <li class="mb-1"><strong>Email:</strong> @(ktv.Email ?? "—")</li>
+                            <li><strong>Tiếp nhận:</strong> @UiHelper.NgayGio(ktv.NgayPhanCong)</li>
+                        </ul>
+                    }
+                </div>
+            </div>
+
+            @* Card Thông tin thiết bị *@
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="mb-3">Thiết bị bảo trì</h3>
+                    <dl class="mb-0">
+                        <dt>Tên thiết bị</dt>
+                        <dd>
+                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@Model.MaThietBi">
+                                <strong>@Model.TenThietBi</strong>
+                            </a>
+                        </dd>
+
+                        <dt>Số Serial</dt>
+                        <dd class="mono">@Model.SoSerial</dd>
+
+                        <dt>Loại thiết bị / Khu vực</dt>
+                        <dd>@(Model.TenLoaiThietBi ?? "—") · @(Model.TenKhuVuc ?? "—")</dd>
+
+                        <dt>Tình trạng thiết bị</dt>
+                        <dd>
+                            <partial name="_StatusBadge" model="UiHelper.Badge(Model.TinhTrangThietBi)" />
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Modal Phân công lần đầu *@
+    @if (Model.CoThePhanCong)
+    {
+        <div class="modal fade" id="modalPhanCong" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="PhanCong" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="MaPhieuXuLy" value="@Model.MaPhieuXuLy" />
+                        <div class="modal-header">
+                            <h3 class="modal-title">Phân công kỹ thuật viên</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label required">Chọn kỹ thuật viên</label>
+                                <select name="MaKyThuatVien" class="form-select" asp-items="Model.KtvOptions" required>
+                                    <option value="">-- Chọn kỹ thuật viên --</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Yêu cầu / Ghi chú phân công</label>
+                                <textarea name="NoiDungPhanCong" class="form-control" rows="3"
+                                          placeholder="Chỉ đạo công việc, hạn hoàn thành hoặc lưu ý đặc biệt..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận phân công</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal Đổi KTV (STT 36) *@
+    @if (Model.CoTheDoiKtv)
+    {
+        <div class="modal fade" id="modalDoiKtv" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="DoiKyThuatVien" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="MaPhieuXuLy" value="@Model.MaPhieuXuLy" />
+                        <div class="modal-header">
+                            <h3 class="modal-title">Đổi kỹ thuật viên phụ trách</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info py-2 small mb-3">
+                                Hệ thống sẽ <strong>đóng phân công cũ</strong> và lưu lại toàn bộ lịch sử bàn giao công việc.
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">KTV hiện tại</label>
+                                <input type="text" class="form-control" value="@(Model.KtvHienTai?.TenKyThuatVien ?? "Chưa có")"
+                                       readonly disabled />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Chọn kỹ thuật viên mới</label>
+                                <select name="MaKyThuatVienMoi" class="form-select" asp-items="Model.KtvOptions" required>
+                                    <option value="">-- Chọn kỹ thuật viên thay thế --</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Lý do bàn giao / đổi KTV</label>
+                                <textarea name="LyDoDoi" class="form-control" rows="3" required
+                                          placeholder="Ghi rõ lý do đổi KTV (VD: KTV cũ bận việc đột xuất, cần hỗ trợ gấp...)"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-warning">Xác nhận đổi KTV</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Modal Hủy phiếu *@
+    @if (Model.CoTheHuy)
+    {
+        <div class="modal fade" id="modalHuyPhieu" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form asp-action="HuyPhieu" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.MaPhieuXuLy" />
+                        <div class="modal-header">
+                            <h3 class="modal-title">Hủy phiếu xử lý</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Bạn có chắc chắn muốn hủy phiếu <strong>@UiHelper.Ma("PX", Model.MaPhieuXuLy)</strong>?</p>
+                            <div class="mb-3">
+                                <label class="form-label">Lý do hủy phiếu</label>
+                                <textarea name="lyDoHuy" class="form-control" rows="2"
+                                          placeholder="Ghi rõ lý do hủy..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận hủy phiếu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
