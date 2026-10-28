@@ -1,82 +1,135 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Khung giao diện Dashboard (8 chỉ số tổng quan) *@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Dashboard hoàn thiện số liệu thật (SST 44) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
 @model DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="page-header">
+<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2">
     <div>
         <h1>Dashboard</h1>
-        <p>Tổng quan thiết bị, bảo trì, sự cố và chi phí xử lý.</p>
+        <p>Tổng quan thiết bị, bảo trì, sự cố và chi phí xử lý thời gian thực.</p>
+    </div>
+    <div class="page-actions">
+        <form method="get" asp-action="Index" class="d-flex align-items-center gap-2 bg-white p-1 px-2 border rounded">
+            <span class="text-small text-muted fw-semibold">Tháng chi phí:</span>
+            <select name="thang" class="form-select form-select-sm" style="width: auto;">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" selected="@(m == Model.Thang)">Tháng @m</option>
+                }
+            </select>
+            <select name="nam" class="form-select form-select-sm" style="width: auto;">
+                @for (int y = Model.Nam - 2; y <= Model.Nam + 1; y++)
+                {
+                    <option value="@y" selected="@(y == Model.Nam)">@y</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Lọc</button>
+            @if (Model.Thang != DateTime.Today.Month || Model.Nam != DateTime.Today.Year)
+            {
+                <a asp-action="Index" class="btn btn-sm btn-ghost" title="Về tháng hiện tại">
+                    <span class="material-symbols-outlined icon-16">today</span>
+                </a>
+            }
+        </form>
     </div>
 </div>
 
 @if (Model.LaDuLieuMinhHoa)
 {
     <div class="alert alert-warning" role="alert">
-        Đang hiển thị <strong>dữ liệu minh họa</strong> để dựng giao diện. Số liệu thật sẽ được nối ở tuần 4.
+        Đang hiển thị <strong>dữ liệu minh họa</strong>.
     </div>
 }
 
+@* 5 KPI cards tổng quan *@
 <div class="row g-3 mb-3">
     <div class="col-sm-6 col-xl">
-        <div class="card kpi-card">
+        <a asp-controller="ThietBi" asp-action="Index" class="card kpi-card text-decoration-none card-hover">
             <span class="kpi-icon"><span class="material-symbols-outlined">precision_manufacturing</span></span>
             <span class="kpi-label">Tổng số thiết bị</span>
-            <span class="kpi-value num">@Model.TongThietBi</span>
-        </div>
+            <span class="kpi-value num text-dark">@Model.TongThietBi</span>
+            <span class="cell-sub text-muted">Toàn bộ danh mục &rarr;</span>
+        </a>
     </div>
     <div class="col-sm-6 col-xl">
-        <div class="card kpi-card is-warning">
+        <a asp-controller="ThietBi" asp-action="Index" asp-route-HanBaoTri="@TrangThaiHanBaoTriEnum.SapDenHan"
+           class="card kpi-card is-warning text-decoration-none card-hover">
             <span class="kpi-icon"><span class="material-symbols-outlined">schedule</span></span>
             <span class="kpi-label">Sắp đến hạn bảo trì</span>
-            <span class="kpi-value num">@Model.ThietBiSapDenHan</span>
-            <span class="cell-sub">Trong @UiHelper.NgayCanhBaoSapDenHan ngày tới</span>
-        </div>
+            <span class="kpi-value num text-dark">@Model.ThietBiSapDenHan</span>
+            <span class="cell-sub">Trong @UiHelper.NgayCanhBaoSapDenHan ngày tới &rarr;</span>
+        </a>
     </div>
     <div class="col-sm-6 col-xl">
-        <div class="card kpi-card is-danger">
+        <a asp-controller="ThietBi" asp-action="Index" asp-route-HanBaoTri="@TrangThaiHanBaoTriEnum.QuaHan"
+           class="card kpi-card is-danger text-decoration-none card-hover">
             <span class="kpi-icon"><span class="material-symbols-outlined">error</span></span>
             <span class="kpi-label">Quá hạn bảo trì</span>
-            <span class="kpi-value num">@Model.ThietBiQuaHan</span>
-        </div>
+            <span class="kpi-value num text-danger">@Model.ThietBiQuaHan</span>
+            <span class="cell-sub text-danger">Cần bảo trì gấp &rarr;</span>
+        </a>
     </div>
     <div class="col-sm-6 col-xl">
-        <div class="card kpi-card">
+        <a asp-controller="KeHoachBaoTri" asp-action="Index" asp-route-TrangThai="@TrangThaiKeHoachEnum.ChoThucHien"
+           class="card kpi-card text-decoration-none card-hover">
             <span class="kpi-icon"><span class="material-symbols-outlined">calendar_clock</span></span>
             <span class="kpi-label">Kế hoạch chờ thực hiện</span>
-            <span class="kpi-value num">@Model.KeHoachChoThucHien</span>
-        </div>
+            <span class="kpi-value num text-dark">@Model.KeHoachChoThucHien</span>
+            <span class="cell-sub text-muted">Theo dõi kế hoạch &rarr;</span>
+        </a>
     </div>
     <div class="col-sm-6 col-xl">
-        <div class="card kpi-card">
+        <a asp-controller="ChiTietXuLy" asp-action="Index"
+           class="card kpi-card text-decoration-none card-hover">
             <span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span>
             <span class="kpi-label">Chi phí tháng @Model.Thang/@Model.Nam</span>
-            <span class="kpi-value num">@UiHelper.Tien(Model.TongChiPhiThang)</span>
-        </div>
+            <span class="kpi-value num text-primary">@UiHelper.Tien(Model.TongChiPhiThang)</span>
+            <span class="cell-sub text-muted">Vật tư &amp; thực hiện &rarr;</span>
+        </a>
     </div>
 </div>
 
-<div class="row g-3">
+@* 3 Biểu đồ thanh ngang phân loại *@
+<div class="row g-3 mb-3">
     @{
-        void Nhom(string tieuDe, string donVi, List<ThongKeMuc> muc)
+        void Nhom(string tieuDe, string donVi, List<ThongKeMuc> muc, string xemTatCaLink)
         {
             <div class="col-lg-4">
-                <div class="card">
+                <div class="card h-100">
                     <div class="card-body">
-                        <h3 class="mb-3">@tieuDe</h3>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="m-0 fs-6 fw-bold">@tieuDe</h3>
+                            <a href="@xemTatCaLink" class="text-small text-decoration-none text-muted">Tất cả &rarr;</a>
+                        </div>
                         @foreach (var m in muc)
                         {
                             var pct = DashboardViewModel.PhanTram(m, muc);
                             <div class="bar-row">
-                                <div class="bar-head">
-                                    <span>@m.Nhan</span>
-                                    <span class="num">@m.SoLuong @donVi</span>
-                                </div>
-                                <div class="bar-track">
-                                    <div class="bar-fill @m.MauCot" style="width:@(pct)%"></div>
-                                </div>
+                                @if (!string.IsNullOrEmpty(m.Link))
+                                {
+                                    <a href="@m.Link" class="text-decoration-none d-block" title="Xem danh sách @m.Nhan">
+                                        <div class="bar-head">
+                                            <span class="text-dark">@m.Nhan</span>
+                                            <span class="num text-primary">@m.SoLuong @donVi</span>
+                                        </div>
+                                        <div class="bar-track">
+                                            <div class="bar-fill @m.MauCot" style="width:@(pct)%"></div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="bar-head">
+                                        <span>@m.Nhan</span>
+                                        <span class="num">@m.SoLuong @donVi</span>
+                                    </div>
+                                    <div class="bar-track">
+                                        <div class="bar-fill @m.MauCot" style="width:@(pct)%"></div>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -85,8 +138,155 @@
         }
     }
     @{
-        Nhom("Thiết bị theo tình trạng", "thiết bị", Model.ThietBiTheoTinhTrang);
-        Nhom("Báo cáo sự cố theo trạng thái", "sự cố", Model.SuCoTheoTrangThai);
-        Nhom("Phiếu xử lý theo trạng thái", "phiếu", Model.PhieuTheoTrangThai);
+        Nhom("Thiết bị theo tình trạng", "thiết bị", Model.ThietBiTheoTinhTrang, Url.Action("Index", "ThietBi")!);
+        Nhom("Báo cáo sự cố theo trạng thái", "sự cố", Model.SuCoTheoTrangThai, Url.Action("Index", "BaoCaoSuCo")!);
+        Nhom("Phiếu xử lý theo trạng thái", "phiếu", Model.PhieuTheoTrangThai, Url.Action("Index", "PhieuXuLy")!);
     }
+</div>
+
+@* Bảng hành động điều hành nhanh *@
+<div class="row g-3">
+    @* Thiết bị cần chú ý bảo trì *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0 d-flex flex-column">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-warning">warning</span>
+                        <h3 class="m-0 fs-6 fw-bold">Thiết bị cần bảo trì gấp</h3>
+                    </div>
+                    <a asp-controller="ThietBi" asp-action="Index" asp-route-HanBaoTri="@TrangThaiHanBaoTriEnum.QuaHan"
+                       class="text-small text-decoration-none">
+                        Xem tất cả (@(Model.ThietBiQuaHan + Model.ThietBiSapDenHan)) &rarr;
+                    </a>
+                </div>
+
+                @if (!Model.ThietBiCanBaoTri.Any())
+                {
+                    <div class="empty-state p-4 text-center my-auto">
+                        <span class="material-symbols-outlined icon-24 text-success">check_circle</span>
+                        <p class="text-muted mt-2 mb-0">Tất cả thiết bị đều đang trong hạn bảo trì tốt.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Thiết bị</th>
+                                    <th>Hạn bảo trì</th>
+                                    <th>Hạn chót</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ThietBiCanBaoTri)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@item.MaThietBi" class="fw-semibold text-decoration-none">
+                                                @item.TenThietBi
+                                            </a>
+                                            <div class="cell-sub mono">@item.SoSerial · @(item.TenKhuVuc ?? "—")</div>
+                                        </td>
+                                        <td>
+                                            <partial name="_StatusBadge" model="UiHelper.Badge(item.TrangThaiHan)" />
+                                            <div class="cell-sub">
+                                                @(item.TrangThaiHan == TrangThaiHanBaoTriEnum.QuaHan
+                                                    ? $"Quá {-item.SoNgayLech} ngày"
+                                                    : (item.SoNgayLech == 0 ? "Hôm nay" : $"Còn {item.SoNgayLech} ngày"))
+                                            </div>
+                                        </td>
+                                        <td class="mono text-small">
+                                            @UiHelper.Ngay(item.NgayBaoTriTiepTheo)
+                                        </td>
+                                        <td class="text-end">
+                                            <a asp-controller="KeHoachBaoTri" asp-action="Create" asp-route-maThietBi="@item.MaThietBi"
+                                               class="btn btn-sm btn-outline-primary" title="Lập kế hoạch bảo trì cho thiết bị này">
+                                                Lập kế hoạch
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Sự cố mới cần xử lý *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0 d-flex flex-column">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-danger">report_problem</span>
+                        <h3 class="m-0 fs-6 fw-bold">Sự cố chờ tiếp nhận &amp; xử lý</h3>
+                    </div>
+                    <a asp-controller="BaoCaoSuCo" asp-action="Index" class="text-small text-decoration-none">
+                        Xem tất cả sự cố &rarr;
+                    </a>
+                </div>
+
+                @if (!Model.SuCoMoiCanXuLy.Any())
+                {
+                    <div class="empty-state p-4 text-center my-auto">
+                        <span class="material-symbols-outlined icon-24 text-success">task_alt</span>
+                        <p class="text-muted mt-2 mb-0">Hiện không có sự cố nào mới phát sinh cần tiếp nhận.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mã / Thiết bị</th>
+                                    <th>Mức độ</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sc in Model.SuCoMoiCanXuLy)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@sc.MaBaoCao" class="mono fw-bold text-decoration-none">
+                                                @UiHelper.Ma("SC", sc.MaBaoCao)
+                                            </a>
+                                            <div class="fw-semibold">@sc.TenThietBi</div>
+                                            <div class="cell-sub text-truncate" style="max-width: 200px;" title="@sc.MoTaSuCo">@sc.MoTaSuCo</div>
+                                        </td>
+                                        <td>
+                                            <partial name="_StatusBadge" model="UiHelper.Badge(sc.MucDoSuCo)" />
+                                        </td>
+                                        <td>
+                                            <partial name="_StatusBadge" model="UiHelper.Badge(sc.TrangThai)" />
+                                            <div class="cell-sub">@UiHelper.NgayGio(sc.NgayBaoCao)</div>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@sc.MaBaoCao"
+                                                   class="btn btn-outline-secondary" title="Xem chi tiết báo cáo">
+                                                    Xem
+                                                </a>
+                                                <a asp-controller="PhieuXuLy" asp-action="Create" asp-route-maBaoCao="@sc.MaBaoCao"
+                                                   class="btn btn-primary" title="Tạo phiếu xử lý cho sự cố này">
+                                                    Lập phiếu
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
