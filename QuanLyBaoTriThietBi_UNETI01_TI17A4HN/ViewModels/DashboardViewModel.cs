@@ -1,11 +1,38 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Dashboard (8 chỉ số thống kê tổng quan; lớp dữ liệu riêng cho View, không map CSDL)
+// Nội dung: Module 5 - ViewModel Dashboard (SST 44: 8 chỉ số thống kê tổng quan + danh sách cảnh báo nghiệp vụ)
 #nullable enable
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
+
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
-/// Một dòng số liệu của biểu đồ cột ngang: nhãn, số lượng, màu cột (class .bar-fill khớp màu badge).
-public record ThongKeMuc(string Nhan, int SoLuong, string MauCot);
+/// Một dòng số liệu của biểu đồ cột ngang: nhãn, số lượng, màu cột (class .bar-fill khớp màu badge), đường dẫn lọc.
+public record ThongKeMuc(string Nhan, int SoLuong, string MauCot, string? Link = null);
+
+/// Thiết bị quá hạn hoặc sắp đến hạn cần chú ý trên Dashboard.
+public record ThietBiCanBaoTriItem(
+    int MaThietBi,
+    string TenThietBi,
+    string SoSerial,
+    string? TenLoaiThietBi,
+    string? TenKhuVuc,
+    DateTime NgayBaoTriTiepTheo,
+    TrangThaiHanBaoTriEnum TrangThaiHan,
+    int SoNgayLech
+);
+
+/// Báo cáo sự cố mới gửi hoặc đã tiếp nhận cần xử lý gấp.
+public record BaoCaoChoXuLyItem(
+    int MaBaoCao,
+    int MaThietBi,
+    string TenThietBi,
+    string SoSerial,
+    string MoTaSuCo,
+    MucDoSuCoEnum MucDoSuCo,
+    TrangThaiBaoCaoEnum TrangThai,
+    DateTime NgayBaoCao,
+    string? NguoiBao
+);
 
 public class DashboardViewModel
 {
@@ -39,6 +66,14 @@ public class DashboardViewModel
     public decimal TongChiPhiThang { get; set; }
     public int Thang { get; set; }
     public int Nam { get; set; }
+
+    // ---- Danh sách hành động nhanh cho Quản trị viên ----
+
+    /// Thiết bị quá hạn hoặc sắp đến hạn cần lập kế hoạch bảo trì
+    public List<ThietBiCanBaoTriItem> ThietBiCanBaoTri { get; set; } = new();
+
+    /// Sự cố mới / Đã tiếp nhận đang chờ lập phiếu xử lý
+    public List<BaoCaoChoXuLyItem> SuCoMoiCanXuLy { get; set; } = new();
 
     /// Phần trăm của một mục so với tổng cả nhóm (0-100, số nguyên) để đặt độ rộng thanh; mục > 0 luôn hiện tối thiểu 1%.
     public static int PhanTram(ThongKeMuc muc, IReadOnlyCollection<ThongKeMuc> nhom)
