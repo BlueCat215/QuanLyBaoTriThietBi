@@ -464,6 +464,169 @@ public class PhieuXuLyService : IPhieuXuLyService
         return ServiceResult.Ok();
     }
 
+    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ)
+    public async Task<ServiceResult> ChuyenChoNghiemThuAsync(
+        ChuyenChoNghiemThuViewModel model,
+        int? maTaiKhoanDangNhap,
+        bool laAdmin
+    )
+    {
+        if (string.IsNullOrWhiteSpace(model.KetQuaXuLy))
+            return ServiceResult.Fail("Vui lòng nhập kết quả xử lý trước khi chuyển chờ nghiệm thu.", nameof(model.KetQuaXuLy));
+
+        if (model.KetQuaXuLy.Trim().Length > 500)
+            return ServiceResult.Fail("Kết quả xử lý không được vượt quá 500 ký tự.", nameof(model.KetQuaXuLy));
+
+        var phieu = await _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo)
+            .Include(p => p.KeHoachBaoTri)
+            .Include(p => p.PhanCongXuLys)
+            .FirstOrDefaultAsync(p => p.MaPhieuXuLy == model.MaPhieuXuLy);
+
+        if (phieu == null)
+            return ServiceResult.Fail("Phiếu xử lý không tồn tại.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu)
+            return ServiceResult.Fail("Phiếu này đã được chuyển sang Chờ nghiệm thu trước đó rồi.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.HoanThanh || phieu.TrangThai == TrangThaiPhieuXuLyEnum.DaHuy)
+            return ServiceResult.Fail("Phiếu đã kết thúc (Hoàn thành / Đã hủy), không thể chuyển nghiệm thu.");
+
+        if (phieu.TrangThai != TrangThaiPhieuXuLyEnum.DangXuLy)
+            return ServiceResult.Fail("Chỉ phiếu đang ở trạng thái Đang xử lý mới được chuyển Chờ nghiệm thu.");
+
+        if (!laAdmin)
+        {
+            if (!maTaiKhoanDangNhap.HasValue)
+                return ServiceResult.Fail("Không xác định được danh tính tài khoản đăng nhập.");
+
+            var ktv = await _phieuRepo.LayKtvTheoTaiKhoanAsync(maTaiKhoanDangNhap.Value);
+            var phanCongHienTai = phieu.PhanCongXuLys.FirstOrDefault(pc => pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc);
+            if (ktv == null || phanCongHienTai == null || ktv.MaKyThuatVien != phanCongHienTai.MaKyThuatVien)
+                return ServiceResult.Fail("Chỉ kỹ thuật viên đang được phân công phụ trách phiếu này mới có quyền chuyển chờ nghiệm thu.");
+        }
+
+        phieu.KetQuaXuLy = model.KetQuaXuLy.Trim();
+        phieu.TrangThai = TrangThaiPhieuXuLyEnum.ChoNghiemThu;
+
+        if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.BaoCaoSuCo != null)
+        {
+            phieu.BaoCaoSuCo.TrangThai = TrangThaiBaoCaoEnum.ChoNghiemThu;
+        }
+        else if (phieu.LoaiXuLy == LoaiXuLyEnum.BaoTriDinhKy && phieu.KeHoachBaoTri != null)
+        {
+            phieu.KeHoachBaoTri.TrangThai = TrangThaiKeHoachEnum.ChoNghiemThu;
+        }
+
+        await _context.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
+    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; TongChiPhi hệ thống tính)
+    public async Task<ServiceResult> NghiemThuAsync(
+        NghiemThuPhieuViewModel model,
+        int? maTaiKhoanDangNhap,
+        bool laAdmin
+    )
+    {
+        if (!laAdmin)
+            return ServiceResult.Fail("Chỉ Quản trị viên (Admin) mới có quyền thực hiện nghiệm thu phiếu xử lý.");
+
+        var phieu = await _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo).ThenInclude(b => b!.ThietBi)
+            .Include(p => p.KeHoachBaoTri).ThenInclude(k => k!.ThietBi)
+            .Include(p => p.PhanCongXuLys)
+            .FirstOrDefaultAsync(p => p.MaPhieuXuLy == model.MaPhieuXuLy);
+
+        if (phieu == null)
+            return ServiceResult.Fail("Phiếu xử lý không tồn tại.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.HoanThanh)
+            return ServiceResult.Fail("Phiếu này đã được nghiệm thu hoàn thành trước đó.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.DaHuy)
+            return ServiceResult.Fail("Phiếu đã bị hủy, không thể nghiệm thu.");
+
+        if (phieu.TrangThai != TrangThaiPhieuXuLyEnum.ChoNghiemThu)
+            return ServiceResult.Fail("Chỉ phiếu đang ở trạng thái Chờ nghiệm thu mới có thể nghiệm thu.");
+
+        if (model.Dat)
+        {
+            var ngayHt = model.NgayHoanThanh ?? DateTime.Now;
+            if (ngayHt > DateTime.Now.AddMinutes(5))
+                return ServiceResult.Fail("Ngày hoàn thành thực tế không được ở trong tương lai.", nameof(model.NgayHoanThanh));
+
+            if (phieu.NgayBatDau.HasValue && ngayHt < phieu.NgayBatDau.Value)
+                return ServiceResult.Fail($"Ngày hoàn thành ({UiHelper.NgayGio(ngayHt)}) không được trước ngày bắt đầu ({UiHelper.NgayGio(phieu.NgayBatDau.Value)}).", nameof(model.NgayHoanThanh));
+
+            phieu.TrangThai = TrangThaiPhieuXuLyEnum.HoanThanh;
+            phieu.NgayHoanThanh = ngayHt;
+
+            if (!string.IsNullOrWhiteSpace(model.NhanXetNghiemThu))
+            {
+                var dongLog = $"[Nghiệm thu ĐẠT {UiHelper.NgayGio(ngayHt)}]: {model.NhanXetNghiemThu.Trim()}";
+                phieu.KetQuaXuLy = string.IsNullOrWhiteSpace(phieu.KetQuaXuLy)
+                    ? dongLog
+                    : phieu.KetQuaXuLy + Environment.NewLine + dongLog;
+            }
+
+            foreach (var pc in phieu.PhanCongXuLys.Where(x => x.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc))
+            {
+                pc.TrangThai = TrangThaiPhanCongEnum.DaKetThuc;
+                pc.NgayKetThucPhanCong = ngayHt;
+            }
+
+            if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.BaoCaoSuCo != null)
+            {
+                phieu.BaoCaoSuCo.TrangThai = TrangThaiBaoCaoEnum.HoanThanh;
+                if (phieu.BaoCaoSuCo.ThietBi != null && phieu.BaoCaoSuCo.ThietBi.TinhTrang != TinhTrangThietBiEnum.NgungSuDung)
+                {
+                    phieu.BaoCaoSuCo.ThietBi.TinhTrang = TinhTrangThietBiEnum.DangHoatDong;
+                }
+            }
+            else if (phieu.LoaiXuLy == LoaiXuLyEnum.BaoTriDinhKy && phieu.KeHoachBaoTri != null)
+            {
+                phieu.KeHoachBaoTri.TrangThai = TrangThaiKeHoachEnum.HoanThanh;
+                if (phieu.KeHoachBaoTri.ThietBi != null)
+                {
+                    var tb = phieu.KeHoachBaoTri.ThietBi;
+                    if (tb.TinhTrang != TinhTrangThietBiEnum.NgungSuDung)
+                    {
+                        tb.TinhTrang = TinhTrangThietBiEnum.DangHoatDong;
+                    }
+
+                    if (tb.NgayBaoTriGanNhat == null || ngayHt.Date >= tb.NgayBaoTriGanNhat.Value.Date)
+                    {
+                        tb.NgayBaoTriGanNhat = ngayHt.Date;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(model.NhanXetNghiemThu))
+                return ServiceResult.Fail("Vui lòng nhập lý do chưa đạt / yêu cầu xử lý lại để kỹ thuật viên khắc phục.", nameof(model.NhanXetNghiemThu));
+
+            phieu.TrangThai = TrangThaiPhieuXuLyEnum.DangXuLy;
+            var dongLog = $"[Nghiệm thu CHƯA ĐẠT - {UiHelper.NgayGio(DateTime.Now)}]: {model.NhanXetNghiemThu.Trim()}";
+            phieu.KetQuaXuLy = string.IsNullOrWhiteSpace(phieu.KetQuaXuLy)
+                ? dongLog
+                : phieu.KetQuaXuLy + Environment.NewLine + dongLog;
+
+            if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.BaoCaoSuCo != null)
+            {
+                phieu.BaoCaoSuCo.TrangThai = TrangThaiBaoCaoEnum.DangXuLy;
+            }
+            else if (phieu.LoaiXuLy == LoaiXuLyEnum.BaoTriDinhKy && phieu.KeHoachBaoTri != null)
+            {
+                phieu.KeHoachBaoTri.TrangThai = TrangThaiKeHoachEnum.DangThucHien;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
     /// Hủy phiếu xử lý
     public async Task<ServiceResult> HuyPhieuXuLyAsync(int maPhieuXuLy, string? lyDoHuy)
     {

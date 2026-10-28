@@ -136,6 +136,8 @@ public class PhieuXuLyDetailsViewModel
     public bool CoTheDoiKtv => LaAdmin && KtvHienTai != null && TrangThai != TrangThaiPhieuXuLyEnum.HoanThanh && TrangThai != TrangThaiPhieuXuLyEnum.DaHuy;
     public bool CoTheHuy => LaAdmin && TrangThai != TrangThaiPhieuXuLyEnum.HoanThanh && TrangThai != TrangThaiPhieuXuLyEnum.DaHuy;
     public bool CoTheBatDau => (TrangThai == TrangThaiPhieuXuLyEnum.DaPhanCong || (TrangThai == TrangThaiPhieuXuLyEnum.ChoPhanCong && KtvHienTai != null)) && (LaAdmin || LaKtvPhuTrach);
+    public bool CoTheChuyenNghiemThu => TrangThai == TrangThaiPhieuXuLyEnum.DangXuLy && (LaAdmin || LaKtvPhuTrach);
+    public bool CoTheNghiemThu => TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu && LaAdmin;
 
     // Dropdown KTV khi phân công / đổi KTV
     public List<SelectListItem> KtvOptions { get; set; } = new();

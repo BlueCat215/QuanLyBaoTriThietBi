@@ -54,6 +54,51 @@ public class ChiTietXuLyController : Controller
         return RedirectToAction(nameof(TheoPhieu), new { maPhieu = maPhieuXuLy });
     }
 
+    /// <summary>
+    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ)
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChuyenChoNghiemThu(ChuyenChoNghiemThuViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Loi"] = "Vui lòng nhập kết quả xử lý hợp lệ trước khi chuyển nghiệm thu.";
+            return RedirectToAction(nameof(TheoPhieu), new { maPhieu = model.MaPhieuXuLy });
+        }
+
+        var result = await _service.ChuyenChoNghiemThuAsync(model, MaTaiKhoanDangNhap, LaAdmin);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã chuyển phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} sang trạng thái Chờ nghiệm thu.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+        return RedirectToAction(nameof(TheoPhieu), new { maPhieu = model.MaPhieuXuLy });
+    }
+
+    /// <summary>
+    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> NghiemThu(NghiemThuPhieuViewModel model)
+    {
+        var result = await _service.NghiemThuAsync(model, MaTaiKhoanDangNhap, LaAdmin);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = model.Dat
+                ? $"Nghiệm thu thành công! Phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} đã hoàn thành và thiết bị đã trở lại hoạt động bình thường."
+                : $"Đã trả phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} về trạng thái Đang xử lý để kỹ thuật viên khắc phục.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+        return RedirectToAction(nameof(TheoPhieu), new { maPhieu = model.MaPhieuXuLy });
+    }
+
     [HttpGet]
     public async Task<IActionResult> Create(int maPhieu)
     {

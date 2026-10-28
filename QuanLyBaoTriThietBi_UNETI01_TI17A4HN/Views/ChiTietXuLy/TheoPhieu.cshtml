@@ -1,4 +1,4 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý của một phiếu + tổng chi phí + Bắt đầu xử lý (STT 39) *@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý + Bắt đầu xử lý (STT 39) + Chuyển Chờ nghiệm thu & Nghiệm thu phiếu (STT 40) *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyIndexViewModel
 @{
@@ -34,6 +34,8 @@
         <a class="btn btn-outline-secondary" asp-controller="PhieuXuLy" asp-action="Details" asp-route-id="@phieu.MaPhieuXuLy">
             <span class="material-symbols-outlined icon-20">description</span> Xem Phiếu @UiHelper.Ma("PX", phieu.MaPhieuXuLy)
         </a>
+
+        @* STT 39: Bắt đầu xử lý *@
         @if (Model.CoTheBatDauXuLy)
         {
             <form asp-action="BatDauXuLy" method="post" class="d-inline">
@@ -44,11 +46,29 @@
                 </button>
             </form>
         }
+
+        @* Thêm bước xử lý *@
         @if (Model.CoTheGhiChiTiet)
         {
             <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
                 <span class="material-symbols-outlined icon-20">add</span> Thêm chi tiết xử lý
             </a>
+        }
+
+        @* STT 40: Chuyển Chờ nghiệm thu *@
+        @if (Model.CoTheChuyenNghiemThu)
+        {
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalChuyenNghiemThu">
+                <span class="material-symbols-outlined icon-20">assignment_turned_in</span> Chuyển chờ nghiệm thu
+            </button>
+        }
+
+        @* STT 40: Nghiệm thu phiếu (Admin) *@
+        @if (Model.CoTheNghiemThu)
+        {
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNghiemThu">
+                <span class="material-symbols-outlined icon-20">verified</span> Nghiệm thu phiếu
+            </button>
         }
     </div>
 </div>
@@ -106,6 +126,55 @@
         </form>
     </div>
 }
+@* Banner Chờ nghiệm thu (STT 40) *@
+else if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu)
+{
+    <div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="material-symbols-outlined fs-2 text-info">fact_check</span>
+            <div>
+                <h4 class="mb-1 fw-bold">Phiếu đang ở trạng thái Chờ nghiệm thu</h4>
+                <p class="mb-1">
+                    <strong>Kết quả xử lý từ KTV:</strong> @(string.IsNullOrWhiteSpace(phieu.KetQuaXuLy) ? "—" : phieu.KetQuaXuLy)
+                </p>
+                <div class="text-muted small">
+                    Tổng chi phí vật tư: <strong class="num text-primary">@UiHelper.Tien(Model.TongChiPhi)</strong> (do hệ thống tự tính, không nhập tay).
+                    @if (Model.LaAdmin)
+                    {
+                        <span>Quản trị viên hãy bấm <strong>Nghiệm thu phiếu</strong> để kiểm tra đạt hoặc trả về xử lý lại.</span>
+                    }
+                    else
+                    {
+                        <span>Đang chờ Quản trị viên duyệt nghiệm thu kết quả công việc.</span>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (Model.CoTheNghiemThu)
+        {
+            <button type="button" class="btn btn-success ms-3 flex-shrink-0" data-bs-toggle="modal" data-bs-target="#modalNghiemThu">
+                <span class="material-symbols-outlined icon-20">verified</span> Nghiệm thu ngay
+            </button>
+        }
+    </div>
+}
+@* Banner Hoàn thành *@
+else if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.HoanThanh)
+{
+    <div class="alert alert-success d-flex align-items-center gap-3 p-3 mb-3">
+        <span class="material-symbols-outlined fs-2 text-success">check_circle</span>
+        <div>
+            <h4 class="mb-1 fw-bold">Phiếu đã hoàn thành nghiệm thu</h4>
+            <div class="small">
+                Hoàn thành lúc: <strong>@UiHelper.NgayGio(phieu.NgayHoanThanh)</strong> · Tổng chi phí vật tư: <strong>@UiHelper.Tien(Model.TongChiPhi)</strong>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(phieu.KetQuaXuLy))
+            {
+                <div class="mt-1 small" style="white-space: pre-line;"><strong>Kết quả &amp; Ghi chú nghiệm thu:</strong> @phieu.KetQuaXuLy</div>
+            }
+        </div>
+    </div>
+}
 else if (!phieu.ChoPhepGhiChiTiet)
 {
     <div class="alert alert-info" role="alert">
@@ -116,6 +185,24 @@ else if (!Model.CoTheGhiChiTiet)
 {
     <div class="alert alert-secondary" role="alert">
         Phiếu đang ở trạng thái <strong>Đang xử lý</strong> bởi kỹ thuật viên <strong>@(phieu.TenKtvHienTai ?? "khác")</strong>. Chỉ kỹ thuật viên đang được phân công (hoặc Quản trị viên) mới có quyền cập nhật chi tiết xử lý.
+    </div>
+}
+
+@* Gợi ý chuyển nghiệm thu khi KTV đang ở Đang xử lý *@
+@if (Model.CoTheChuyenNghiemThu)
+{
+    <div class="card mb-3 border-warning bg-light">
+        <div class="card-body py-2 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-warning">info</span>
+                <span class="small">
+                    Đã hoàn thành công việc và kê khai vật tư? Bấm <strong>Chuyển chờ nghiệm thu</strong> và nhập kết quả để bàn giao Admin nghiệm thu.
+                </span>
+            </div>
+            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalChuyenNghiemThu">
+                <span class="material-symbols-outlined icon-16">assignment_turned_in</span> Chuyển chờ nghiệm thu
+            </button>
+        </div>
     </div>
 }
 
@@ -150,12 +237,20 @@ else
     <div class="table-card card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3 class="card-title m-0">Lịch sử các bước xử lý (@Model.Items.Count bước)</h3>
-            @if (Model.CoTheGhiChiTiet)
-            {
-                <a class="btn btn-sm btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
-                    <span class="material-symbols-outlined icon-16">add</span> Thêm bước xử lý
-                </a>
-            }
+            <div class="d-flex gap-2">
+                @if (Model.CoTheGhiChiTiet)
+                {
+                    <a class="btn btn-sm btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
+                        <span class="material-symbols-outlined icon-16">add</span> Thêm bước xử lý
+                    </a>
+                }
+                @if (Model.CoTheChuyenNghiemThu)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalChuyenNghiemThu">
+                        <span class="material-symbols-outlined icon-16">assignment_turned_in</span> Chuyển nghiệm thu
+                    </button>
+                }
+            </div>
         </div>
         <table class="data-table mb-0">
             <thead>
@@ -212,6 +307,7 @@ else
     </div>
 }
 
+@* Modal Xóa chi tiết xử lý *@
 <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -235,12 +331,174 @@ else
     </div>
 </div>
 
+@* STT 40: Modal Chuyển Chờ Nghiệm Thu *@
+@if (Model.CoTheChuyenNghiemThu)
+{
+    <div class="modal fade" id="modalChuyenNghiemThu" tabindex="-1" aria-labelledby="modalChuyenNghiemThuTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="ChuyenChoNghiemThu" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="MaPhieuXuLy" value="@phieu.MaPhieuXuLy" />
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalChuyenNghiemThuTitle">Chuyển Chờ Nghiệm Thu</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info py-2 small mb-3">
+                            Kỹ thuật viên xác nhận đã hoàn tất công việc thực tế và kê khai đầy đủ các bước xử lý, vật tư sử dụng.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required fw-bold">Kết quả xử lý công việc</label>
+                            <textarea name="KetQuaXuLy" class="form-control" rows="4" required
+                                      placeholder="Mô tả tóm tắt kết quả xử lý (VD: Đã thay tụ kích và vệ sinh quạt giải nhiệt, thiết bị vận hành êm, đo dòng điện ổn định 4.5A)...">@phieu.KetQuaXuLy</textarea>
+                            <div class="form-text">Yêu cầu bắt buộc mô tả rõ kết quả đạt được để phục vụ nghiệm thu (tối đa 500 ký tự).</div>
+                        </div>
+                        <div class="border rounded p-2 bg-light small">
+                            <div class="d-flex justify-content-between">
+                                <span>Số bước xử lý đã ghi:</span>
+                                <strong>@Model.Items.Count bước</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <span>Tổng chi phí vật tư:</span>
+                                <strong class="text-primary">@UiHelper.Tien(Model.TongChiPhi)</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-warning">
+                            <span class="material-symbols-outlined icon-16">send</span> Xác nhận chuyển nghiệm thu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@* STT 40: Modal Nghiệm Thu Phiếu (Admin) *@
+@if (Model.CoTheNghiemThu)
+{
+    <div class="modal fade" id="modalNghiemThu" tabindex="-1" aria-labelledby="modalNghiemThuTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="NghiemThu" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="MaPhieuXuLy" value="@phieu.MaPhieuXuLy" />
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalNghiemThuTitle">Nghiệm Thu Phiếu Xử Lý</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 p-3 bg-light rounded border">
+                            <div class="small text-muted mb-1">Kết quả do Kỹ thuật viên báo cáo:</div>
+                            <div class="fw-semibold" style="white-space: pre-line;">@(string.IsNullOrWhiteSpace(phieu.KetQuaXuLy) ? "Chưa có mô tả" : phieu.KetQuaXuLy)</div>
+                            <div class="d-flex justify-content-between border-top pt-2 mt-2 small">
+                                <span>Tổng chi phí vật tư (hệ thống tính):</span>
+                                <strong class="num text-primary fs-6">@UiHelper.Tien(Model.TongChiPhi)</strong>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label required fw-bold">Kết luận nghiệm thu</label>
+                            <div class="d-flex gap-4 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Dat" id="radioNghiemThuDat" value="true" checked />
+                                    <label class="form-check-label text-success fw-bold" for="radioNghiemThuDat">
+                                        <span class="material-symbols-outlined icon-16 align-middle">check_circle</span> ĐẠT (Hoàn thành)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="Dat" id="radioNghiemThuChuaDat" value="false" />
+                                    <label class="form-check-label text-danger fw-bold" for="radioNghiemThuChuaDat">
+                                        <span class="material-symbols-outlined icon-16 align-middle">cancel</span> CHƯA ĐẠT (Trả về xử lý lại)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="groupNgayHoanThanh">
+                            <label class="form-label required">Ngày hoàn thành thực tế</label>
+                            <input type="datetime-local" name="NgayHoanThanh" id="inputNgayHoanThanh" class="form-control"
+                                   value="@(DateTime.Now.ToString("yyyy-MM-ddTHH:mm"))" required />
+                            <div class="form-text">Thời điểm chốt kết thúc phiếu và chuyển thiết bị về trạng thái Đang hoạt động.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" id="labelNhanXet">Nhận xét nghiệm thu / Lý do</label>
+                            <textarea name="NhanXetNghiemThu" id="textareaNhanXet" class="form-control" rows="3"
+                                      placeholder="Ghi nhận xét đánh giá chất lượng hoặc lý do chưa đạt..."></textarea>
+                            <div class="form-text text-danger d-none" id="noteBatBuocChuaDat">Bắt buộc nhập lý do chưa đạt để kỹ thuật viên biết nội dung cần khắc phục.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitNghiemThu">
+                            <span class="material-symbols-outlined icon-16">verified</span> Xác nhận nghiệm thu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
 @section Scripts {
     <script>
-        document.getElementById('modalXoa').addEventListener('show.bs.modal', function (e) {
+        document.getElementById('modalXoa')?.addEventListener('show.bs.modal', function (e) {
             var nut = e.relatedTarget;
             document.getElementById('xoaId').value = nut.getAttribute('data-id');
             document.getElementById('xoaTen').textContent = nut.getAttribute('data-ten');
         });
+
+        (function () {
+            var rDat = document.getElementById('radioNghiemThuDat');
+            var rChuaDat = document.getElementById('radioNghiemThuChuaDat');
+            var grpHt = document.getElementById('groupNgayHoanThanh');
+            var inpHt = document.getElementById('inputNgayHoanThanh');
+            var txtNhanXet = document.getElementById('textareaNhanXet');
+            var lblNhanXet = document.getElementById('labelNhanXet');
+            var noteChuaDat = document.getElementById('noteBatBuocChuaDat');
+            var btnSubmit = document.getElementById('btnSubmitNghiemThu');
+
+            function capNhatGiaoDienNghiemThu() {
+                if (!rDat || !rChuaDat) return;
+                var laDat = rDat.checked;
+                if (laDat) {
+                    if (grpHt) grpHt.style.display = 'block';
+                    if (inpHt) inpHt.required = true;
+                    if (lblNhanXet) {
+                        lblNhanXet.classList.remove('required');
+                        lblNhanXet.textContent = 'Ghi chú nghiệm thu (tùy chọn)';
+                    }
+                    if (txtNhanXet) txtNhanXet.required = false;
+                    if (noteChuaDat) noteChuaDat.classList.add('d-none');
+                    if (btnSubmit) {
+                        btnSubmit.className = 'btn btn-success';
+                        btnSubmit.innerHTML = '<span class="material-symbols-outlined icon-16">check_circle</span> Xác nhận Đạt & Hoàn thành';
+                    }
+                } else {
+                    if (grpHt) grpHt.style.display = 'none';
+                    if (inpHt) inpHt.required = false;
+                    if (lblNhanXet) {
+                        lblNhanXet.classList.add('required');
+                        lblNhanXet.textContent = 'Lý do chưa đạt / Yêu cầu xử lý lại';
+                    }
+                    if (txtNhanXet) txtNhanXet.required = true;
+                    if (noteChuaDat) noteChuaDat.classList.remove('d-none');
+                    if (btnSubmit) {
+                        btnSubmit.className = 'btn btn-danger';
+                        btnSubmit.innerHTML = '<span class="material-symbols-outlined icon-16">undo</span> Trả về Đang xử lý';
+                    }
+                }
+            }
+
+            if (rDat && rChuaDat) {
+                rDat.addEventListener('change', capNhatGiaoDienNghiemThu);
+                rChuaDat.addEventListener('change', capNhatGiaoDienNghiemThu);
+                capNhatGiaoDienNghiemThu();
+            }
+        })();
     </script>
 }
