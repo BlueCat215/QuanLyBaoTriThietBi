@@ -1,6 +1,6 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Chi tiết xử lý (danh sách phiếu, chi tiết theo phiếu, form Thêm/Sửa)
+// Nội dung: Module 5 - ViewModel Chi tiết xử lý (danh sách phiếu, chi tiết theo phiếu, form Thêm/Sửa, bắt đầu xử lý)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -29,7 +29,9 @@ public record PhieuTomTat(
     DateTime? NgayHoanThanh,
     string? KetQuaXuLy,
     string? TenThietBi,
-    string? SoSerial
+    string? SoSerial,
+    int? MaKtvHienTai = null,
+    string? TenKtvHienTai = null
 )
 {
     /// NƠI DUY NHẤT quy định khi nào được thêm/sửa/xóa chi tiết xử lý: chỉ khi phiếu đang xử lý.
@@ -79,6 +81,12 @@ public class ChiTietXuLyIndexViewModel
 
     /// SUM(ThanhTien) - tính bằng truy vấn, không lưu cột.
     public decimal TongChiPhi { get; set; }
+
+    // Phân quyền KTV đang phụ trách / Admin
+    public bool LaAdmin { get; set; }
+    public bool LaKtvPhuTrach { get; set; }
+    public bool CoTheGhiChiTiet => Phieu.ChoPhepGhiChiTiet && (LaAdmin || LaKtvPhuTrach);
+    public bool CoTheBatDauXuLy => (Phieu.TrangThai == TrangThaiPhieuXuLyEnum.DaPhanCong || (Phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoPhanCong && Phieu.MaKtvHienTai.HasValue)) && (LaAdmin || LaKtvPhuTrach);
 }
 
 /// Vật tư đang dùng được, hiển thị trong ô chọn (đơn giá mặc định dùng để gợi ý).
@@ -115,6 +123,10 @@ public class ChiTietXuLyFormViewModel
     public string? GhiChu { get; set; }
 
     public bool LaThemMoi => MaChiTiet == 0;
+
+    // Quyền thao tác
+    public bool LaAdmin { get; set; }
+    public bool LaKtvPhuTrach { get; set; }
 
     // ---- Chỉ để hiển thị, không bind từ form ----
     [BindNever, ValidateNever]

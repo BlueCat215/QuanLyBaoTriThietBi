@@ -1,6 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
-// Nội dung: Module 4 - Interface Service Phiếu xử lý và Phân công xử lý
+// Nội dung: Module 4 - Interface Service Phiếu xử lý và Phân công xử lý (bổ sung STT 39 Bắt đầu xử lý)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -25,7 +25,7 @@ public interface IPhieuXuLyService
     // Chuẩn bị dữ liệu form tạo phiếu mới
     Task<TaoPhieuXuLyViewModel> ChuanBiFormTaoPhieuAsync(int? maBaoCao, int? maKeHoach);
 
-    //  Phân công xử lý lần đầu
+    // Phân công xử lý lần đầu
     Task<ServiceResult> PhanCongXuLyAsync(PhanCongXuLyFormViewModel model);
 
     // Đổi kỹ thuật viên phụ trách, kết thúc phân công cũ, tạo phân công mới lưu lịch sử
@@ -33,6 +33,9 @@ public interface IPhieuXuLyService
 
     // LINQ truy vấn kỹ thuật viên đang phụ trách hiện tại
     Task<KyThuatVien?> LayKtvHienTaiAsync(int maPhieuXuLy);
+
+    // STT 39: Bắt đầu xử lý phiếu (chỉ KTV đang được phân công hoặc Admin)
+    Task<ServiceResult> BatDauXuLyAsync(int maPhieuXuLy, int? maTaiKhoanDangNhap, bool laAdmin);
 
     // Hủy phiếu xử lý
     Task<ServiceResult> HuyPhieuXuLyAsync(int maPhieuXuLy, string? lyDoHuy);

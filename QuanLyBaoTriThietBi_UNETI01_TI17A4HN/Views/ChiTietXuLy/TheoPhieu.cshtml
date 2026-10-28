@@ -1,4 +1,4 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý của một phiếu + tổng chi phí *@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý của một phiếu + tổng chi phí + Bắt đầu xử lý (STT 39) *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyIndexViewModel
 @{
@@ -31,9 +31,24 @@
     </div>
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="Index">Danh sách phiếu</a>
-        @if (phieu.ChoPhepGhiChiTiet)
+        <a class="btn btn-outline-secondary" asp-controller="PhieuXuLy" asp-action="Details" asp-route-id="@phieu.MaPhieuXuLy">
+            <span class="material-symbols-outlined icon-20">description</span> Xem Phiếu @UiHelper.Ma("PX", phieu.MaPhieuXuLy)
+        </a>
+        @if (Model.CoTheBatDauXuLy)
         {
-            <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">Thêm chi tiết xử lý</a>
+            <form asp-action="BatDauXuLy" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="maPhieuXuLy" value="@phieu.MaPhieuXuLy" />
+                <button type="submit" class="btn btn-success" title="Kỹ thuật viên bắt đầu xử lý phiếu">
+                    <span class="material-symbols-outlined icon-20">play_arrow</span> Bắt đầu xử lý
+                </button>
+            </form>
+        }
+        @if (Model.CoTheGhiChiTiet)
+        {
+            <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
+                <span class="material-symbols-outlined icon-20">add</span> Thêm chi tiết xử lý
+            </a>
         }
     </div>
 </div>
@@ -49,14 +64,15 @@
     <div class="col-md-6 col-xl-3">
         <div class="card kpi-card">
             <span class="kpi-label">Thời gian xử lý</span>
-            <span class="fw-semibold">Bắt đầu: @UiHelper.NgayGio(phieu.NgayBatDau)</span>
-            <span class="fw-semibold">Hoàn thành: @UiHelper.NgayGio(phieu.NgayHoanThanh)</span>
+            <span class="fw-semibold">Bắt đầu: @(phieu.NgayBatDau.HasValue ? UiHelper.NgayGio(phieu.NgayBatDau) : "Chưa bắt đầu")</span>
+            <span class="fw-semibold">Hoàn thành: @(phieu.NgayHoanThanh.HasValue ? UiHelper.NgayGio(phieu.NgayHoanThanh) : "Chưa hoàn thành")</span>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="card kpi-card">
-            <span class="kpi-label">Số dòng chi tiết</span>
-            <span class="kpi-value">@Model.Items.Count</span>
+            <span class="kpi-label">Kỹ thuật viên phụ trách</span>
+            <span class="fw-semibold text-truncate">@(phieu.TenKtvHienTai ?? "Chưa phân công")</span>
+            <span class="cell-sub">@(Model.LaKtvPhuTrach ? "(Bạn đang phụ trách)" : (Model.LaAdmin ? "(Quản trị viên)" : ""))</span>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
@@ -68,62 +84,111 @@
     </div>
 </div>
 
-@if (!phieu.ChoPhepGhiChiTiet)
+@* Banner kích hoạt Bắt đầu xử lý (STT 39) *@
+@if (Model.CoTheBatDauXuLy)
+{
+    <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <span class="material-symbols-outlined fs-2 text-warning">pending_actions</span>
+            <div>
+                <h4 class="mb-1 fw-bold">Phiếu đã được phân công — Chưa bắt đầu xử lý</h4>
+                <p class="mb-0 text-muted">
+                    Phiếu đang ở trạng thái <strong>Đã phân công</strong>. Hãy nhấn <strong>Bắt đầu xử lý</strong> để hệ thống ghi nhận thời gian bắt đầu (<code>NgayBatDau</code>), chuyển phiếu sang trạng thái <strong>Đang xử lý</strong> và mở khóa chức năng cập nhật nhật ký/vật tư chi tiết.
+                </p>
+            </div>
+        </div>
+        <form asp-action="BatDauXuLy" method="post" class="ms-3 flex-shrink-0">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="maPhieuXuLy" value="@phieu.MaPhieuXuLy" />
+            <button type="submit" class="btn btn-success">
+                <span class="material-symbols-outlined icon-20">play_arrow</span> Bắt đầu xử lý ngay
+            </button>
+        </form>
+    </div>
+}
+else if (!phieu.ChoPhepGhiChiTiet)
 {
     <div class="alert alert-info" role="alert">
         Phiếu đang ở trạng thái <strong>@UiHelper.Badge(phieu.TrangThai).Text</strong> nên chỉ được xem chi tiết xử lý. Chỉ phiếu <strong>Đang xử lý</strong> mới được thêm, sửa hoặc xóa.
+    </div>
+}
+else if (!Model.CoTheGhiChiTiet)
+{
+    <div class="alert alert-secondary" role="alert">
+        Phiếu đang ở trạng thái <strong>Đang xử lý</strong> bởi kỹ thuật viên <strong>@(phieu.TenKtvHienTai ?? "khác")</strong>. Chỉ kỹ thuật viên đang được phân công (hoặc Quản trị viên) mới có quyền cập nhật chi tiết xử lý.
     </div>
 }
 
 @if (!Model.Items.Any())
 {
     <div class="card">
-        <div class="card-body empty-state">
-            <span class="material-symbols-outlined icon-24">build</span>
-            <h3>Chưa có chi tiết xử lý nào</h3>
-            <p>Ghi nhận từng bước thực hiện, vật tư / linh kiện đã dùng và chi phí cho phiếu này.</p>
-            @if (phieu.ChoPhepGhiChiTiet)
+        <div class="card-body empty-state p-4 text-center">
+            <span class="material-symbols-outlined icon-32 text-muted">build</span>
+            <h3 class="mt-2">Chưa có chi tiết xử lý nào</h3>
+            <p class="text-muted">Ghi nhận từng bước thực hiện, vật tư / linh kiện đã dùng và chi phí cho phiếu này.</p>
+            @if (Model.CoTheGhiChiTiet)
             {
-                <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">Thêm chi tiết xử lý</a>
+                <a class="btn btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
+                    <span class="material-symbols-outlined icon-20">add</span> Thêm chi tiết xử lý
+                </a>
+            }
+            else if (Model.CoTheBatDauXuLy)
+            {
+                <form asp-action="BatDauXuLy" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="maPhieuXuLy" value="@phieu.MaPhieuXuLy" />
+                    <button type="submit" class="btn btn-success">
+                        <span class="material-symbols-outlined icon-20">play_arrow</span> Bắt đầu xử lý để nhập chi tiết
+                    </button>
+                </form>
             }
         </div>
     </div>
 }
 else
 {
-    <div class="table-card">
-        <table class="data-table">
+    <div class="table-card card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="card-title m-0">Lịch sử các bước xử lý (@Model.Items.Count bước)</h3>
+            @if (Model.CoTheGhiChiTiet)
+            {
+                <a class="btn btn-sm btn-primary" asp-action="Create" asp-route-maPhieu="@phieu.MaPhieuXuLy">
+                    <span class="material-symbols-outlined icon-16">add</span> Thêm bước xử lý
+                </a>
+            }
+        </div>
+        <table class="data-table mb-0">
             <thead>
                 <tr>
-                    <th>Ngày</th>
+                    <th style="width: 140px;">Thời gian</th>
                     <th>Nội dung thực hiện</th>
                     <th>Vật tư / linh kiện</th>
                     <th class="num">Số lượng</th>
                     <th class="num">Đơn giá</th>
                     <th class="num">Thành tiền</th>
-                    <th></th>
+                    <th style="width: 80px;"></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model.Items)
                 {
                     <tr>
-                        <td class="num">@UiHelper.NgayGio(item.NgayCapNhat)</td>
+                        <td class="num text-muted small">@UiHelper.NgayGio(item.NgayCapNhat)</td>
                         <td>
-                            <div class="cell-title">@item.NoiDungThucHien</div>
+                            <div class="cell-title fw-semibold">@item.NoiDungThucHien</div>
                             @if (!string.IsNullOrEmpty(item.GhiChu))
                             {
-                                <div class="cell-sub">@item.GhiChu</div>
+                                <div class="cell-sub text-muted small">@item.GhiChu</div>
                             }
                         </td>
                         <td>@(string.IsNullOrEmpty(item.VatTuLinhKien) ? "—" : item.VatTuLinhKien)</td>
                         <td class="num">@(item.SoLuong?.ToString() ?? "—")</td>
                         <td class="num">@UiHelper.Tien(item.DonGia)</td>
-                        <td class="num">@UiHelper.Tien(item.ThanhTien)</td>
-                        <td>
-                            @if (phieu.ChoPhepGhiChiTiet)
+                        <td class="num fw-bold">@UiHelper.Tien(item.ThanhTien)</td>
+                        <td class="text-end">
+                            @if (Model.CoTheGhiChiTiet)
                             {
-                                <div class="row-actions">
+                                <div class="row-actions btn-group btn-group-sm">
                                     <a class="btn btn-ghost btn-icon" asp-action="Edit" asp-route-id="@item.MaChiTiet"
                                        title="Sửa chi tiết xử lý">
                                         <span class="material-symbols-outlined">edit</span>
@@ -140,8 +205,9 @@ else
                 }
             </tbody>
         </table>
-        <div class="table-footer">
-            <span>Tổng chi phí: <strong class="num">@UiHelper.Tien(Model.TongChiPhi)</strong></span>
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Lịch sử xử lý được lưu trữ theo mốc thời gian cập nhật của kỹ thuật viên.</span>
+            <span>Tổng chi phí vật tư: <strong class="num text-primary fs-5">@UiHelper.Tien(Model.TongChiPhi)</strong></span>
         </div>
     </div>
 }
@@ -150,12 +216,13 @@ else
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form asp-action="Delete" method="post">
+                @Html.AntiForgeryToken()
                 <div class="modal-header">
                     <h3 class="modal-title" id="modalXoaTitle">Xóa chi tiết xử lý</h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Bạn có chắc muốn xóa dòng <strong id="xoaTen"></strong>? Tổng chi phí của phiếu sẽ được tính lại.</p>
+                    <p>Bạn có chắc muốn xóa dòng <strong id="xoaTen"></strong>? Tổng chi phí của phiếu sẽ được hệ thống tính lại tự động.</p>
                     <input type="hidden" name="id" id="xoaId" />
                     <input type="hidden" name="maPhieu" value="@phieu.MaPhieuXuLy" />
                 </div>
