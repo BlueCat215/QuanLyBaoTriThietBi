@@ -1,6 +1,6 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Chi tiết xử lý (danh sách phiếu, chi tiết theo phiếu, form Thêm/Sửa, bắt đầu xử lý)
+// Nội dung: Module 5 - ViewModel Chi tiết xử lý (danh sách phiếu, chi tiết theo phiếu, form Thêm/Sửa, bắt đầu xử lý, chuyển chờ nghiệm thu & nghiệm thu)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -87,6 +87,8 @@ public class ChiTietXuLyIndexViewModel
     public bool LaKtvPhuTrach { get; set; }
     public bool CoTheGhiChiTiet => Phieu.ChoPhepGhiChiTiet && (LaAdmin || LaKtvPhuTrach);
     public bool CoTheBatDauXuLy => (Phieu.TrangThai == TrangThaiPhieuXuLyEnum.DaPhanCong || (Phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoPhanCong && Phieu.MaKtvHienTai.HasValue)) && (LaAdmin || LaKtvPhuTrach);
+    public bool CoTheChuyenNghiemThu => Phieu.TrangThai == TrangThaiPhieuXuLyEnum.DangXuLy && (LaAdmin || LaKtvPhuTrach);
+    public bool CoTheNghiemThu => Phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu && LaAdmin;
 }
 
 /// Vật tư đang dùng được, hiển thị trong ô chọn (đơn giá mặc định dùng để gợi ý).
@@ -134,4 +136,40 @@ public class ChiTietXuLyFormViewModel
 
     [BindNever, ValidateNever]
     public List<VatTuLuaChon> VatTuOptions { get; set; } = new();
+}
+
+/// <summary>
+/// STT 40: Form chuyển phiếu sang Chờ nghiệm thu (yêu cầu bắt buộc có KetQuaXuLy)
+/// </summary>
+public class ChuyenChoNghiemThuViewModel
+{
+    public int MaPhieuXuLy { get; set; }
+
+    [Required(ErrorMessage = "Vui lòng nhập kết quả xử lý trước khi chuyển nghiệm thu")]
+    [StringLength(500, ErrorMessage = "Kết quả xử lý tối đa 500 ký tự")]
+    [Display(Name = "Kết quả xử lý")]
+    public string KetQuaXuLy { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// STT 40: Form Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý)
+/// </summary>
+public class NghiemThuPhieuViewModel
+{
+    public int MaPhieuXuLy { get; set; }
+
+    [Display(Name = "Kết quả nghiệm thu")]
+    public bool Dat { get; set; } = true;
+
+    [Display(Name = "Ngày hoàn thành thực tế")]
+    [DataType(DataType.DateTime)]
+    public DateTime? NgayHoanThanh { get; set; } = DateTime.Now;
+
+    [StringLength(500, ErrorMessage = "Nhận xét nghiệm thu tối đa 500 ký tự")]
+    [Display(Name = "Nhận xét nghiệm thu / Lý do chưa đạt")]
+    public string? NhanXetNghiemThu { get; set; }
+
+    // Thông tin hiển thị tóm tắt trong modal nghiệm thu
+    public decimal TongChiPhi { get; set; }
+    public string? KetQuaXuLyHienTai { get; set; }
 }

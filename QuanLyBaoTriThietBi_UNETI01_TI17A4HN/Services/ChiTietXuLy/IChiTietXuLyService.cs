@@ -1,6 +1,6 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - Interface Service Chi tiết xử lý (CRUD chi tiết, tính tổng chi phí, bắt đầu xử lý chỉ KTV được phân công)
+// Nội dung: Module 5 - Interface Service Chi tiết xử lý (CRUD chi tiết, tính tổng chi phí, Bắt đầu xử lý, Chuyển chờ nghiệm thu & Nghiệm thu phiếu)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
@@ -38,4 +38,14 @@ public interface IChiTietXuLyService
     /// Ghi NgayBatDau, chuyển phiếu sang Đang xử lý, cập nhật trạng thái nguồn và thiết bị.
     /// </summary>
     Task<ServiceResult> BatDauXuLyAsync(int maPhieuXuLy, int? maTaiKhoanDangNhap, bool laAdmin);
+
+    /// <summary>
+    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ, chỉ KTV phụ trách hoặc Admin)
+    /// </summary>
+    Task<ServiceResult> ChuyenChoNghiemThuAsync(ChuyenChoNghiemThuViewModel model, int? maTaiKhoanDangNhap, bool laAdmin);
+
+    /// <summary>
+    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
+    /// </summary>
+    Task<ServiceResult> NghiemThuAsync(NghiemThuPhieuViewModel model, int? maTaiKhoanDangNhap, bool laAdmin);
 }

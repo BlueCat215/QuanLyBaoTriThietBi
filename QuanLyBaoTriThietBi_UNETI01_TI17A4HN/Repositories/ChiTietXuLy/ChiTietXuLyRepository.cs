@@ -160,5 +160,6 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
             .Include(p => p.BaoCaoSuCo).ThenInclude(b => b!.ThietBi)
             .Include(p => p.KeHoachBaoTri).ThenInclude(k => k!.ThietBi)
             .Include(p => p.PhanCongXuLys)
+            .Include(p => p.ChiTietXuLys)
             .FirstOrDefaultAsync(p => p.MaPhieuXuLy == maPhieuXuLy);
 }

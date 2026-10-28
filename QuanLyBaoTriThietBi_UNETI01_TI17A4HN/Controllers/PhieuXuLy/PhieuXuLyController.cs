@@ -165,6 +165,52 @@ public class PhieuXuLyController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // ------------------------------------------ CHUYỂN CHỜ NGHIỆM THU (STT 40) ------------------------------------------
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> ChuyenChoNghiemThu(ChuyenChoNghiemThuViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Loi"] = "Vui lòng nhập kết quả xử lý hợp lệ trước khi chuyển nghiệm thu.";
+            return RedirectToAction(nameof(Details), new { id = model.MaPhieuXuLy });
+        }
+
+        var result = await _phieuService.ChuyenChoNghiemThuAsync(model, MaTaiKhoanDangNhap, LaAdmin);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã chuyển phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} sang trạng thái Chờ nghiệm thu.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        return RedirectToAction(nameof(Details), new { id = model.MaPhieuXuLy });
+    }
+
+    // ------------------------------------------ NGHIỆM THU PHIẾU (STT 40) ------------------------------------------
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Admin)]
+    public async Task<IActionResult> NghiemThu(NghiemThuPhieuViewModel model)
+    {
+        var result = await _phieuService.NghiemThuAsync(model, MaTaiKhoanDangNhap, LaAdmin);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = model.Dat
+                ? $"Nghiệm thu thành công! Phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} đã hoàn thành và thiết bị đã trở lại hoạt động bình thường."
+                : $"Đã trả phiếu {UiHelper.Ma("PX", model.MaPhieuXuLy)} về trạng thái Đang xử lý để kỹ thuật viên khắc phục.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        return RedirectToAction(nameof(Details), new { id = model.MaPhieuXuLy });
+    }
+
     // ------------------------------------------ HỦY PHIẾU XỬ LÝ ------------------------------------------
     [HttpPost]
     [ValidateAntiForgeryToken]
