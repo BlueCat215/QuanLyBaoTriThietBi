@@ -148,6 +148,23 @@ public class PhieuXuLyController : Controller
         return RedirectToAction(nameof(Details), new { id = model.MaPhieuXuLy });
     }
 
+    // ------------------------------------------ BẮT ĐẦU XỬ LÝ (STT 39) ------------------------------------------
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> BatDauXuLy(int id)
+    {
+        var result = await _phieuService.BatDauXuLyAsync(id, MaTaiKhoanDangNhap, LaAdmin);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = $"Đã bắt đầu xử lý phiếu {UiHelper.Ma("PX", id)}. Phiếu đã chuyển sang trạng thái Đang xử lý.";
+            return RedirectToAction("TheoPhieu", "ChiTietXuLy", new { maPhieu = id });
+        }
+
+        TempData["Loi"] = result.ErrorMessage;
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
     // ------------------------------------------ HỦY PHIẾU XỬ LÝ ------------------------------------------
     [HttpPost]
     [ValidateAntiForgeryToken]

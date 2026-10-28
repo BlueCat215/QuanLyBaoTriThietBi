@@ -60,6 +60,8 @@ public record PhieuXuLyDanhSachRow(
         LoaiXuLy == LoaiXuLyEnum.XuLySuCo
             ? (MaBaoCao.HasValue ? $"Sự cố {UiHelper.Ma("SC", MaBaoCao.Value)}" : "Sự cố")
             : (MaKeHoach.HasValue ? $"Kế hoạch {UiHelper.Ma("KH", MaKeHoach.Value)}" : "Kế hoạch");
+
+    public bool CoTheBatDau => TrangThai == TrangThaiPhieuXuLyEnum.DaPhanCong;
 }
 
 /// <summary>
@@ -133,6 +135,7 @@ public class PhieuXuLyDetailsViewModel
     public bool CoThePhanCong => LaAdmin && (TrangThai == TrangThaiPhieuXuLyEnum.ChoPhanCong || KtvHienTai == null);
     public bool CoTheDoiKtv => LaAdmin && KtvHienTai != null && TrangThai != TrangThaiPhieuXuLyEnum.HoanThanh && TrangThai != TrangThaiPhieuXuLyEnum.DaHuy;
     public bool CoTheHuy => LaAdmin && TrangThai != TrangThaiPhieuXuLyEnum.HoanThanh && TrangThai != TrangThaiPhieuXuLyEnum.DaHuy;
+    public bool CoTheBatDau => (TrangThai == TrangThaiPhieuXuLyEnum.DaPhanCong || (TrangThai == TrangThaiPhieuXuLyEnum.ChoPhanCong && KtvHienTai != null)) && (LaAdmin || LaKtvPhuTrach);
 
     // Dropdown KTV khi phân công / đổi KTV
     public List<SelectListItem> KtvOptions { get; set; } = new();

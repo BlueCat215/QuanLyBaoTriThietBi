@@ -1,6 +1,6 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - Repository Chi tiết xử lý (LINQ: danh sách phiếu, chi tiết theo phiếu, tổng chi phí = SUM(ThanhTien))
+// Nội dung: Module 5 - Repository Chi tiết xử lý (LINQ: danh sách phiếu, chi tiết theo phiếu, tổng chi phí = SUM(ThanhTien), hỗ trợ phân quyền và bắt đầu xử lý)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -78,6 +78,10 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
                 SoSerial = p.BaoCaoSuCo != null
                     ? p.BaoCaoSuCo.ThietBi!.SoSerial
                     : (p.KeHoachBaoTri != null ? p.KeHoachBaoTri.ThietBi!.SoSerial : null),
+                Ktv = p.PhanCongXuLys
+                    .Where(pc => pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc)
+                    .Select(pc => new { pc.MaKyThuatVien, Ten = pc.KyThuatVien != null ? pc.KyThuatVien.HoTen : null })
+                    .FirstOrDefault()
             })
             .FirstOrDefaultAsync();
 
@@ -94,7 +98,9 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
                 x.NgayHoanThanh,
                 x.KetQuaXuLy,
                 x.TenThietBi,
-                x.SoSerial
+                x.SoSerial,
+                x.Ktv?.MaKyThuatVien,
+                x.Ktv?.Ten
             );
     }
 
@@ -141,4 +147,18 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
         return ds.Select(v => new VatTuLuaChon(v.MaVatTu, v.TenVatTu, v.DonViTinh, v.DonGiaMacDinh))
             .ToList();
     }
+
+    public Task<KyThuatVien?> LayKtvTheoTaiKhoanAsync(int maTaiKhoan) =>
+        _context.KyThuatViens.AsNoTracking().FirstOrDefaultAsync(k => k.MaTaiKhoan == maTaiKhoan);
+
+    public Task<PhanCongXuLy?> LayPhanCongHienTaiAsync(int maPhieuXuLy) =>
+        _context.PhanCongXuLys.AsNoTracking()
+            .FirstOrDefaultAsync(pc => pc.MaPhieuXuLy == maPhieuXuLy && pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc);
+
+    public Task<PhieuXuLy?> LayPhieuEntityAsync(int maPhieuXuLy) =>
+        _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo).ThenInclude(b => b!.ThietBi)
+            .Include(p => p.KeHoachBaoTri).ThenInclude(k => k!.ThietBi)
+            .Include(p => p.PhanCongXuLys)
+            .FirstOrDefaultAsync(p => p.MaPhieuXuLy == maPhieuXuLy);
 }

@@ -392,6 +392,78 @@ public class PhieuXuLyService : IPhieuXuLyService
     public Task<KyThuatVien?> LayKtvHienTaiAsync(int maPhieuXuLy) =>
         _phieuRepo.LayKtvHienTaiAsync(maPhieuXuLy);
 
+    /// STT 39: Bắt đầu xử lý phiếu (chỉ KTV đang được phân công hoặc Admin)
+    /// Ghi nhận NgayBatDau, chuyển phiếu sang Đang xử lý, cập nhật trạng thái nguồn và thiết bị
+    public async Task<ServiceResult> BatDauXuLyAsync(int maPhieuXuLy, int? maTaiKhoanDangNhap, bool laAdmin)
+    {
+        var phieu = await _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo).ThenInclude(b => b!.ThietBi)
+            .Include(p => p.KeHoachBaoTri).ThenInclude(k => k!.ThietBi)
+            .Include(p => p.PhanCongXuLys)
+            .FirstOrDefaultAsync(p => p.MaPhieuXuLy == maPhieuXuLy);
+
+        if (phieu == null)
+            return ServiceResult.Fail("Phiếu xử lý không tồn tại.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.DangXuLy)
+            return ServiceResult.Fail("Phiếu này đã bắt đầu xử lý trước đó rồi.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu)
+            return ServiceResult.Fail("Phiếu đang chờ nghiệm thu, không thể bắt đầu xử lý lại.");
+
+        if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.HoanThanh || phieu.TrangThai == TrangThaiPhieuXuLyEnum.DaHuy)
+            return ServiceResult.Fail("Phiếu đã kết thúc (Hoàn thành / Đã hủy), không thể bắt đầu xử lý.");
+
+        var phanCongHienTai = phieu.PhanCongXuLys
+            .FirstOrDefault(pc => pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc);
+
+        if (phanCongHienTai == null)
+            return ServiceResult.Fail("Phiếu chưa được phân công cho kỹ thuật viên nào.");
+
+        if (!laAdmin)
+        {
+            if (!maTaiKhoanDangNhap.HasValue)
+                return ServiceResult.Fail("Không xác định được danh tính người dùng đăng nhập.");
+
+            var ktv = await _phieuRepo.LayKtvTheoTaiKhoanAsync(maTaiKhoanDangNhap.Value);
+            if (ktv == null || ktv.MaKyThuatVien != phanCongHienTai.MaKyThuatVien)
+                return ServiceResult.Fail("Chỉ kỹ thuật viên đang được phân công phụ trách phiếu này mới có quyền bắt đầu xử lý.");
+        }
+
+        // 1. Cập nhật phiếu xử lý: ghi nhận NgayBatDau và chuyển trạng thái sang DangXuLy
+        phieu.NgayBatDau ??= DateTime.Now;
+        phieu.TrangThai = TrangThaiPhieuXuLyEnum.DangXuLy;
+
+        // 2. Đồng bộ nguồn sự cố / kế hoạch và tình trạng thiết bị
+        if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.BaoCaoSuCo != null)
+        {
+            if (phieu.BaoCaoSuCo.TrangThai != TrangThaiBaoCaoEnum.DangXuLy)
+            {
+                phieu.BaoCaoSuCo.TrangThai = TrangThaiBaoCaoEnum.DangXuLy;
+            }
+
+            if (phieu.BaoCaoSuCo.ThietBi != null && phieu.BaoCaoSuCo.ThietBi.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
+            {
+                phieu.BaoCaoSuCo.ThietBi.TinhTrang = TinhTrangThietBiEnum.TamNgungDoSuCo;
+            }
+        }
+        else if (phieu.LoaiXuLy == LoaiXuLyEnum.BaoTriDinhKy && phieu.KeHoachBaoTri != null)
+        {
+            if (phieu.KeHoachBaoTri.TrangThai != TrangThaiKeHoachEnum.DangThucHien)
+            {
+                phieu.KeHoachBaoTri.TrangThai = TrangThaiKeHoachEnum.DangThucHien;
+            }
+
+            if (phieu.KeHoachBaoTri.ThietBi != null && phieu.KeHoachBaoTri.ThietBi.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
+            {
+                phieu.KeHoachBaoTri.ThietBi.TinhTrang = TinhTrangThietBiEnum.DangBaoTri;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
+
     /// Hủy phiếu xử lý
     public async Task<ServiceResult> HuyPhieuXuLyAsync(int maPhieuXuLy, string? lyDoHuy)
     {

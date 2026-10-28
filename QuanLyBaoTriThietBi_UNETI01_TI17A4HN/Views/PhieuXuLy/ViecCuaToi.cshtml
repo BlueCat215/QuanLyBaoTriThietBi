@@ -96,6 +96,16 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm">
+                                        @if (item.CoTheBatDau)
+                                        {
+                                            <form asp-action="BatDauXuLy" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@item.MaPhieuXuLy" />
+                                                <button type="submit" class="btn btn-success btn-sm" title="Bắt đầu xử lý phiếu này">
+                                                    <span class="material-symbols-outlined icon-16">play_arrow</span> Bắt đầu
+                                                </button>
+                                            </form>
+                                        }
                                         <a asp-action="Details" asp-route-id="@item.MaPhieuXuLy" class="btn btn-outline-secondary btn-sm" title="Xem chi tiết">
                                             Xem
                                         </a>

@@ -17,6 +17,17 @@
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="@(laAdmin ? "Index" : "ViecCuaToi")">Quay lại danh sách</a>
 
+        @if (Model.CoTheBatDau)
+        {
+            <form asp-action="BatDauXuLy" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.MaPhieuXuLy" />
+                <button type="submit" class="btn btn-success" title="Kỹ thuật viên bắt đầu thực hiện xử lý phiếu">
+                    <span class="material-symbols-outlined icon-20">play_arrow</span> Bắt đầu xử lý
+                </button>
+            </form>
+        }
+
         <a class="btn btn-primary" asp-controller="ChiTietXuLy" asp-action="TheoPhieu"
            asp-route-maPhieu="@Model.MaPhieuXuLy">
             <span class="material-symbols-outlined icon-20">build</span> Chi tiết công việc &amp; Vật tư
