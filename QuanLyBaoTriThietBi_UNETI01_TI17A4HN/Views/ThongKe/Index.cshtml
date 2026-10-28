@@ -1,0 +1,440 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Trang Báo cáo thống kê (SST 45: mục 9.8) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
+@model ThongKeIndexViewModel
+@{
+    ViewData["Title"] = "Báo cáo thống kê";
+    var namHienTai = DateTime.Today.Year;
+    var maxChiPhiThang = Model.ChiPhi12Thang.Any() ? Model.ChiPhi12Thang.Max(c => c.TongChiPhi) : 0m;
+}
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+        <h1>Báo cáo thống kê</h1>
+        <p>Phân tích đa chiều về thiết bị, sự cố, hiệu suất kỹ thuật viên và chi phí bảo trì.</p>
+    </div>
+</div>
+
+@* Thanh bộ lọc thời gian *@
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label text-small text-muted mb-1">Năm thống kê</label>
+                <select name="Nam" class="form-select form-select-sm">
+                    @for (int y = namHienTai - 3; y <= namHienTai + 1; y++)
+                    {
+                        <option value="@y" selected="@(y == (Model.BoLoc.Nam ?? namHienTai))">Năm @y</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-small text-muted mb-1">Từ ngày (tùy chọn)</label>
+                <input type="date" name="TuNgay" value="@(Model.BoLoc.TuNgay?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-small text-muted mb-1">Đến ngày (tùy chọn)</label>
+                <input type="date" name="DenNgay" value="@(Model.BoLoc.DenNgay?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm" />
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <span class="material-symbols-outlined icon-16">filter_alt</span> Thống kê
+                </button>
+                @if (Model.BoLoc.CoBoLocKhoangNgay || Model.BoLoc.Nam != namHienTai)
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm" title="Đặt lại năm hiện tại">
+                        <span class="material-symbols-outlined icon-16">restart_alt</span> Đặt lại
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Khối 5 chỉ số tổng quan *@
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">precision_manufacturing</span></span>
+            <span class="kpi-label">Tổng thiết bị quản lý</span>
+            <span class="kpi-value num">@Model.TongThietBi</span>
+            <span class="cell-sub text-muted">Trong danh mục hệ thống</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card is-warning">
+            <span class="kpi-icon"><span class="material-symbols-outlined">warning</span></span>
+            <span class="kpi-label">Sự cố phát sinh</span>
+            <span class="kpi-value num text-dark">@Model.TongSuCo</span>
+            <span class="cell-sub text-muted">Trong kỳ báo cáo</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">assignment_turned_in</span></span>
+            <span class="kpi-label">Tỷ lệ hoàn thành phiếu</span>
+            <span class="kpi-value num text-dark">
+                @(Model.TongPhieuXuLy > 0 ? $"{(Model.TongPhieuHoanThanh * 100 / Model.TongPhieuXuLy)}%" : "0%")
+            </span>
+            <span class="cell-sub text-muted">@Model.TongPhieuHoanThanh / @Model.TongPhieuXuLy phiếu xử lý</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">timer</span></span>
+            <span class="kpi-label">TG xử lý trung bình</span>
+            <span class="kpi-value num text-dark">@Model.ThoiGianXuLyTbGio <span class="fs-6 fw-normal text-muted">giờ</span></span>
+            <span class="cell-sub text-muted">Tính trên phiếu hoàn tất</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
+        <div class="card kpi-card">
+            <span class="kpi-icon"><span class="material-symbols-outlined">payments</span></span>
+            <span class="kpi-label">Tổng chi phí bảo trì</span>
+            <span class="kpi-value num text-primary">@UiHelper.Tien(Model.TongChiPhi)</span>
+            <span class="cell-sub text-muted">Vật tư &amp; phụ tùng thay thế</span>
+        </div>
+    </div>
+</div>
+
+@* PHẦN 1: BẢNG THỐNG KÊ CHI TIẾT THEO LOẠI THIẾT BỊ VÀ THEO KHU VỰC *@
+<div class="row g-3 mb-4">
+    @* Thống kê theo Loại thiết bị *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h3 class="m-0 fs-6 fw-bold">
+                        <span class="material-symbols-outlined text-primary align-middle me-1">category</span>
+                        Thống kê theo Loại thiết bị
+                    </h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Loại thiết bị</th>
+                                <th class="num">Thiết bị</th>
+                                <th class="num">Sự cố</th>
+                                <th class="num">Phiếu</th>
+                                <th class="num">Chi phí</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var l in Model.TheoLoaiThietBi)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <a asp-controller="ThietBi" asp-action="Index" asp-route-MaLoaiThietBi="@l.MaNhom" class="text-decoration-none">
+                                            @l.TenNhom
+                                        </a>
+                                    </td>
+                                    <td class="num">@l.SoThietBi</td>
+                                    <td class="num @(l.SoSuCo > 0 ? "text-warning fw-bold" : "")">@l.SoSuCo</td>
+                                    <td class="num">@l.SoPhieuXuLy</td>
+                                    <td class="num fw-bold text-primary">@UiHelper.Tien(l.TongChiPhi)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Thống kê theo Khu vực *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h3 class="m-0 fs-6 fw-bold">
+                        <span class="material-symbols-outlined text-primary align-middle me-1">apartment</span>
+                        Thống kê theo Khu vực / Vị trí
+                    </h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Khu vực</th>
+                                <th class="num">Thiết bị</th>
+                                <th class="num">Sự cố</th>
+                                <th class="num">Phiếu</th>
+                                <th class="num">Chi phí</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var k in Model.TheoKhuVuc)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">
+                                        <a asp-controller="ThietBi" asp-action="Index" asp-route-MaKhuVuc="@k.MaNhom" class="text-decoration-none">
+                                            @k.TenNhom
+                                        </a>
+                                    </td>
+                                    <td class="num">@k.SoThietBi</td>
+                                    <td class="num @(k.SoSuCo > 0 ? "text-warning fw-bold" : "")">@k.SoSuCo</td>
+                                    <td class="num">@k.SoPhieuXuLy</td>
+                                    <td class="num fw-bold text-primary">@UiHelper.Tien(k.TongChiPhi)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* PHẦN 2: MỨC ĐỘ SỰ CỐ & BIỂU ĐỒ CHI PHÍ 12 THÁNG *@
+<div class="row g-3 mb-4">
+    @* Phân loại theo mức độ sự cố *@
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h3 class="fs-6 fw-bold mb-3">
+                    <span class="material-symbols-outlined text-danger align-middle me-1">crisis_alert</span>
+                    Phân bố sự cố theo mức độ nghiêm trọng
+                </h3>
+                @foreach (var m in Model.TheoMucDoSuCo)
+                {
+                    var badge = UiHelper.Badge(m.MucDo);
+                    var mauCot = m.MucDo switch
+                    {
+                        MucDoSuCoEnum.KhanCap => "is-danger",
+                        MucDoSuCoEnum.Cao => "is-warning",
+                        MucDoSuCoEnum.TrungBinh => "is-info",
+                        _ => "is-success"
+                    };
+                    <div class="bar-row mb-3">
+                        <div class="bar-head d-flex justify-content-between align-items-center">
+                            <div>
+                                <partial name="_StatusBadge" model="badge" />
+                                <span class="ms-2 text-small text-muted">Đã xong: @m.SoLuongDaXong / @m.SoLuong</span>
+                            </div>
+                            <span class="num fw-bold">@m.SoLuong vụ (@m.TyLePhanTram%)</span>
+                        </div>
+                        <div class="bar-track mt-1">
+                            <div class="bar-fill @mauCot" style="width:@(Math.Max(2, (int)m.TyLePhanTram))%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Chi phí bảo trì theo 12 tháng *@
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fs-6 fw-bold m-0">
+                        <span class="material-symbols-outlined text-primary align-middle me-1">bar_chart</span>
+                        Chi phí bảo trì theo từng tháng (Năm @(Model.BoLoc.Nam ?? namHienTai))
+                    </h3>
+                </div>
+                <div class="row g-2">
+                    @foreach (var t in Model.ChiPhi12Thang)
+                    {
+                        var pct = maxChiPhiThang > 0 ? (int)Math.Round((double)(t.TongChiPhi * 100 / maxChiPhiThang)) : 0;
+                        <div class="col-md-6 mb-2">
+                            <div class="bar-row">
+                                <div class="bar-head">
+                                    <span>Tháng @t.Thang <small class="text-muted">(@t.SoPhieuPhatSinh phiếu)</small></span>
+                                    <span class="num fw-bold @(t.TongChiPhi > 0 ? "text-primary" : "text-muted")">@UiHelper.Tien(t.TongChiPhi)</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill @(t.TongChiPhi > 0 ? "is-info-strong" : "is-muted")" style="width:@(Math.Max(t.TongChiPhi > 0 ? 3 : 0, pct))%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* PHẦN 3: HIỆU SUẤT KỸ THUẬT VIÊN *@
+<div class="card mb-4">
+    <div class="card-body p-0">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h3 class="m-0 fs-6 fw-bold">
+                <span class="material-symbols-outlined text-primary align-middle me-1">engineering</span>
+                Thống kê hiệu suất Kỹ thuật viên
+            </h3>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Kỹ thuật viên</th>
+                        <th>Chuyên môn</th>
+                        <th>Liên hệ</th>
+                        <th class="num">Tổng phiếu</th>
+                        <th class="num">Hoàn thành</th>
+                        <th class="num">Đang xử lý</th>
+                        <th class="num">TG xử lý TB</th>
+                        <th class="num">Chi phí vật tư</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var k in Model.TheoKyThuatVien)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-sm">@UiHelper.VietTat(k.TenKyThuatVien)</span>
+                                    <span class="fw-semibold">@k.TenKyThuatVien</span>
+                                </div>
+                            </td>
+                            <td>@(k.ChuyenMon ?? "Kỹ thuật viên")</td>
+                            <td class="text-small mono">@(k.SoDienThoai ?? "—")</td>
+                            <td class="num">@k.TongPhieuPhuTrach</td>
+                            <td class="num">
+                                <span class="badge is-success">@k.SoPhieuHoanThanh</span>
+                            </td>
+                            <td class="num">
+                                @if (k.SoPhieuDangXuLy > 0)
+                                {
+                                    <span class="badge is-info">@k.SoPhieuDangXuLy</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">0</span>
+                                }
+                            </td>
+                            <td class="num">
+                                @(k.ThoiGianXuLyTrungBinhGio > 0 ? $"{k.ThoiGianXuLyTrungBinhGio} giờ" : "—")
+                            </td>
+                            <td class="num fw-bold text-primary">
+                                @UiHelper.Tien(k.TongChiPhiVatTu)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* PHẦN 4: TOP THIẾT BỊ TRỌNG ĐIỂM CẦN QUAN TÂM *@
+<div class="row g-3">
+    @* Top 5 thiết bị nhiều sự cố nhất *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h3 class="m-0 fs-6 fw-bold">
+                        <span class="material-symbols-outlined text-warning align-middle me-1">report</span>
+                        Thiết bị phát sinh nhiều sự cố nhất
+                    </h3>
+                </div>
+                @if (!Model.TopThietBiNhieuSuCo.Any())
+                {
+                    <div class="empty-state p-4 text-center">
+                        <span class="material-symbols-outlined icon-24 text-success">check_circle</span>
+                        <p class="text-muted mt-2 mb-0">Không có thiết bị nào gặp sự cố trong kỳ báo cáo.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Thiết bị / Serial</th>
+                                    <th>Loại / Khu vực</th>
+                                    <th class="num">Số sự cố</th>
+                                    <th class="num">Chi phí</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tb in Model.TopThietBiNhieuSuCo)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@tb.MaThietBi" class="fw-semibold text-decoration-none">
+                                                @tb.TenThietBi
+                                            </a>
+                                            <div class="cell-sub mono">@tb.SoSerial</div>
+                                        </td>
+                                        <td class="text-small">
+                                            <div>@(tb.TenLoaiThietBi ?? "—")</div>
+                                            <div class="text-muted">@(tb.TenKhuVuc ?? "—")</div>
+                                        </td>
+                                        <td class="num">
+                                            <span class="badge is-danger">@tb.SoSuCo vụ</span>
+                                        </td>
+                                        <td class="num fw-bold text-primary">
+                                            @UiHelper.Tien(tb.TongChiPhi)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Top 5 thiết bị tốn chi phí bảo trì & sửa chữa nhất *@
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h3 class="m-0 fs-6 fw-bold">
+                        <span class="material-symbols-outlined text-danger align-middle me-1">monetization_on</span>
+                        Thiết bị tốn nhiều chi phí nhất
+                    </h3>
+                </div>
+                @if (!Model.TopThietBiTonChiPhi.Any())
+                {
+                    <div class="empty-state p-4 text-center">
+                        <span class="material-symbols-outlined icon-24 text-muted">inventory_2</span>
+                        <p class="text-muted mt-2 mb-0">Chưa có chi phí vật tư phát sinh trong kỳ này.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Thiết bị / Serial</th>
+                                    <th>Loại / Khu vực</th>
+                                    <th class="num">Phiếu xử lý</th>
+                                    <th class="num">Tổng chi phí</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cp in Model.TopThietBiTonChiPhi)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@cp.MaThietBi" class="fw-semibold text-decoration-none">
+                                                @cp.TenThietBi
+                                            </a>
+                                            <div class="cell-sub mono">@cp.SoSerial</div>
+                                        </td>
+                                        <td class="text-small">
+                                            <div>@(cp.TenLoaiThietBi ?? "—")</div>
+                                            <div class="text-muted">@(cp.TenKhuVuc ?? "—")</div>
+                                        </td>
+                                        <td class="num">
+                                            @cp.SoPhieuXuLy phiếu
+                                        </td>
+                                        <td class="num fw-bold text-danger">
+                                            @UiHelper.Tien(cp.TongChiPhi)
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
