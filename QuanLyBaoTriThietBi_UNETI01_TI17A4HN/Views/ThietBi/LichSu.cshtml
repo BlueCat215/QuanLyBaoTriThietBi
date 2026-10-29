@@ -1,0 +1,549 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Trang Lịch sử thiết bị (STT 41) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.LichSuThietBiViewModel
+@{
+    var tb = Model.ThietBi;
+    ViewData["Title"] = "Lịch sử thiết bị - " + tb.TenThietBi;
+    var ngung = tb.TinhTrang == TinhTrangThietBiEnum.NgungSuDung;
+}
+
+<div class="page-header">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-action="Index">Thiết bị</a></li>
+                <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@tb.MaThietBi">@tb.TenThietBi</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lịch sử thiết bị</li>
+            </ol>
+        </nav>
+        <h1>Lịch sử thiết bị: @tb.TenThietBi</h1>
+        <p>
+            Mã: <span class="mono fw-semibold">@UiHelper.Ma("TB", tb.MaThietBi)</span> ·
+            Serial: <span class="mono fw-semibold">@tb.SoSerial</span> ·
+            Loại: <span>@(tb.TenLoaiThietBi ?? "—")</span> ·
+            Khu vực: <span>@(tb.TenKhuVuc ?? "—")</span>
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@tb.MaThietBi">
+            <span class="material-symbols-outlined icon-20">arrow_back</span> Chi tiết thiết bị
+        </a>
+        <a class="btn btn-outline-secondary" asp-action="Index">
+            <span class="material-symbols-outlined icon-20">list</span> Danh sách thiết bị
+        </a>
+    </div>
+</div>
+
+@* KPI Summary Cards *@
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-2dot4 col-lg-4">
+        <div class="card kpi-card h-100">
+            <span class="kpi-label">Tình trạng thiết bị</span>
+            <div class="my-1">
+                <partial name="_StatusBadge" model="UiHelper.Badge(tb.TinhTrang)" />
+            </div>
+            <span class="cell-sub">
+                @if (ngung)
+                {
+                    <span>Ngừng sử dụng</span>
+                }
+                else
+                {
+                    var (badge, ghiChu) = UiHelper.HanBaoTri(tb.NgayBaoTriTiepTheo);
+                    <span>Hạn: @UiHelper.Ngay(tb.NgayBaoTriTiepTheo) (@ghiChu)</span>
+                }
+            </span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2dot4 col-lg-4">
+        <div class="card kpi-card h-100">
+            <span class="kpi-label">Kế hoạch bảo trì</span>
+            <div class="kpi-value text-primary">@Model.TongSoKeHoach</div>
+            <span class="cell-sub">Chu kỳ: @tb.ChuKyBaoTriThang tháng/lần</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2dot4 col-lg-4">
+        <div class="card kpi-card h-100">
+            <span class="kpi-label">Sự cố phát sinh</span>
+            <div class="kpi-value text-danger">@Model.TongSoSuCo</div>
+            <span class="cell-sub">Toàn bộ sự cố đã ghi nhận</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2dot4 col-lg-4">
+        <div class="card kpi-card h-100">
+            <span class="kpi-label">Phiếu xử lý</span>
+            <div class="kpi-value text-success">@Model.SoPhieuHoanThanh <span class="fs-6 text-muted">/ @Model.TongSoPhieuXuLy</span></div>
+            <span class="cell-sub">Phiếu đã hoàn thành nghiệm thu</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2dot4 col-lg-4">
+        <div class="card kpi-card h-100">
+            <span class="kpi-label">Tổng chi phí lũy kế</span>
+            <div class="kpi-value text-warning fs-4">@UiHelper.Tien(Model.TongChiPhiLuyKe)</div>
+            <span class="cell-sub">Vật tư & sửa chữa từ trước tới nay</span>
+        </div>
+    </div>
+</div>
+
+@* Thông tin tổng quan thiết bị *@
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h3 class="mb-0 fs-5">Thông số vận hành thiết bị</h3>
+            <span class="cell-sub">Đưa vào dùng: @UiHelper.Ngay(tb.NgayDuaVaoSuDung)</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <span class="text-muted d-block small">Bảo trì gần nhất</span>
+                <strong>@(tb.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(tb.NgayBaoTriGanNhat) : "Chưa bảo trì lần nào")</strong>
+            </div>
+            <div class="col-md-3">
+                <span class="text-muted d-block small">Bảo trì tiếp theo</span>
+                @if (ngung)
+                {
+                    <span>—</span>
+                }
+                else
+                {
+                    var (badge, ghiChu) = UiHelper.HanBaoTri(tb.NgayBaoTriTiepTheo);
+                    <strong>@UiHelper.Ngay(tb.NgayBaoTriTiepTheo)</strong>
+                    <partial name="_StatusBadge" model="badge" />
+                }
+            </div>
+            <div class="col-md-6">
+                <span class="text-muted d-block small">Mô tả thiết bị</span>
+                <span>@(string.IsNullOrWhiteSpace(tb.MoTa) ? "Chưa có mô tả chi tiết." : tb.MoTa)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Tabbed Navigation *@
+<ul class="nav nav-tabs mb-3" id="tabLichSu" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#tab-timeline"
+                type="button" role="tab" aria-controls="tab-timeline" aria-selected="true">
+            <span class="material-symbols-outlined icon-20 align-text-bottom me-1">timeline</span>
+            Dòng thời gian (@Model.TimelineEvents.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="phieu-tab" data-bs-toggle="tab" data-bs-target="#tab-phieu"
+                type="button" role="tab" aria-controls="tab-phieu" aria-selected="false">
+            <span class="material-symbols-outlined icon-20 align-text-bottom me-1">assignment</span>
+            Phiếu xử lý & KTV (@Model.PhieuXuLys.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="kehoach-tab" data-bs-toggle="tab" data-bs-target="#tab-kehoach"
+                type="button" role="tab" aria-controls="tab-kehoach" aria-selected="false">
+            <span class="material-symbols-outlined icon-20 align-text-bottom me-1">event_available</span>
+            Kế hoạch bảo trì (@Model.KeHoachBaoTris.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="suco-tab" data-bs-toggle="tab" data-bs-target="#tab-suco"
+                type="button" role="tab" aria-controls="tab-suco" aria-selected="false">
+            <span class="material-symbols-outlined icon-20 align-text-bottom me-1">warning</span>
+            Báo cáo sự cố (@Model.BaoCaoSuCos.Count)
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="tabLichSuContent">
+    @* TAB 1: DÒNG THỜI GIAN TỔNG HỢP (TIMELINE) *@
+    <div class="tab-pane fade show active" id="tab-timeline" role="tabpanel" aria-labelledby="timeline-tab">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0 fs-5">Truy vết toàn bộ tiến trình vòng đời thiết bị</h3>
+                    <span class="text-muted small">Sắp xếp theo thứ tự mới nhất lên trước</span>
+                </div>
+
+                @if (!Model.TimelineEvents.Any())
+                {
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined icon-24">history</span>
+                        <h3>Chưa có sự kiện nào</h3>
+                        <p>Thiết bị chưa phát sinh lịch sử kế hoạch, sự cố hoặc phiếu xử lý nào.</p>
+                    </div>
+                }
+                else
+                {
+                    <ul class="timeline">
+                        @foreach (var evt in Model.TimelineEvents)
+                        {
+                            <li class="timeline-item @evt.CssClass">
+                                <div class="timeline-time">@UiHelper.NgayGio(evt.Ngay)</div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                    <strong class="fs-6">@evt.TieuDe</strong>
+                                    @if (!string.IsNullOrEmpty(evt.BadgeText))
+                                    {
+                                        <span class="badge @evt.BadgeClass">@evt.BadgeText</span>
+                                    }
+                                    @if (evt.ChiPhi.HasValue && evt.ChiPhi > 0)
+                                    {
+                                        <span class="badge bg-light text-dark border">
+                                            Chi phí: @UiHelper.Tien(evt.ChiPhi)
+                                        </span>
+                                    }
+                                </div>
+                                <div class="text-secondary small mb-2">@evt.ChiTiet</div>
+                                @if (!string.IsNullOrEmpty(evt.UrlChiTiet))
+                                {
+                                    <a href="@evt.UrlChiTiet" class="btn btn-sm btn-outline-secondary">
+                                        <span class="material-symbols-outlined icon-16 align-text-bottom">open_in_new</span> Xem chi tiết
+                                    </a>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* TAB 2: LỊCH SỬ PHIẾU XỬ LÝ & KỸ THUẬT VIÊN *@
+    <div class="tab-pane fade" id="tab-phieu" role="tabpanel" aria-labelledby="phieu-tab">
+        @if (!Model.PhieuXuLys.Any())
+        {
+            <div class="card">
+                <div class="card-body empty-state">
+                    <span class="material-symbols-outlined icon-24">receipt_long</span>
+                    <h3>Chưa có phiếu xử lý nào</h3>
+                    <p>Thiết bị này chưa có phiếu xử lý sự cố hoặc bảo trì nào được lập.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var p in Model.PhieuXuLys)
+            {
+                <div class="card mb-4 border">
+                    <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center py-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="mono fw-bold fs-5">@UiHelper.Ma("PX", p.MaPhieuXuLy)</span>
+                            <span class="badge bg-secondary">@p.NguonText</span>
+                            <partial name="_StatusBadge" model="UiHelper.Badge(p.TrangThai)" />
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-semibold text-danger">Tổng chi phí: @UiHelper.Tien(p.TongChiPhi)</span>
+                            <a class="btn btn-sm btn-outline-primary" asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@p.MaPhieuXuLy">
+                                <span class="material-symbols-outlined icon-16 align-text-bottom">visibility</span> Mở phiếu
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @* Thời gian và kết quả *@
+                        <div class="row g-2 mb-3 small">
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">Ngày tạo phiếu</span>
+                                <strong>@UiHelper.NgayGio(p.NgayTao)</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">Ngày bắt đầu xử lý</span>
+                                <strong>@(p.NgayBatDau.HasValue ? UiHelper.NgayGio(p.NgayBatDau) : "Chưa bắt đầu")</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">Ngày hoàn thành nghiệm thu</span>
+                                <strong>@(p.NgayHoanThanh.HasValue ? UiHelper.NgayGio(p.NgayHoanThanh) : "Chưa hoàn thành")</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <span class="text-muted d-block">Kết quả xử lý</span>
+                                <strong>@(string.IsNullOrWhiteSpace(p.KetQuaXuLy) ? "—" : p.KetQuaXuLy)</strong>
+                            </div>
+                        </div>
+
+                        @* Lịch sử phân công KTV *@
+                        <h4 class="fs-6 fw-bold mt-3 mb-2 d-flex align-items-center gap-1">
+                            <span class="material-symbols-outlined icon-18 text-primary">engineering</span>
+                            Lịch sử phân công kỹ thuật viên phụ trách (Bảo toàn lịch sử khi đổi KTV)
+                        </h4>
+                        @if (!p.DanhSachKtv.Any())
+                        {
+                            <p class="text-muted small fst-italic mb-3">Phiếu chưa từng được phân công kỹ thuật viên.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm table-bordered align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Kỹ thuật viên</th>
+                                            <th>Chuyên môn</th>
+                                            <th>Liên hệ</th>
+                                            <th>Ngày phân công</th>
+                                            <th>Ngày kết thúc</th>
+                                            <th>Nội dung phân công</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ktv in p.DanhSachKtv)
+                                        {
+                                            <tr class="@(ktv.LaHienTai ? "table-active" : "text-muted")">
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="avatar @(ktv.LaHienTai ? "is-accent" : "")">
+                                                            @UiHelper.VietTat(ktv.TenKyThuatVien)
+                                                        </span>
+                                                        <div>
+                                                            <div class="fw-semibold">@ktv.TenKyThuatVien</div>
+                                                            @if (ktv.LaHienTai)
+                                                            {
+                                                                <span class="badge bg-success-subtle text-success small">KTV hiện tại</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>@(ktv.ChuyenMon ?? "—")</td>
+                                                <td>
+                                                    <div>@(ktv.SoDienThoai ?? "—")</div>
+                                                    <small class="text-muted">@(ktv.Email ?? "")</small>
+                                                </td>
+                                                <td>@UiHelper.NgayGio(ktv.NgayPhanCong)</td>
+                                                <td>@(ktv.NgayKetThucPhanCong.HasValue ? UiHelper.NgayGio(ktv.NgayKetThucPhanCong) : "Đang phụ trách")</td>
+                                                <td>@(ktv.NoiDungPhanCong ?? "—")</td>
+                                                <td>
+                                                    @if (ktv.LaHienTai)
+                                                    {
+                                                        <span class="badge bg-success">Đang hiệu lực</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary" title="Đã kết thúc hoặc bàn giao KTV">Đã bàn giao</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
+                        @* Chi tiết các bước xử lý và vật tư *@
+                        <h4 class="fs-6 fw-bold mt-3 mb-2 d-flex align-items-center gap-1">
+                            <span class="material-symbols-outlined icon-18 text-warning">build</span>
+                            Các bước xử lý và vật tư / linh kiện thay thế
+                        </h4>
+                        @if (!p.DanhSachChiTiet.Any())
+                        {
+                            <p class="text-muted small fst-italic mb-0">Chưa ghi nhận bước xử lý hay vật tư thay thế nào.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped table-bordered align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Ngày cập nhật</th>
+                                            <th>Nội dung thực hiện</th>
+                                            <th>Vật tư / linh kiện</th>
+                                            <th class="text-end">Số lượng</th>
+                                            <th class="text-end">Đơn giá</th>
+                                            <th class="text-end">Thành tiền</th>
+                                            <th>Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var ct in p.DanhSachChiTiet)
+                                        {
+                                            <tr>
+                                                <td class="small">@UiHelper.NgayGio(ct.NgayCapNhat)</td>
+                                                <td>@ct.NoiDungThucHien</td>
+                                                <td>@(string.IsNullOrWhiteSpace(ct.VatTuLinhKien) ? "—" : ct.VatTuLinhKien)</td>
+                                                <td class="text-end">@(ct.SoLuong.HasValue ? ct.SoLuong.Value.ToString("N0") : "—")</td>
+                                                <td class="text-end">@UiHelper.Tien(ct.DonGia)</td>
+                                                <td class="text-end fw-semibold">@UiHelper.Tien(ct.ThanhTien)</td>
+                                                <td class="small text-muted">@(ct.GhiChu ?? "—")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light fw-bold">
+                                            <td colspan="5" class="text-end">Tổng cộng chi phí phiếu:</td>
+                                            <td class="text-end text-danger">@UiHelper.Tien(p.TongChiPhi)</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @* TAB 3: LỊCH SỬ KẾ HOẠCH BẢO TRÌ *@
+    <div class="tab-pane fade" id="tab-kehoach" role="tabpanel" aria-labelledby="kehoach-tab">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3 fs-5">Tất cả kế hoạch bảo trì định kỳ đã thiết lập</h3>
+                @if (!Model.KeHoachBaoTris.Any())
+                {
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined icon-24">calendar_today</span>
+                        <h3>Chưa có kế hoạch bảo trì</h3>
+                        <p>Thiết bị này chưa có kế hoạch bảo trì định kỳ nào.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mã KH</th>
+                                    <th>Ngày dự kiến</th>
+                                    <th>Nội dung bảo trì</th>
+                                    <th>Mức ưu tiên</th>
+                                    <th>Trạng thái KH</th>
+                                    <th>Phiếu xử lý</th>
+                                    <th>KTV phụ trách</th>
+                                    <th>Ngày hoàn thành</th>
+                                    <th class="text-end">Chi phí</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var kh in Model.KeHoachBaoTris)
+                                {
+                                    <tr>
+                                        <td><span class="mono fw-semibold">@UiHelper.Ma("KH", kh.MaKeHoach)</span></td>
+                                        <td>@UiHelper.Ngay(kh.NgayDuKien)</td>
+                                        <td>
+                                            <div class="fw-semibold">@kh.NoiDungBaoTri</div>
+                                            @if (!string.IsNullOrWhiteSpace(kh.GhiChu))
+                                            {
+                                                <small class="text-muted">@kh.GhiChu</small>
+                                            }
+                                        </td>
+                                        <td><partial name="_StatusBadge" model="UiHelper.Badge(kh.MucDoUuTien)" /></td>
+                                        <td><partial name="_StatusBadge" model="UiHelper.Badge(kh.TrangThai)" /></td>
+                                        <td>
+                                            @if (kh.MaPhieuXuLy.HasValue)
+                                            {
+                                                <a asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@kh.MaPhieuXuLy.Value" class="mono text-decoration-none">
+                                                    @UiHelper.Ma("PX", kh.MaPhieuXuLy.Value)
+                                                </a>
+                                                @if (kh.TrangThaiPhieu.HasValue)
+                                                {
+                                                    <div><partial name="_StatusBadge" model="UiHelper.Badge(kh.TrangThaiPhieu.Value)" /></div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Chưa tạo</span>
+                                            }
+                                        </td>
+                                        <td>@(kh.TenKtvPhuTrach ?? "Chưa phân công")</td>
+                                        <td>@(kh.NgayHoanThanh.HasValue ? UiHelper.NgayGio(kh.NgayHoanThanh) : "—")</td>
+                                        <td class="text-end fw-semibold">@UiHelper.Tien(kh.ChiPhi)</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-ghost btn-icon" asp-controller="KeHoachBaoTri" asp-action="Details" asp-route-id="@kh.MaKeHoach" title="Xem chi tiết kế hoạch">
+                                                <span class="material-symbols-outlined icon-18">open_in_new</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* TAB 4: LỊCH SỬ BÁO CÁO SỰ CỐ *@
+    <div class="tab-pane fade" id="tab-suco" role="tabpanel" aria-labelledby="suco-tab">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3 fs-5">Tất cả sự cố đã phát sinh của thiết bị</h3>
+                @if (!Model.BaoCaoSuCos.Any())
+                {
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined icon-24">task_alt</span>
+                        <h3>Không có sự cố nào</h3>
+                        <p>Thiết bị hoạt động ổn định, chưa từng phát sinh sự cố nào được ghi nhận.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="data-table table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Mã SC</th>
+                                    <th>Ngày báo cáo</th>
+                                    <th>Người báo</th>
+                                    <th>Mô tả sự cố</th>
+                                    <th>Mức độ</th>
+                                    <th>Trạng thái SC</th>
+                                    <th>Phiếu xử lý</th>
+                                    <th>KTV phụ trách</th>
+                                    <th>Ngày hoàn thành</th>
+                                    <th class="text-end">Chi phí</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sc in Model.BaoCaoSuCos)
+                                {
+                                    <tr>
+                                        <td><span class="mono fw-semibold">@UiHelper.Ma("SC", sc.MaBaoCao)</span></td>
+                                        <td>@UiHelper.NgayGio(sc.NgayBaoCao)</td>
+                                        <td>@sc.NguoiBaoCao</td>
+                                        <td>
+                                            <div class="fw-semibold">@sc.MoTaSuCo</div>
+                                            @if (!string.IsNullOrWhiteSpace(sc.GhiChu))
+                                            {
+                                                <small class="text-muted">@sc.GhiChu</small>
+                                            }
+                                        </td>
+                                        <td><partial name="_StatusBadge" model="UiHelper.Badge(sc.MucDoSuCo)" /></td>
+                                        <td><partial name="_StatusBadge" model="UiHelper.Badge(sc.TrangThai)" /></td>
+                                        <td>
+                                            @if (sc.MaPhieuXuLy.HasValue)
+                                            {
+                                                <a asp-controller="ChiTietXuLy" asp-action="TheoPhieu" asp-route-maPhieu="@sc.MaPhieuXuLy.Value" class="mono text-decoration-none">
+                                                    @UiHelper.Ma("PX", sc.MaPhieuXuLy.Value)
+                                                </a>
+                                                @if (sc.TrangThaiPhieu.HasValue)
+                                                {
+                                                    <div><partial name="_StatusBadge" model="UiHelper.Badge(sc.TrangThaiPhieu.Value)" /></div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Chưa tạo</span>
+                                            }
+                                        </td>
+                                        <td>@(sc.TenKtvPhuTrach ?? "Chưa phân công")</td>
+                                        <td>@(sc.NgayHoanThanh.HasValue ? UiHelper.NgayGio(sc.NgayHoanThanh) : "—")</td>
+                                        <td class="text-end fw-semibold">@UiHelper.Tien(sc.ChiPhi)</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-ghost btn-icon" asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@sc.MaBaoCao" title="Xem chi tiết sự cố">
+                                                <span class="material-symbols-outlined icon-18">open_in_new</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Thông báo tuân thủ nguyên tắc bảo toàn lịch sử truy vết (Mục 25 - THIETKE.md) *@
+<div class="alert alert-info d-flex align-items-center gap-2 mt-4" role="alert">
+    <span class="material-symbols-outlined icon-24 text-info">verified_user</span>
+    <div>
+        <strong>Nguyên tắc bảo toàn lịch sử truy vết (Mục 25 - THIETKE.md):</strong>
+        Mọi dữ liệu vòng đời thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, từng lần đổi KTV phụ trách và chi tiết sửa chữa / vật tư) đều được hệ thống lưu vết vĩnh viễn, không xóa vật lý hay sửa đè làm mất lịch sử vận hành.
+    </div>
+</div>

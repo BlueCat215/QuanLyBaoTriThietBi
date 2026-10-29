@@ -35,4 +35,9 @@ public interface IChiTietXuLyRepository : IRepository<ChiTietXuLy>
 
     /// Lấy thực thể phiếu xử lý kèm thông tin liên quan để thao tác chuyển trạng thái bắt đầu xử lý.
     Task<PhieuXuLy?> LayPhieuEntityAsync(int maPhieuXuLy);
+
+    /// <summary>
+    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế)
+    /// </summary>
+    Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi);
 }
