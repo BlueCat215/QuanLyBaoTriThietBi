@@ -200,4 +200,18 @@ public class ChiTietXuLyController : Controller
         TempData["Loi"] = result.ErrorMessage;
         return RedirectToAction(nameof(TheoPhieu), new { maPhieu });
     }
+
+    /// <summary>
+    /// STT 41: Lịch sử thiết bị - hiển thị toàn diện kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> LichSuThietBi(int id)
+    {
+        var vm = await _service.LayLichSuThietBiAsync(id);
+        if (vm is null)
+            return NotFound();
+
+        return View("~/Views/ThietBi/LichSu.cshtml", vm);
+    }
+
 }

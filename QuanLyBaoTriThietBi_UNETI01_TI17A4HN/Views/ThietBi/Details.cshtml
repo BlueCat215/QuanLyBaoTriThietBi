@@ -19,6 +19,9 @@
     </div>
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
+        <a class="btn btn-outline-primary" asp-action="LichSu" asp-route-id="@tb.MaThietBi">
+            <span class="material-symbols-outlined icon-20">history</span> Lịch sử thiết bị
+        </a>
         @if (coQuyenQuanLy && !ngung)
         {
             <a class="btn btn-primary" asp-action="Edit" asp-route-id="@tb.MaThietBi">Sửa thiết bị</a>
@@ -104,6 +107,9 @@
                     <li>Thông báo: <strong>@lienQuan.SoThongBao</strong></li>
                     <li>Tệp đính kèm: <strong>@lienQuan.SoTepDinhKem</strong></li>
                 </ul>
+                <a class="btn btn-outline-primary w-100 mb-3" asp-action="LichSu" asp-route-id="@tb.MaThietBi">
+                    <span class="material-symbols-outlined icon-20 me-1">history</span> Xem lịch sử vòng đời
+                </a>
 
                 @if (laAdmin)
                 {

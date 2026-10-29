@@ -569,4 +569,11 @@ public class ChiTietXuLyService : IChiTietXuLyService
 
         return kq;
     }
+
+    /// <summary>
+    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
+    /// </summary>
+    public Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi) =>
+        _repo.LayLichSuThietBiAsync(maThietBi);
+
 }

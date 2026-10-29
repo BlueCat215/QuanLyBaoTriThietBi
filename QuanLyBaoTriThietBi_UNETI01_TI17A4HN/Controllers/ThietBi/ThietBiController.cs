@@ -14,8 +14,13 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 public class ThietBiController : Controller
 {
     private readonly IThietBiService _service;
+    private readonly IChiTietXuLyService _chiTietService;
 
-    public ThietBiController(IThietBiService service) => _service = service;
+    public ThietBiController(IThietBiService service, IChiTietXuLyService chiTietService)
+    {
+        _service = service;
+        _chiTietService = chiTietService;
+    }
 
     public async Task<IActionResult> Index(ThietBiBoLoc boLoc)
     {
@@ -33,6 +38,19 @@ public class ThietBiController : Controller
         var vm = await _service.LayChiTietAsync(id);
         if (vm is null)
             return NotFound();
+        return View(vm);
+    }
+
+    /// <summary>
+    /// STT 41: Lịch sử thiết bị - hiển thị lịch sử kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, ngày hoàn thành, chi phí lũy kế
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> LichSu(int id)
+    {
+        var vm = await _chiTietService.LayLichSuThietBiAsync(id);
+        if (vm is null)
+            return NotFound();
+
         return View(vm);
     }
 
@@ -97,6 +115,8 @@ public class ThietBiController : Controller
         await NapDanhMucAsync(vm);
         return View(vm);
     }
+
+
 
     /// <param name="returnUrl">Địa chỉ nội bộ để quay về sau khi đổi (danh sách giữ nguyên Tìm kiếm/Lọc/Sắp xếp, hoặc trang chi tiết).</param>
     [HttpPost, ValidateAntiForgeryToken]

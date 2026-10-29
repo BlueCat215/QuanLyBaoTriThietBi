@@ -48,4 +48,9 @@ public interface IChiTietXuLyService
     /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
     /// </summary>
     Task<ServiceResult> NghiemThuAsync(NghiemThuPhieuViewModel model, int? maTaiKhoanDangNhap, bool laAdmin);
+
+    /// <summary>
+    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
+    /// </summary>
+    Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi);
 }
