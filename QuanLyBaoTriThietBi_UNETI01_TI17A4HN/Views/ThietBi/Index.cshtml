@@ -16,12 +16,24 @@
         <h1>Thiết bị</h1>
         <p>Quản lý danh sách thiết bị, tình trạng và hạn bảo trì.</p>
     </div>
-    @if (coQuyenQuanLy)
-    {
-        <div class="page-actions">
+    <div class="page-actions d-flex gap-2">
+        <a class="btn btn-outline-success" asp-action="ExportExcel"
+           asp-route-TuKhoa="@bl.TuKhoa"
+           asp-route-MaLoaiThietBi="@bl.MaLoaiThietBi"
+           asp-route-MaKhuVuc="@bl.MaKhuVuc"
+           asp-route-TinhTrang="@bl.TinhTrang"
+           asp-route-HanBaoTri="@bl.HanBaoTri"
+           asp-route-NgaySuDungTu="@bl.NgaySuDungTu?.ToString("yyyy-MM-dd")"
+           asp-route-NgaySuDungDen="@bl.NgaySuDungDen?.ToString("yyyy-MM-dd")"
+           asp-route-SapXep="@bl.SapXep"
+           title="Xuất toàn bộ danh sách thiết bị theo bộ lọc ra file Excel">
+            <span class="material-symbols-outlined icon-18">download</span> Xuất Excel
+        </a>
+        @if (coQuyenQuanLy)
+        {
             <a class="btn btn-primary" asp-action="Create">Thêm thiết bị</a>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @if (Model.PagedItems.TotalItems == 0 && !coThayDoi)

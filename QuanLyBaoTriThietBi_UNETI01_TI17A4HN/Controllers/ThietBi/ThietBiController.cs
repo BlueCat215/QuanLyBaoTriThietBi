@@ -33,6 +33,39 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
+    /// <summary>
+    /// STT 61: Xuất toàn bộ danh sách thiết bị theo bộ lọc ra file Excel (.xlsx)
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportExcel(ThietBiBoLoc boLoc)
+    {
+        var danhSach = await _service.LayToanBoDeXuatExcelAsync(boLoc);
+
+        var columns = new List<ExcelColumn<ThietBiRow>>
+        {
+            new("Mã thiết bị", x => UiHelper.Ma("TB", x.MaThietBi), alignment: ClosedXML.Excel.XLAlignmentHorizontalValues.Center),
+            new("Tên thiết bị", x => x.TenThietBi),
+            new("Số Serial", x => x.SoSerial),
+            new("Loại thiết bị", x => x.TenLoaiThietBi),
+            new("Khu vực", x => x.TenKhuVuc),
+            new("Tình trạng", x => UiHelper.Badge(x.TinhTrang).Text, alignment: ClosedXML.Excel.XLAlignmentHorizontalValues.Center),
+            new("Hạn bảo trì tiếp", x => x.NgayBaoTriTiepTheo, numberFormat: "dd/MM/yyyy", alignment: ClosedXML.Excel.XLAlignmentHorizontalValues.Center)
+        };
+
+        var nguoiXuat = User.Identity?.Name ?? "Hệ thống";
+        var bytes = ExcelExportHelper.Export(
+            sheetName: "Danh sách Thiết bị",
+            reportTitle: "BÁO CÁO DANH SÁCH THIẾT BỊ BẢO TRÌ",
+            data: danhSach,
+            columns: columns,
+            nguoiXuat: nguoiXuat,
+            coCotStt: true
+        );
+
+        var fileName = $"DanhSachThietBi_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+        return File(bytes, ExcelExportHelper.ContentType, fileName);
+    }
+
     public async Task<IActionResult> Details(int id)
     {
         var vm = await _service.LayChiTietAsync(id);

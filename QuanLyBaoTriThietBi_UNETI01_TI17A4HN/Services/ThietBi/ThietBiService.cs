@@ -47,6 +47,21 @@ public class ThietBiService : IThietBiService
         };
     }
 
+    public async Task<List<ThietBiRow>> LayToanBoDeXuatExcelAsync(ThietBiBoLoc boLoc)
+    {
+        boLoc.TuKhoa = boLoc.TuKhoa?.Trim();
+        var danhSach = await _repo.TimKiemAsync(boLoc);
+        return danhSach.Select(t => new ThietBiRow(
+            t.MaThietBi,
+            t.TenThietBi,
+            t.SoSerial,
+            t.LoaiThietBi?.TenLoaiThietBi ?? "—",
+            t.KhuVuc?.TenKhuVuc ?? "—",
+            t.TinhTrang,
+            t.NgayBaoTriTiepTheo
+        )).ToList();
+    }
+
     public async Task<(int SapDenHan, int QuaHan)> DemHanBaoTriAsync(DateTime? homNay = null)
     {
         var sapDenHan = await _repo.DemSapDenHanAsync(homNay);

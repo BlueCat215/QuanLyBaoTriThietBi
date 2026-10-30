@@ -9,6 +9,12 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 public interface IThietBiService
 {
     Task<ThietBiIndexViewModel> LayDanhSachAsync(ThietBiBoLoc boLoc);
+
+    /// <summary>
+    /// Lấy toàn bộ danh sách thiết bị theo bộ lọc (không phân trang) để xuất file Excel.
+    /// </summary>
+    Task<List<ThietBiRow>> LayToanBoDeXuatExcelAsync(ThietBiBoLoc boLoc);
+
     Task<ThietBiDetailsViewModel?> LayChiTietAsync(int id);
     Task<ThietBiFormViewModel?> LayDeSuaAsync(int id);
 
