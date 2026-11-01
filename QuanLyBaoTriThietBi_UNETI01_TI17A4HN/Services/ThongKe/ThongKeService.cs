@@ -2,19 +2,18 @@
 // MSSV: <23103100225>
 // Nội dung: Module 5 - Service Báo cáo thống kê (SST 45: LINQ GroupBy theo loại, khu vực, mức độ, KTV, chi phí & thời gian xử lý)
 #nullable enable
-using Microsoft.EntityFrameworkCore;
-using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
+using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 public class ThongKeService : IThongKeService
 {
-    private readonly AppDbContext _context;
+    private readonly IThongKeRepository _repo;
 
-    public ThongKeService(AppDbContext context) => _context = context;
+    public ThongKeService(IThongKeRepository repo) => _repo = repo;
 
     public async Task<ThongKeIndexViewModel> LayThongKeAsync(ThongKeBoLoc boLoc)
     {
@@ -34,39 +33,14 @@ public class ThongKeService : IThongKeService
             endDate = new DateTime(namChon + 1, 1, 1);
         }
 
-        // 2. Tải toàn bộ dữ liệu cần thiết phục vụ thống kê (truy vấn NoTracking tối ưu hiệu năng)
-        var thietBis = await _context.ThietBis
-            .AsNoTracking()
-            .Include(t => t.LoaiThietBi)
-            .Include(t => t.KhuVuc)
-            .ToListAsync();
-
-        var loaiThietBis = await _context.LoaiThietBis.AsNoTracking().ToListAsync();
-        var khuVucs = await _context.KhuVucs.AsNoTracking().ToListAsync();
-
-        var baoCaos = await _context.BaoCaoSuCos
-            .AsNoTracking()
-            .Where(b => b.NgayBaoCao >= startDate && b.NgayBaoCao < endDate)
-            .ToListAsync();
-
-        var keHoachs = await _context.KeHoachBaoTris
-            .AsNoTracking()
-            .Where(k => k.NgayDuKien >= startDate && k.NgayDuKien < endDate)
-            .ToListAsync();
-
-        var phieus = await _context.PhieuXuLys
-            .AsNoTracking()
-            .Include(p => p.BaoCaoSuCo)
-            .Include(p => p.KeHoachBaoTri)
-            .Include(p => p.PhanCongXuLys)
-                .ThenInclude(pc => pc.KyThuatVien)
-            .Include(p => p.ChiTietXuLys)
-            .Where(p => p.NgayTao >= startDate && p.NgayTao < endDate)
-            .ToListAsync();
-
-        var ktvs = await _context.KyThuatViens
-            .AsNoTracking()
-            .ToListAsync();
+        // 2. Tải toàn bộ dữ liệu cần thiết phục vụ thống kê qua Repository
+        var thietBis = await _repo.LayDanhSachThietBiAsync();
+        var loaiThietBis = await _repo.LayDanhSachLoaiThietBiAsync();
+        var khuVucs = await _repo.LayDanhSachKhuVucAsync();
+        var baoCaos = await _repo.LayBaoCaoSuCoTheoKhoangNgayAsync(startDate, endDate);
+        var keHoachs = await _repo.LayKeHoachBaoTriTheoKhoangNgayAsync(startDate, endDate);
+        var phieus = await _repo.LayPhieuXuLyTheoKhoangNgayAsync(startDate, endDate);
+        var ktvs = await _repo.LayDanhSachKyThuatVienAsync();
 
         // 3. Tính toán các chỉ số tổng quan
         int tongThietBi = thietBis.Count;
@@ -148,6 +122,7 @@ public class ThongKeService : IThongKeService
             int count = ds.Count;
             int daXong = ds.Count(b => b.TrangThai == TrangThaiBaoCaoEnum.HoanThanh);
             double pct = tongSuCo > 0 ? Math.Round((double)count * 100 / tongSuCo, 1) : 0;
+
             return new ThongKeMucDoItem(
                 m,
                 UiHelper.Badge(m).Text,
@@ -252,14 +227,7 @@ public class ThongKeService : IThongKeService
         .ToList();
 
         // 11. Thống kê chi phí theo 12 tháng của năm được chọn
-        var allChiTietTrongNam = await _context.ChiTietXuLys
-            .AsNoTracking()
-            .Include(c => c.PhieuXuLy)
-            .Where(c => c.NgayCapNhat.Year == namChon
-                     && c.ThanhTien != null
-                     && c.PhieuXuLy != null
-                     && c.PhieuXuLy.TrangThai != TrangThaiPhieuXuLyEnum.DaHuy)
-            .ToListAsync();
+        var allChiTietTrongNam = await _repo.LayChiTietXuLyTrongNamAsync(namChon);
 
         var chiPhi12Thang = Enumerable.Range(1, 12).Select(m =>
         {
