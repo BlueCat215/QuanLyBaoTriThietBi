@@ -71,6 +71,55 @@ public class ThietBiController : Controller
         var vm = await _service.LayChiTietAsync(id);
         if (vm is null)
             return NotFound();
+
+        // STT 56: Sinh mã QR động trỏ tới URL chi tiết thiết bị
+        var urlChiTiet = Url.Action("Details", "ThietBi", new { id }, Request.Scheme) 
+            ?? $"{Request.Scheme}://{Request.Host}/ThietBi/Details/{id}";
+        vm.QrUrl = urlChiTiet;
+        vm.QrCodeDataUri = QRCodeHelper.TaoDataUriPng(urlChiTiet, pixelsPerModule: 5);
+
+        return View(vm);
+    }
+
+    /// <summary>
+    /// STT 56: Tải về ảnh mã QR của thiết bị (.png)
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> QrCode(int id)
+    {
+        var tb = await _service.LayChiTietAsync(id);
+        if (tb is null)
+            return NotFound();
+
+        var urlChiTiet = Url.Action("Details", "ThietBi", new { id }, Request.Scheme)
+            ?? $"{Request.Scheme}://{Request.Host}/ThietBi/Details/{id}";
+
+        var pngBytes = QRCodeHelper.TaoBytesPng(urlChiTiet, pixelsPerModule: 10);
+        var fileName = $"QR_{tb.ThietBi.SoSerial}_{id}.png";
+        return File(pngBytes, "image/png", fileName);
+    }
+
+    /// <summary>
+    /// STT 56: Màn hình In tem nhãn tài sản dán máy (Print Template chuẩn 70mm x 40mm)
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> InTemNhan(int id)
+    {
+        var chiTietVm = await _service.LayChiTietAsync(id);
+        if (chiTietVm is null)
+            return NotFound();
+
+        var urlChiTiet = Url.Action("Details", "ThietBi", new { id }, Request.Scheme)
+            ?? $"{Request.Scheme}://{Request.Host}/ThietBi/Details/{id}";
+
+        var vm = new ThietBiTemNhanViewModel
+        {
+            ThietBi = chiTietVm.ThietBi,
+            QrCodeDataUri = QRCodeHelper.TaoDataUriPng(urlChiTiet, pixelsPerModule: 6),
+            ChiTietUrl = urlChiTiet,
+            NgayIn = DateTime.Now
+        };
+
         return View(vm);
     }
 

@@ -1,4 +1,4 @@
-// ViewModel Thiết bị (danh sách, chi tiết, form Thêm/Sửa)
+﻿// ViewModel Thiết bị (danh sách, chi tiết, form Thêm/Sửa)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -50,6 +50,21 @@ public class ThietBiDetailsViewModel
 {
     public required ThietBi ThietBi { get; init; }
     public required DuLieuLienQuanThietBi DuLieuLienQuan { get; init; }
+
+    /// Chuỗi Data URI Base64 PNG của mã QR (sinh động từ URL hoặc Serial, không lưu DB)
+    public string QrCodeDataUri { get; set; } = string.Empty;
+
+    /// Đường dẫn tuyệt đối URL chi tiết thiết bị được mã hóa trong QR
+    public string QrUrl { get; set; } = string.Empty;
+}
+
+/// STT 56: ViewModel phục vụ in tem nhãn tài sản dán máy
+public class ThietBiTemNhanViewModel
+{
+    public required ThietBi ThietBi { get; init; }
+    public required string QrCodeDataUri { get; init; }
+    public required string ChiTietUrl { get; init; }
+    public DateTime NgayIn { get; init; } = DateTime.Now;
 }
 
 public class ThietBiFormViewModel
