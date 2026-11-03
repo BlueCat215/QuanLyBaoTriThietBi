@@ -56,8 +56,15 @@
     </div>
 </div>
 
-<div class="mb-4">
+<div class="mb-3">
     <label asp-for="MoTa" class="form-label"></label>
     <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
     <span asp-validation-for="MoTa"></span>
+</div>
+
+<div class="mb-4">
+    <label asp-for="TepAnhDinhKem" class="form-label">Ảnh thiết bị thực tế</label>
+    <input asp-for="TepAnhDinhKem" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif" class="form-control" />
+    <div class="form-text">Định dạng hỗ trợ: JPG, PNG, WEBP, GIF. Kích thước tối đa 5MB/ảnh. Có thể chọn nhiều ảnh cùng lúc.</div>
+    <span asp-validation-for="TepAnhDinhKem"></span>
 </div>
