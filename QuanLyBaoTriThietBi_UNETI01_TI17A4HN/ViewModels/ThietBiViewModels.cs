@@ -1,6 +1,7 @@
-﻿// ViewModel Thiết bị (danh sách, chi tiết, form Thêm/Sửa)
+// ViewModel Thiết bị (danh sách, chi tiết, form Thêm/Sửa)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -56,6 +57,8 @@ public class ThietBiDetailsViewModel
 
     /// Đường dẫn tuyệt đối URL chi tiết thiết bị được mã hóa trong QR
     public string QrUrl { get; set; } = string.Empty;
+    /// STT 54: Danh sách ảnh thực tế đính kèm của thiết bị
+    public List<TepDinhKemItemViewModel> DanhSachAnh { get; set; } = new();
 }
 
 /// STT 56: ViewModel phục vụ in tem nhãn tài sản dán máy
@@ -109,6 +112,10 @@ public class ThietBiFormViewModel
     [StringLength(255, ErrorMessage = "Mô tả tối đa 255 ký tự")]
     [Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
+    /// STT 54: Tệp ảnh tải lên đính kèm từ form Tạo / Sửa
+    public List<IFormFile>? TepAnhDinhKem { get; set; }
+    /// STT 54: Danh sách ảnh hiện tại (dành cho màn hình Sửa thiết bị)
+    public List<TepDinhKemItemViewModel> DanhSachAnhHienTai { get; set; } = new();
 
     public bool LaThemMoi => MaThietBi == 0;
 

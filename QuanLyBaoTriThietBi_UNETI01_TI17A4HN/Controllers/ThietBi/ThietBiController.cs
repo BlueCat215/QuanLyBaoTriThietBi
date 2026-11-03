@@ -15,11 +15,17 @@ public class ThietBiController : Controller
 {
     private readonly IThietBiService _service;
     private readonly IChiTietXuLyService _chiTietService;
+    private readonly ITepDinhKemService _tepDinhKemService;
 
-    public ThietBiController(IThietBiService service, IChiTietXuLyService chiTietService)
+    public ThietBiController(
+        IThietBiService service,
+        IChiTietXuLyService chiTietService,
+        ITepDinhKemService tepDinhKemService
+    )
     {
         _service = service;
         _chiTietService = chiTietService;
+        _tepDinhKemService = tepDinhKemService;
     }
 
     public async Task<IActionResult> Index(ThietBiBoLoc boLoc)
@@ -64,6 +70,64 @@ public class ThietBiController : Controller
 
         var fileName = $"DanhSachThietBi_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
         return File(bytes, ExcelExportHelper.ContentType, fileName);
+    }
+
+    /// <summary>
+    /// STT 54: Tải lên thêm ảnh thực tế cho thiết bị từ trang Chi tiết thiết bị
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> UploadAnh(int id, List<IFormFile> files)
+    {
+        if (files == null || files.Count == 0 || files.All(f => f.Length == 0))
+        {
+            TempData["Loi"] = "Vui lòng chọn ít nhất một tệp ảnh để tải lên.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var maTaiKhoan = HttpContext.Session.GetInt32(SessionKeys.MaTaiKhoan);
+        var result = await _tepDinhKemService.UploadNhieuTepAsync(
+            files,
+            LoaiDoiTuongDinhKemEnum.ThietBi,
+            id,
+            maTaiKhoan,
+            chiChapNhanAnh: true
+        );
+
+        if (result.Succeeded)
+        {
+            var soLuong = result.Data?.Count ?? 0;
+            TempData["ThanhCong"] = $"Đã tải lên thành công {soLuong} ảnh thực tế cho thiết bị.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    /// <summary>
+    /// STT 54: Xóa ảnh thực tế của thiết bị
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
+    public async Task<IActionResult> XoaAnh(int id, int maTepDinhKem, string? returnUrl)
+    {
+        var result = await _tepDinhKemService.XoaTepAsync(maTepDinhKem);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = "Đã xóa ảnh đính kèm thành công.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     public async Task<IActionResult> Details(int id)
@@ -151,11 +215,12 @@ public class ThietBiController : Controller
     {
         if (ModelState.IsValid)
         {
-            var result = await _service.ThemAsync(vm);
+            var maTaiKhoan = HttpContext.Session.GetInt32(SessionKeys.MaTaiKhoan);
+            var result = await _service.ThemAsync(vm, maTaiKhoan);
             if (result.Succeeded)
             {
                 TempData["ThanhCong"] = "Đã thêm thiết bị thành công.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = result.Data });
             }
             ModelState.AddServiceErrors(result);
         }
@@ -185,7 +250,8 @@ public class ThietBiController : Controller
 
         if (ModelState.IsValid)
         {
-            var result = await _service.SuaAsync(vm);
+            var maTaiKhoan = HttpContext.Session.GetInt32(SessionKeys.MaTaiKhoan);
+            var result = await _service.SuaAsync(vm, maTaiKhoan);
             if (result.Succeeded)
             {
                 TempData["ThanhCong"] = "Đã cập nhật thiết bị thành công.";

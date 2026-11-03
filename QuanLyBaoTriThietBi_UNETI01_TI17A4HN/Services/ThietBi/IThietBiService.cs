@@ -1,5 +1,5 @@
-// Họ tên: Nguyễn Minh Đức
-// Nội dung: Interface Service Thiết bị (Module 2: CRUD, SFSP, hạn bảo trì)
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Nội dung: Interface Service Thiết bị (Module 2: CRUD, SFSP, hạn bảo trì, ảnh thiết bị thực tế)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
@@ -30,8 +30,8 @@ public interface IThietBiService
     Task<List<(int Ma, string Ten)>> LayLoaiChoChonAsync(int? giuLaiMa);
     Task<List<(int Ma, string Ten)>> LayKhuVucChoChonAsync(int? giuLaiMa);
 
-    Task<ServiceResult> ThemAsync(ThietBiFormViewModel vm);
-    Task<ServiceResult> SuaAsync(ThietBiFormViewModel vm);
+    Task<ServiceResult<int>> ThemAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null);
+    Task<ServiceResult> SuaAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null);
 
     ///Đổi tình trạng (kể cả chuyển sang Ngừng sử dụng). Data = tình trạng mới.
     Task<ServiceResult<TinhTrangThietBiEnum>> DoiTinhTrangAsync(

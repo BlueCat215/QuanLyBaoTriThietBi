@@ -1,4 +1,4 @@
-﻿@* Chi tiết Thiết bị, đổi tình trạng, xóa an toàn *@
+@* Chi tiết Thiết bị, đổi tình trạng, xóa an toàn, ảnh thực tế (STT 54), mã QR (STT 56) *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiDetailsViewModel
@@ -14,8 +14,7 @@
 <div class="page-header">
     <div>
         <h1>@tb.TenThietBi</h1>
-        <p><span class="mono">@UiHelper.Ma("TB", tb.MaThietBi)</span> · Serial <span class="mono">@tb.SoSerial</span>
-        </p>
+        <p><span class="mono">@UiHelper.Ma("TB", tb.MaThietBi)</span> · Serial <span class="mono">@tb.SoSerial</span></p>
     </div>
     <div class="page-actions">
         <a class="btn btn-outline-secondary" asp-action="Index">Quay lại danh sách</a>
@@ -34,126 +33,251 @@
 </div>
 
 <div class="row g-3">
-
-    <div class="card">
-        <div class="card-body">
-            <h3 class="mb-3">Thông tin thiết bị</h3>
-            <dl class="row mb-0">
-                <dt class="col-sm-4">Tình trạng</dt>
-                <dd class="col-sm-8">
-                    <partial name="_StatusBadge" model="UiHelper.Badge(tb.TinhTrang)" />
-                </dd>
-
-                <dt class="col-sm-4">Loại thiết bị</dt>
-                <dd class="col-sm-8">@(tb.LoaiThietBi?.TenLoaiThietBi ?? "—")</dd>
-
-                <dt class="col-sm-4">Khu vực</dt>
-                <dd class="col-sm-8">@(tb.KhuVuc?.TenKhuVuc ?? "—")</dd>
-
-                <dt class="col-sm-4">Ngày đưa vào sử dụng</dt>
-                <dd class="col-sm-8">@UiHelper.Ngay(tb.NgayDuaVaoSuDung)</dd>
-
-                <dt class="col-sm-4">Chu kỳ bảo trì</dt>
-                <dd class="col-sm-8">@tb.ChuKyBaoTriThang tháng</dd>
-
-                <dt class="col-sm-4">Bảo trì gần nhất</dt>
-                <dd class="col-sm-8">@(tb.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(tb.NgayBaoTriGanNhat) : "Chưa bảo trì lần nào")</dd>
-
-                <dt class="col-sm-4">Bảo trì tiếp theo</dt>
-                <dd class="col-sm-8">
-                    @if (ngung)
-                    {
-                        <span>—</span>
-                    }
-                    else
-                    {
-                        var (badge, ghiChu) = UiHelper.HanBaoTri(tb.NgayBaoTriTiepTheo);
-                        <span>@UiHelper.Ngay(tb.NgayBaoTriTiepTheo)</span>
-                        <partial name="_StatusBadge" model="badge" />
-                        <span class="text-muted">(@ghiChu)</span>
-                    }
-                </dd>
-
-                <dt class="col-sm-4">Mô tả</dt>
-                <dd class="col-sm-8">@(string.IsNullOrEmpty(tb.MoTa) ? "—" : tb.MoTa)</dd>
-            </dl>
-        </div>
-    </div>
-</div>
-
-<div class="col-lg-4">
-    @if (coQuyenQuanLy)
-    {
+    <!-- CỘT TRÁI: THÔNG TIN CHI TIẾT & BỘ SƯU TẬP ẢNH THỰC TẾ -->
+    <div class="col-lg-8">
+        <!-- Thông tin cơ bản -->
         <div class="card mb-3">
             <div class="card-body">
-                <h3 class="mb-3">Đổi tình trạng</h3>
-                <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
-                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
-                    <label class="form-label" for="tinhTrang">Tình trạng mới</label>
-                    <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
-                        @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
+                <h3 class="mb-3">Thông tin thiết bị</h3>
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Tình trạng</dt>
+                    <dd class="col-sm-8">
+                        <partial name="_StatusBadge" model="UiHelper.Badge(tb.TinhTrang)" />
+                    </dd>
+
+                    <dt class="col-sm-4">Loại thiết bị</dt>
+                    <dd class="col-sm-8">@(tb.LoaiThietBi?.TenLoaiThietBi ?? "—")</dd>
+
+                    <dt class="col-sm-4">Khu vực</dt>
+                    <dd class="col-sm-8">@(tb.KhuVuc?.TenKhuVuc ?? "—")</dd>
+
+                    <dt class="col-sm-4">Ngày đưa vào sử dụng</dt>
+                    <dd class="col-sm-8">@UiHelper.Ngay(tb.NgayDuaVaoSuDung)</dd>
+
+                    <dt class="col-sm-4">Chu kỳ bảo trì</dt>
+                    <dd class="col-sm-8">@tb.ChuKyBaoTriThang tháng</dd>
+
+                    <dt class="col-sm-4">Bảo trì gần nhất</dt>
+                    <dd class="col-sm-8">@(tb.NgayBaoTriGanNhat.HasValue ? UiHelper.Ngay(tb.NgayBaoTriGanNhat) : "Chưa bảo trì lần nào")</dd>
+
+                    <dt class="col-sm-4">Bảo trì tiếp theo</dt>
+                    <dd class="col-sm-8">
+                        @if (ngung)
                         {
-                            <option value="@v" selected="@(tb.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
+                            <span>—</span>
                         }
-                    </select>
-                    <button type="submit" class="btn btn-outline-secondary w-100">Cập nhật tình trạng</button>
-                </form>
+                        else
+                        {
+                            var (badge, ghiChu) = UiHelper.HanBaoTri(tb.NgayBaoTriTiepTheo);
+                            <span>@UiHelper.Ngay(tb.NgayBaoTriTiepTheo)</span>
+                            <partial name="_StatusBadge" model="badge" />
+                            <span class="text-muted">(@ghiChu)</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Mô tả</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(tb.MoTa) ? "—" : tb.MoTa)</dd>
+                </dl>
             </div>
         </div>
-    }
 
-    <div class="card mb-3">
-        <div class="card-body text-center">
-            <h3 class="mb-2">Mã QR Thiết bị</h3>
-            <p class="text-muted small mb-3">Quét mã bằng điện thoại để tra cứu lý lịch hoặc gửi báo cáo sự cố.</p>
-            <div class="p-2 border rounded bg-white d-inline-block mb-3 shadow-sm">
-                <img src="@Model.QrCodeDataUri" alt="QR Code @tb.SoSerial"
-                     style="width: 160px; height: 160px; display: block;" />
-            </div>
-            <div class="cell-sub mono mb-3" style="font-size: 11px; word-break: break-all;">@Model.QrUrl</div>
-            <div class="d-flex gap-2 justify-content-center">
-                <a class="btn btn-sm btn-outline-primary" asp-action="InTemNhan" asp-route-id="@tb.MaThietBi"
-                   target="_blank">
-                    <span class="material-symbols-outlined icon-18">print</span> In tem nhãn
-                </a>
-                <a class="btn btn-sm btn-outline-secondary" asp-action="QrCode" asp-route-id="@tb.MaThietBi">
-                    <span class="material-symbols-outlined icon-18">download</span> Tải ảnh QR
-                </a>
-            </div>
-        </div>
-    </div>
+        <!-- STT 54: Bộ sưu tập ảnh thực tế thiết bị (Gallery + Lightbox) -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="mb-0">Ảnh thực tế (@Model.DanhSachAnh.Count)</h3>
+                        <p class="text-muted small mb-0">Hình ảnh trực quan hiện trạng và vị trí lắp đặt thiết bị tại hiện trường.</p>
+                    </div>
+                    @if (coQuyenQuanLy)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUploadAnh">
+                            <span class="material-symbols-outlined icon-18 me-1">add_photo_alternate</span> Tải thêm ảnh
+                        </button>
+                    }
+                </div>
 
-    <div class="card">
-        <div class="card-body">
-            <h3 class="mb-3">Dữ liệu liên quan</h3>
-            <ul class="list-unstyled mb-3">
-                <li>Kế hoạch bảo trì: <strong>@lienQuan.SoKeHoach</strong></li>
-                <li>Báo cáo sự cố: <strong>@lienQuan.SoBaoCao</strong></li>
-                <li>Thông báo: <strong>@lienQuan.SoThongBao</strong></li>
-                <li>Tệp đính kèm: <strong>@lienQuan.SoTepDinhKem</strong></li>
-            </ul>
-            <a class="btn btn-outline-primary w-100 mb-3" asp-action="LichSu" asp-route-id="@tb.MaThietBi">
-                <span class="material-symbols-outlined icon-20 me-1">history</span> Xem lịch sử vòng đời
-            </a>
-
-            @if (laAdmin)
-            {
-                @if (lienQuan.CoDuLieu)
+                @if (Model.DanhSachAnh.Count == 0)
                 {
-                    <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
-                        <strong>Ngừng sử dụng</strong> để giữ lịch sử.
-                    </p>
+                    <div class="p-4 text-center border rounded bg-light">
+                        <span class="material-symbols-outlined text-muted" style="font-size: 48px;">image</span>
+                        <p class="text-muted mt-2 mb-2">Chưa có ảnh thực tế nào của thiết bị này.</p>
+                        @if (coQuyenQuanLy)
+                        {
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalUploadAnh">
+                                Tải ảnh đầu tiên
+                            </button>
+                        }
+                    </div>
                 }
                 else
                 {
-                    <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
-                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
-                            data-bs-target="#modalXoa">Xóa thiết bị</button>
+                    <div class="row g-3 row-cols-2 row-cols-sm-3 row-cols-md-4">
+                        @foreach (var anh in Model.DanhSachAnh)
+                        {
+                            <div class="col">
+                                <div class="card h-100 border shadow-sm position-relative group-hover-parent overflow-hidden">
+                                    <div style="height: 140px; background-color: #f8fafc; cursor: pointer;"
+                                         onclick="moLightbox('@anh.DuongDanFile', '@anh.TenFileGoc', '@anh.NgayUpload.ToString("dd/MM/yyyy HH:mm")', '@(anh.TenNguoiUpload ?? "Hệ thống")')">
+                                        <img src="@anh.DuongDanFile" alt="@anh.TenFileGoc"
+                                             class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s;"
+                                             onmouseover="this.style.transform='scale(1.05)'"
+                                             onmouseout="this.style.transform='scale(1)'" />
+                                    </div>
+                                    <div class="p-2 d-flex justify-content-between align-items-center bg-white border-top">
+                                        <div class="text-truncate small" title="@anh.TenFileGoc" style="max-width: 110px;">
+                                            @anh.TenFileGoc
+                                        </div>
+                                        @if (coQuyenQuanLy)
+                                        {
+                                            <form asp-action="XoaAnh" asp-route-id="@tb.MaThietBi" method="post"
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa ảnh này?');">
+                                                <input type="hidden" name="maTepDinhKem" value="@anh.MaTepDinhKem" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
+                                                <button type="submit" class="btn btn-sm text-danger p-0 border-0 bg-transparent" title="Xóa ảnh">
+                                                    <span class="material-symbols-outlined icon-18">delete</span>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
-            }
+            </div>
+        </div>
+    </div>
+
+    <!-- CỘT PHẢI: ĐỔI TÌNH TRẠNG, MÃ QR & DỮ LIỆU LIÊN QUAN -->
+    <div class="col-lg-4">
+        @if (coQuyenQuanLy)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h3 class="mb-3">Đổi tình trạng</h3>
+                    <form asp-action="DoiTinhTrang" asp-route-id="@tb.MaThietBi" method="post">
+                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", new { id = tb.MaThietBi })" />
+                        <label class="form-label" for="tinhTrang">Tình trạng mới</label>
+                        <select id="tinhTrang" name="tinhTrang" class="form-select mb-3">
+                            @foreach (var v in Enum.GetValues<TinhTrangThietBiEnum>())
+                            {
+                                <option value="@v" selected="@(tb.TinhTrang == v)">@UiHelper.Badge(v).Text</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary w-100">Cập nhật tình trạng</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <!-- STT 56: Mã QR động -->
+        <div class="card mb-3">
+            <div class="card-body text-center">
+                <h3 class="mb-2">Mã QR Thiết bị</h3>
+                <p class="text-muted small mb-3">Quét mã bằng điện thoại để tra cứu lý lịch hoặc gửi báo cáo sự cố.</p>
+                <div class="p-2 border rounded bg-white d-inline-block mb-3 shadow-sm">
+                    <img src="@Model.QrCodeDataUri" alt="QR Code @tb.SoSerial"
+                         style="width: 160px; height: 160px; display: block;" />
+                </div>
+                <div class="cell-sub mono mb-3" style="font-size: 11px; word-break: break-all;">@Model.QrUrl</div>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="InTemNhan" asp-route-id="@tb.MaThietBi" target="_blank">
+                        <span class="material-symbols-outlined icon-18">print</span> In tem nhãn
+                    </a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="QrCode" asp-route-id="@tb.MaThietBi">
+                        <span class="material-symbols-outlined icon-18">download</span> Tải ảnh QR
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dữ liệu liên quan -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Dữ liệu liên quan</h3>
+                <ul class="list-unstyled mb-3">
+                    <li>Kế hoạch bảo trì: <strong>@lienQuan.SoKeHoach</strong></li>
+                    <li>Báo cáo sự cố: <strong>@lienQuan.SoBaoCao</strong></li>
+                    <li>Thông báo: <strong>@lienQuan.SoThongBao</strong></li>
+                    <li>Tệp đính kèm: <strong>@lienQuan.SoTepDinhKem</strong></li>
+                </ul>
+                <a class="btn btn-outline-primary w-100 mb-3" asp-action="LichSu" asp-route-id="@tb.MaThietBi">
+                    <span class="material-symbols-outlined icon-20 me-1">history</span> Xem lịch sử vòng đời
+                </a>
+
+                @if (laAdmin)
+                {
+                    @if (lienQuan.CoDuLieu)
+                    {
+                        <p class="text-muted mb-0">Thiết bị đã phát sinh dữ liệu nên không thể xóa. Hãy chuyển sang
+                            <strong>Ngừng sử dụng</strong> để giữ lịch sử.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Thiết bị chưa phát sinh dữ liệu nên có thể xóa (ví dụ khi nhập nhầm).</p>
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                                data-bs-target="#modalXoa">Xóa thiết bị</button>
+                    }
+                }
+            </div>
         </div>
     </div>
 </div>
+
+<!-- MODAL UPLOAD ẢNH NHANH (STT 54) -->
+@if (coQuyenQuanLy)
+{
+    <div class="modal fade" id="modalUploadAnh" tabindex="-1" aria-labelledby="modalUploadAnhTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="UploadAnh" asp-route-id="@tb.MaThietBi" method="post" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h3 class="modal-title fs-5" id="modalUploadAnhTitle">Tải lên ảnh thực tế</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required" for="files">Chọn tệp hình ảnh</label>
+                            <input type="file" id="files" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.gif" class="form-control" required />
+                            <div class="form-text">Định dạng hỗ trợ: JPG, PNG, WEBP, GIF. Kích thước tối đa 5MB mỗi ảnh. Có thể chọn cùng lúc nhiều ảnh.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-symbols-outlined icon-18 me-1">cloud_upload</span> Bắt đầu tải lên
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- MODAL LIGHTBOX XEM ẢNH PHÓNG TO (STT 54) -->
+<div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-0">
+            <div class="modal-header border-bottom border-secondary py-2">
+                <div>
+                    <h5 class="modal-title fs-6 text-white mb-0" id="lightboxTitle">Chi tiết hình ảnh</h5>
+                    <small class="text-secondary" id="lightboxMeta"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center p-2 bg-black d-flex align-items-center justify-content-center" style="min-height: 400px; max-height: 75vh;">
+                <img id="lightboxImg" src="" alt="Ảnh thiết bị" class="img-fluid" style="max-height: 70vh; object-fit: contain; border-radius: 4px;" />
+            </div>
+            <div class="modal-footer border-top border-secondary py-2 justify-content-between">
+                <a id="lightboxDownloadBtn" href="" download class="btn btn-sm btn-outline-light">
+                    <span class="material-symbols-outlined icon-18 me-1">download</span> Tải ảnh gốc
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if (laAdmin && !lienQuan.CoDuLieu)
@@ -167,8 +291,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Bạn có chắc muốn xóa thiết bị <strong>@tb.TenThietBi</strong>? Hành động này không thể hoàn tác.
-                        </p>
+                        <p>Bạn có chắc muốn xóa thiết bị <strong>@tb.TenThietBi</strong>? Hành động này không thể hoàn tác.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -180,3 +303,16 @@
     </div>
 }
 
+@section Scripts {
+    <script>
+        function moLightbox(url, tenFile, ngayUpload, nguoiUpload) {
+            document.getElementById('lightboxImg').src = url;
+            document.getElementById('lightboxTitle').textContent = tenFile;
+            document.getElementById('lightboxMeta').textContent = 'Tải lên lúc: ' + ngayUpload + ' · Người đăng: ' + nguoiUpload;
+            document.getElementById('lightboxDownloadBtn').href = url;
+            
+            var modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+            modal.show();
+        }
+    </script>
+}

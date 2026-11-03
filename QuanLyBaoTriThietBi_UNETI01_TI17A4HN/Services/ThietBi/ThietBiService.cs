@@ -15,8 +15,13 @@ public class ThietBiService : IThietBiService
     private static readonly DateTime NgayToiThieu = new(1900, 1, 1);
 
     private readonly IThietBiRepository _repo;
+    private readonly ITepDinhKemService _tepDinhKemService;
 
-    public ThietBiService(IThietBiRepository repo) => _repo = repo;
+    public ThietBiService(IThietBiRepository repo, ITepDinhKemService tepDinhKemService)
+    {
+        _repo = repo;
+        _tepDinhKemService = tepDinhKemService;
+    }
 
     // ---------------- Truy vấn ----------------
     public async Task<ThietBiIndexViewModel> LayDanhSachAsync(ThietBiBoLoc boLoc)
@@ -103,11 +108,13 @@ public class ThietBiService : IThietBiService
         if (tb is null)
             return null;
 
-        return new ThietBiDetailsViewModel
+        var vm = new ThietBiDetailsViewModel
         {
             ThietBi = tb,
             DuLieuLienQuan = await _repo.DemDuLieuLienQuanAsync(id),
+            DanhSachAnh = await _tepDinhKemService.LayDanhSachTheoDoiTuongAsync(LoaiDoiTuongDinhKemEnum.ThietBi, id),
         };
+        return vm;
     }
 
     public async Task<ThietBiFormViewModel?> LayDeSuaAsync(int id)
@@ -127,6 +134,7 @@ public class ThietBiService : IThietBiService
             ChuKyBaoTriThang = tb.ChuKyBaoTriThang,
             NgayBaoTriGanNhat = tb.NgayBaoTriGanNhat,
             MoTa = tb.MoTa,
+            DanhSachAnhHienTai = await _tepDinhKemService.LayDanhSachTheoDoiTuongAsync(LoaiDoiTuongDinhKemEnum.ThietBi, id),
         };
     }
 
@@ -137,13 +145,13 @@ public class ThietBiService : IThietBiService
         _repo.LayKhuVucChoChonAsync(giuLaiMa);
 
     // ---------------- Thêm ----------------
-    public async Task<ServiceResult> ThemAsync(ThietBiFormViewModel vm)
+    public async Task<ServiceResult<int>> ThemAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null)
     {
         ChuanHoa(vm);
 
         var loi = await KiemTraAsync(vm, hienTai: null);
         if (!loi.Succeeded)
-            return loi;
+            return ServiceResult<int>.Fail(loi.ErrorMessage);
 
         var tb = new ThietBi
         {
@@ -160,11 +168,24 @@ public class ThietBiService : IThietBiService
 
         await _repo.AddAsync(tb);
         await _repo.SaveChangesAsync();
-        return ServiceResult.Ok();
+
+        // STT 54: Tải lên các tệp ảnh đính kèm ban đầu (nếu có)
+        if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
+        {
+            await _tepDinhKemService.UploadNhieuTepAsync(
+                vm.TepAnhDinhKem,
+                LoaiDoiTuongDinhKemEnum.ThietBi,
+                tb.MaThietBi,
+                maTaiKhoan,
+                chiChapNhanAnh: true
+            );
+        }
+
+        return ServiceResult<int>.Ok(tb.MaThietBi);
     }
 
     // ---------------- Sửa ----------------
-    public async Task<ServiceResult> SuaAsync(ThietBiFormViewModel vm)
+    public async Task<ServiceResult> SuaAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null)
     {
         var tb = await _repo.GetByIdAsync(vm.MaThietBi);
         if (tb is null)
@@ -186,6 +207,19 @@ public class ThietBiService : IThietBiService
         tb.MoTa = vm.MoTa;
 
         await _repo.SaveChangesAsync();
+
+        // STT 54: Tải lên các ảnh đính kèm mới (nếu có)
+        if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
+        {
+            await _tepDinhKemService.UploadNhieuTepAsync(
+                vm.TepAnhDinhKem,
+                LoaiDoiTuongDinhKemEnum.ThietBi,
+                tb.MaThietBi,
+                maTaiKhoan,
+                chiChapNhanAnh: true
+            );
+        }
+
         return ServiceResult.Ok();
     }
 
