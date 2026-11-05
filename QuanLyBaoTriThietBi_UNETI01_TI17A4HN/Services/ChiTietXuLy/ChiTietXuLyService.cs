@@ -1,6 +1,6 @@
 // Họ tên: Nguyễn Khắc Hiếu
 // MSSV: <23103100225>
-// Nội dung: Module 5 - Service Chi tiết xử lý (STT 39: Bắt đầu xử lý cho KTV được phân công, ghi NgayBatDau, chuyển Đang xử lý; cập nhật ChiTietXuLy hình thành lịch sử xử lý; ThanhTien = SoLuong x DonGia do hệ thống tính)
+// Nội dung: Module 5 - Service Chi tiết xử lý (STT 39: Bắt đầu xử lý, cập nhật ChiTietXuLy; STT 58: Tự động trừ/hoàn tồn kho và snapshot tên vật tư bảo toàn lịch sử)
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -131,6 +131,23 @@ public class ChiTietXuLyService : IChiTietXuLyService
         if (!loi.Succeeded)
             return loi;
 
+        // STT 58: Tích hợp xuất kho vật tư và Snapshot bảo toàn lịch sử
+        if (vm.MaVatTu.HasValue && vm.SoLuong.HasValue && vm.SoLuong.Value > 0)
+        {
+            var vt = await _repo.LayVatTuTrackingAsync(vm.MaVatTu.Value);
+            if (vt is null)
+                return ServiceResult.Fail("Vật tư đã chọn không tồn tại trong kho.");
+            if (!vt.TrangThai)
+                return ServiceResult.Fail($"Vật tư \"{vt.TenVatTu}\" đã ngừng sử dụng, không thể xuất kho.");
+            if (vt.SoLuongTon < vm.SoLuong.Value)
+                return ServiceResult.Fail($"Số lượng tồn kho của \"{vt.TenVatTu}\" không đủ (Hiện còn: {vt.SoLuongTon} {vt.DonViTinh}, yêu cầu xuất: {vm.SoLuong.Value}).", nameof(vm.SoLuong));
+
+            // Trừ tồn kho và snapshot tên vật tư
+            vt.SoLuongTon -= vm.SoLuong.Value;
+            vm.VatTuLinhKien = vt.TenVatTu;
+            vm.DonGia ??= vt.DonGiaMacDinh;
+        }
+
         await _repo.AddAsync(
             new ChiTietXuLy
             {
@@ -179,6 +196,54 @@ public class ChiTietXuLyService : IChiTietXuLyService
         if (!loi.Succeeded)
             return loi;
 
+        // STT 58: Xử lý điều chỉnh xuất / hoàn kho khi cập nhật bước xử lý
+        if (ct.MaVatTu == vm.MaVatTu)
+        {
+            if (vm.MaVatTu.HasValue)
+            {
+                var vt = await _repo.LayVatTuTrackingAsync(vm.MaVatTu.Value);
+                if (vt != null)
+                {
+                    var slCu = ct.SoLuong ?? 0;
+                    var slMoi = vm.SoLuong ?? 0;
+                    var chenhLech = slMoi - slCu;
+                    if (chenhLech > 0 && vt.SoLuongTon < chenhLech)
+                    {
+                        return ServiceResult.Fail($"Vật tư \"{vt.TenVatTu}\" không đủ tồn kho để xuất thêm {chenhLech} {vt.DonViTinh} (Hiện còn tồn: {vt.SoLuongTon}).", nameof(vm.SoLuong));
+                    }
+                    vt.SoLuongTon -= chenhLech;
+                    vm.VatTuLinhKien = vt.TenVatTu;
+                }
+            }
+        }
+        else
+        {
+            // 1. Hoàn lại kho cho vật tư cũ
+            if (ct.MaVatTu.HasValue && ct.SoLuong.HasValue && ct.SoLuong.Value > 0)
+            {
+                var vtCu = await _repo.LayVatTuTrackingAsync(ct.MaVatTu.Value);
+                if (vtCu != null)
+                {
+                    vtCu.SoLuongTon += ct.SoLuong.Value;
+                }
+            }
+            // 2. Trừ kho vật tư mới
+            if (vm.MaVatTu.HasValue && vm.SoLuong.HasValue && vm.SoLuong.Value > 0)
+            {
+                var vtMoi = await _repo.LayVatTuTrackingAsync(vm.MaVatTu.Value);
+                if (vtMoi is null)
+                    return ServiceResult.Fail("Vật tư mới chọn không tồn tại trong kho.");
+                if (!vtMoi.TrangThai)
+                    return ServiceResult.Fail($"Vật tư \"{vtMoi.TenVatTu}\" đã ngừng sử dụng, không thể xuất kho.");
+                if (vtMoi.SoLuongTon < vm.SoLuong.Value)
+                    return ServiceResult.Fail($"Vật tư \"{vtMoi.TenVatTu}\" không đủ tồn kho (Hiện còn: {vtMoi.SoLuongTon} {vtMoi.DonViTinh}, yêu cầu xuất: {vm.SoLuong.Value}).", nameof(vm.SoLuong));
+
+                vtMoi.SoLuongTon -= vm.SoLuong.Value;
+                vm.VatTuLinhKien = vtMoi.TenVatTu;
+                vm.DonGia ??= vtMoi.DonGiaMacDinh;
+            }
+        }
+
         // NgayCapNhat giữ nguyên mốc thời gian ghi nhận bước xử lý ban đầu
         ct.NoiDungThucHien = vm.NoiDungThucHien;
         ct.MaVatTu = vm.MaVatTu;
@@ -213,6 +278,16 @@ public class ChiTietXuLyService : IChiTietXuLyService
             return ServiceResult<int>.Fail("Không tìm thấy phiếu xử lý.");
         if (!phieu.ChoPhepGhiChiTiet)
             return ServiceResult<int>.Fail(LyDoKhongGhiDuoc(phieu));
+
+        // STT 58: Hoàn lại số lượng tồn kho khi xóa dòng chi tiết xử lý
+        if (ct.MaVatTu.HasValue && ct.SoLuong.HasValue && ct.SoLuong.Value > 0)
+        {
+            var vt = await _repo.LayVatTuTrackingAsync(ct.MaVatTu.Value);
+            if (vt != null)
+            {
+                vt.SoLuongTon += ct.SoLuong.Value;
+            }
+        }
 
         var maPhieu = ct.MaPhieuXuLy;
         _repo.Remove(ct);

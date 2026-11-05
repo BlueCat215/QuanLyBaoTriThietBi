@@ -92,7 +92,7 @@ public class ChiTietXuLyIndexViewModel
 }
 
 /// Vật tư đang dùng được, hiển thị trong ô chọn (đơn giá mặc định dùng để gợi ý).
-public record VatTuLuaChon(int Ma, string Ten, string DonViTinh, decimal DonGia);
+public record VatTuLuaChon(int Ma, string Ten, string DonViTinh, decimal DonGia, int SoLuongTon = 0);
 
 public class ChiTietXuLyFormViewModel
 {

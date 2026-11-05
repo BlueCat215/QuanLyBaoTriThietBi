@@ -1,4 +1,4 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Các trường nhập chung cho Thêm/Sửa chi tiết xử lý *@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: 23103100225 | Nội dung: Module 5 - STT 58: Form nhập chi tiết xử lý tích hợp xuất kho vật tư và snapshot tên *@
 @using System.Globalization
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyFormViewModel
 
@@ -11,23 +11,31 @@
 
 <div class="row g-3 mb-3">
     <div class="col-md-6">
-        <label asp-for="MaVatTu" class="form-label"></label>
+        <label asp-for="MaVatTu" class="form-label">Vật tư trong kho (STT 58)</label>
         <select asp-for="MaVatTu" class="form-select">
-            <option value="">-- Không chọn (nhập tay bên cạnh) --</option>
+            <option value="">-- Không chọn (nhập tay linh kiện tự do bên cạnh) --</option>
             @foreach (var v in Model.VatTuOptions)
             {
+                var tinhTrang = v.SoLuongTon <= 0 
+                    ? "❌ [HẾT HÀNG]" 
+                    : (v.SoLuongTon <= 5 ? $"⚠️ [SẮP HẾT: còn {v.SoLuongTon}]" : $"✅ [Còn {v.SoLuongTon}]");
                 <option value="@v.Ma" selected="@(Model.MaVatTu == v.Ma)"
-                        data-ten="@v.Ten" data-dongia="@v.DonGia.ToString("0.##", CultureInfo.InvariantCulture)">
-                    @v.Ten (@v.DonViTinh)
+                        data-ten="@v.Ten" 
+                        data-dongia="@v.DonGia.ToString("0.##", CultureInfo.InvariantCulture)"
+                        data-tonkho="@v.SoLuongTon"
+                        data-donvitinh="@v.DonViTinh">
+                    @v.Ten (@v.DonViTinh) - @tinhTrang
                 </option>
             }
         </select>
-        <div class="form-text">Chọn vật tư trong kho để tự điền tên và đơn giá mặc định (vẫn sửa được).</div>
+        <div id="thongBaoTonKho" class="small mt-1 d-none"></div>
+        <div class="form-text">Chọn vật tư từ kho để tự động trừ tồn kho và snapshot tên vật tư bảo toàn lịch sử.</div>
         <span asp-validation-for="MaVatTu"></span>
     </div>
     <div class="col-md-6">
-        <label asp-for="VatTuLinhKien" class="form-label"></label>
+        <label asp-for="VatTuLinhKien" class="form-label">Tên vật tư / Linh kiện (Snapshot lịch sử)</label>
         <input asp-for="VatTuLinhKien" class="form-control" placeholder="Ví dụ: Tụ khởi động 35µF" />
+        <div class="form-text">Tên được lưu dạng snapshot để bảo toàn lịch sử dù sau này danh mục kho có thay đổi.</div>
         <span asp-validation-for="VatTuLinhKien"></span>
     </div>
 </div>
