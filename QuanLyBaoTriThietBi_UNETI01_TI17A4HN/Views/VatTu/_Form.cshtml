@@ -1,0 +1,58 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: 23103100225 | Nội dung: Module 5 - STT 57: Form nhập liệu danh mục vật tư *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.VatTuFormViewModel
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <span class="material-symbols-outlined align-middle me-1">inventory_2</span>
+            Thông tin vật tư / linh kiện
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label asp-for="TenVatTu" class="form-label required">Tên vật tư / Linh kiện</label>
+                <input asp-for="TenVatTu" class="form-control" placeholder="Ví dụ: Gas R32 (bình), Tụ khởi động 35µF, Keo tản nhiệt..." />
+                <span asp-validation-for="TenVatTu" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="DonViTinh" class="form-label required">Đơn vị tính</label>
+                <input asp-for="DonViTinh" class="form-control" placeholder="Cái, Bộ, Bình, Tuýp, Mét, Hộp..." />
+                <span asp-validation-for="DonViTinh" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="DonGiaMacDinh" class="form-label required">Đơn giá mặc định (₫)</label>
+                <div class="input-group">
+                    <input asp-for="DonGiaMacDinh" type="number" min="0" step="1" class="form-control" placeholder="0" />
+                    <span class="input-group-text">₫</span>
+                </div>
+                <div class="form-text">Đơn giá gợi ý khi kỹ thuật viên xuất dùng sửa chữa.</div>
+                <span asp-validation-for="DonGiaMacDinh" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SoLuongTon" class="form-label required">Số lượng tồn kho</label>
+                <div class="input-group">
+                    <input asp-for="SoLuongTon" type="number" min="0" step="1" class="form-control" placeholder="0" />
+                    <span class="input-group-text">Đơn vị</span>
+                </div>
+                <div class="form-text">Hệ thống sẽ tự động trừ khi xuất sửa chữa và hoàn trả khi hủy.</div>
+                <span asp-validation-for="SoLuongTon" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12 mt-3">
+                <div class="form-check form-switch">
+                    <input asp-for="TrangThai" class="form-check-input" type="checkbox" id="checkTrangThai" />
+                    <label class="form-check-label fw-semibold" for="checkTrangThai">
+                        Đang sử dụng (Cho phép chọn xuất kho khi thực hiện sửa chữa)
+                    </label>
+                </div>
+                <div class="form-text ms-4">
+                    Nếu tắt, vật tư sẽ chuyển sang "Ngừng sử dụng", KTV không thể chọn xuất mới nhưng lịch sử sửa chữa cũ vẫn được bảo lưu 100%.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

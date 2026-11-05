@@ -130,6 +130,9 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
     public Task<VatTu?> LayVatTuAsync(int maVatTu) =>
         _context.VatTus.AsNoTracking().FirstOrDefaultAsync(v => v.MaVatTu == maVatTu);
 
+    public Task<VatTu?> LayVatTuTrackingAsync(int maVatTu) =>
+        _context.VatTus.FirstOrDefaultAsync(v => v.MaVatTu == maVatTu);
+
     public async Task<List<VatTuLuaChon>> LayVatTuChoChonAsync(int? giuLaiMa)
     {
         var ds = await _context
@@ -142,10 +145,11 @@ public class ChiTietXuLyRepository : Repository<ChiTietXuLy>, IChiTietXuLyReposi
                 v.TenVatTu,
                 v.DonViTinh,
                 v.DonGiaMacDinh,
+                v.SoLuongTon,
             })
             .ToListAsync();
 
-        return ds.Select(v => new VatTuLuaChon(v.MaVatTu, v.TenVatTu, v.DonViTinh, v.DonGiaMacDinh))
+        return ds.Select(v => new VatTuLuaChon(v.MaVatTu, v.TenVatTu, v.DonViTinh, v.DonGiaMacDinh, v.SoLuongTon))
             .ToList();
     }
 

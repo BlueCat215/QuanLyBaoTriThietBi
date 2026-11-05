@@ -24,6 +24,9 @@ public interface IChiTietXuLyRepository : IRepository<ChiTietXuLy>
 
     Task<VatTu?> LayVatTuAsync(int maVatTu);
 
+    /// STT 58: Lấy vật tư có tracking để cập nhật trừ/hoàn tồn kho
+    Task<VatTu?> LayVatTuTrackingAsync(int maVatTu);
+
     /// Vật tư đang sử dụng (giữ lại vật tư hiện tại của dòng đang sửa dù đã ngừng sử dụng).
     Task<List<VatTuLuaChon>> LayVatTuChoChonAsync(int? giuLaiMa);
 

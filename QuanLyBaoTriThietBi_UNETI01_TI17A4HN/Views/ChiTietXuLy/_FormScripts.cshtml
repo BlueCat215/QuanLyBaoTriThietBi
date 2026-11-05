@@ -1,4 +1,4 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Script tự điền tên/đơn giá từ vật tư và tạm tính thành tiền (xem trước, số liệu thật do Service tính) *@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: 23103100225 | Nội dung: Module 5 - STT 58: Script tự điền tên/đơn giá từ kho, cảnh báo tồn kho và tạm tính thành tiền *@
 <script>
     (function () {
         var vt = document.getElementById('MaVatTu');
@@ -6,9 +6,10 @@
         var sl = document.getElementById('SoLuong');
         var dg = document.getElementById('DonGia');
         var out = document.getElementById('thanhTienXemTruoc');
+        var thongBaoTon = document.getElementById('thongBaoTonKho');
         if (!vt || !ten || !sl || !dg || !out) return;
 
-        var tenTuDong = null; // tên đã được điền tự động từ vật tư (để biết có được phép ghi đè không)
+        var tenTuDong = null;
 
         function tamTinh() {
             var a = parseFloat(sl.value), b = parseFloat(dg.value);
@@ -17,18 +18,48 @@
                 : (a * b).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + ' ₫';
         }
 
+        function capNhatCanhBaoTonKho() {
+            if (!thongBaoTon) return;
+            var opt = vt.options[vt.selectedIndex];
+            if (!vt.value || !opt) {
+                thongBaoTon.className = 'small mt-1 d-none';
+                thongBaoTon.textContent = '';
+                return;
+            }
+
+            var ton = parseInt(opt.getAttribute('data-tonkho')) || 0;
+            var dvt = opt.getAttribute('data-donvitinh') || 'đơn vị';
+
+            if (ton <= 0) {
+                thongBaoTon.className = 'small mt-1 text-danger fw-semibold';
+                thongBaoTon.innerHTML = '<span class="material-symbols-outlined align-middle fs-6">error</span> Vật tư này hiện đã HẾT HÀNG trong kho (0 ' + dvt + '). Không thể xuất kho thêm!';
+            } else if (ton <= 5) {
+                thongBaoTon.className = 'small mt-1 text-warning fw-semibold';
+                thongBaoTon.innerHTML = '<span class="material-symbols-outlined align-middle fs-6">warning</span> Vật tư sắp hết trong kho (còn ' + ton + ' ' + dvt + ').';
+            } else {
+                thongBaoTon.className = 'small mt-1 text-success';
+                thongBaoTon.innerHTML = '<span class="material-symbols-outlined align-middle fs-6">check_circle</span> Khả dụng trong kho: ' + ton + ' ' + dvt + '.';
+            }
+        }
+
         vt.addEventListener('change', function () {
             var opt = vt.options[vt.selectedIndex];
-            if (!vt.value || !opt) return;
+            if (!vt.value || !opt) {
+                capNhatCanhBaoTonKho();
+                return;
+            }
             dg.value = opt.getAttribute('data-dongia');
             if (ten.value.trim() === '' || ten.value === tenTuDong) {
                 ten.value = opt.getAttribute('data-ten');
                 tenTuDong = ten.value;
             }
+            capNhatCanhBaoTonKho();
             tamTinh();
         });
+
         sl.addEventListener('input', tamTinh);
         dg.addEventListener('input', tamTinh);
         tamTinh();
+        capNhatCanhBaoTonKho();
     })();
 </script>

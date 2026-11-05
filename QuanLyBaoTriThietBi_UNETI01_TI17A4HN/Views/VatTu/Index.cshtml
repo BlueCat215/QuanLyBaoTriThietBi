@@ -1,0 +1,321 @@
+@* Họ tên: Nguyễn Khắc Hiếu | MSSV: 23103100225 | Nội dung: Module 5 - STT 57: Giao diện Quản lý danh mục Kho vật tư & Cảnh báo tồn kho *@
+@using System.Globalization
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.VatTuIndexViewModel
+@{
+    ViewData["Title"] = "Quản lý Kho vật tư & Linh kiện";
+}
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="h3 mb-1">
+            <span class="material-symbols-outlined align-middle me-1 text-primary">inventory_2</span>
+            Kho vật tư &amp; Linh kiện thay thế
+        </h1>
+        <p class="text-muted mb-0">Chuẩn hóa danh mục vật tư sửa chữa, theo dõi tồn kho thời gian thực và cảnh báo thiếu hàng.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="XuatExcel"
+           asp-route-TuKhoa="@Model.Filter.TuKhoa"
+           asp-route-TrangThai="@Model.Filter.TrangThai"
+           asp-route-MucTon="@Model.Filter.MucTon"
+           class="btn btn-outline-success">
+            <span class="material-symbols-outlined align-middle me-1">download</span>
+            Xuất Excel
+        </a>
+        @if (Model.LaAdmin)
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <span class="material-symbols-outlined align-middle me-1">add_circle</span>
+                Thêm vật tư mới
+            </a>
+        }
+    </div>
+</div>
+
+@* ---- BẢNG THỐNG KÊ NHANH TỒN KHO ---- *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body p-3 d-flex align-items-center">
+                <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
+                    <span class="material-symbols-outlined fs-3">category</span>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Tổng danh mục</div>
+                    <div class="fs-4 fw-bold">@Model.TongSoVatTu.ToString("N0") <small class="fs-6 fw-normal text-muted">loại</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 @(Model.SoVatTuSapHet > 0 ? "border-start border-warning border-4" : "")">
+            <div class="card-body p-3 d-flex align-items-center">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">
+                    <span class="material-symbols-outlined fs-3">warning</span>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Sắp hết hàng (≤ 5)</div>
+                    <div class="fs-4 fw-bold text-warning">@Model.SoVatTuSapHet.ToString("N0") <small class="fs-6 fw-normal text-muted">loại</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 @(Model.SoVatTuHetHang > 0 ? "border-start border-danger border-4" : "")">
+            <div class="card-body p-3 d-flex align-items-center">
+                <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3 text-danger">
+                    <span class="material-symbols-outlined fs-3">error</span>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Đã hết hàng (= 0)</div>
+                    <div class="fs-4 fw-bold text-danger">@Model.SoVatTuHetHang.ToString("N0") <small class="fs-6 fw-normal text-muted">loại</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body p-3 d-flex align-items-center">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
+                    <span class="material-symbols-outlined fs-3">payments</span>
+                </div>
+                <div>
+                    <div class="text-muted small fw-medium">Tổng giá trị tồn</div>
+                    <div class="fs-4 fw-bold text-success">@Model.TongGiaTriTonKho.ToString("#,##0 ₫", new CultureInfo("vi-VN"))</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---- BỘ LỌC TÌM KIẾM ---- *@
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><span class="material-symbols-outlined fs-5 text-muted">search</span></span>
+                    <input type="text" name="TuKhoa" value="@Model.Filter.TuKhoa" class="form-control" placeholder="Tìm theo tên vật tư hoặc ĐVT..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="MucTon" class="form-select">
+                    <option value="">-- Mức tồn kho (Tất cả) --</option>
+                    <option value="ConHang" selected="@(Model.Filter.MucTon == "ConHang")">Còn hàng (&gt; 0)</option>
+                    <option value="SapHet" selected="@(Model.Filter.MucTon == "SapHet")">⚠️ Sắp hết hàng (≤ 5)</option>
+                    <option value="HetHang" selected="@(Model.Filter.MucTon == "HetHang")">❌ Đã hết hàng (= 0)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="TrangThai" class="form-select">
+                    <option value="">-- Trạng thái (Tất cả) --</option>
+                    <option value="true" selected="@(Model.Filter.TrangThai == true)">Đang sử dụng</option>
+                    <option value="false" selected="@(Model.Filter.TrangThai == false)">Ngừng sử dụng</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <span class="material-symbols-outlined align-middle fs-6 me-1">filter_alt</span> Lọc
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Đặt lại bộ lọc">
+                    <span class="material-symbols-outlined align-middle fs-6">refresh</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* ---- DANH SÁCH BẢNG VẬT TƯ ---- *@
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 80px;" class="text-center">Mã</th>
+                    <th>Tên vật tư / Linh kiện</th>
+                    <th style="width: 90px;" class="text-center">ĐVT</th>
+                    <th class="text-end" style="width: 140px;">Đơn giá gợi ý</th>
+                    <th class="text-end" style="width: 130px;">Tồn kho</th>
+                    <th class="text-end" style="width: 150px;">Tổng giá trị tồn</th>
+                    <th class="text-center" style="width: 120px;">Số lần dùng</th>
+                    <th class="text-center" style="width: 130px;">Trạng thái</th>
+                    @if (Model.LaAdmin)
+                    {
+                        <th class="text-center" style="width: 140px;">Thao tác</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="@(Model.LaAdmin ? 9 : 8)" class="text-center py-5 text-muted">
+                            <span class="material-symbols-outlined fs-1 d-block mb-2 text-secondary">inventory_2</span>
+                            Không tìm thấy vật tư nào phù hợp với điều kiện tìm kiếm.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="text-center text-muted font-monospace small">VT-@item.MaVatTu.ToString("D4")</td>
+                            <td>
+                                <div class="fw-semibold text-dark">@item.TenVatTu</div>
+                                @if (item.CanhBao == MucTonKhoCanhBao.HetHang)
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <span class="material-symbols-outlined align-middle" style="font-size: 14px;">error</span> Đã hết hàng
+                                    </span>
+                                }
+                                else if (item.CanhBao == MucTonKhoCanhBao.SapHetHang)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                        <span class="material-symbols-outlined align-middle" style="font-size: 14px;">warning</span> Sắp hết (≤ 5)
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-secondary border">@item.DonViTinh</span>
+                            </td>
+                            <td class="text-end font-monospace">@item.DonGiaMacDinh.ToString("#,##0 ₫", new CultureInfo("vi-VN"))</td>
+                            <td class="text-end">
+                                <span class="fw-bold fs-6 @(item.SoLuongTon <= 0 ? "text-danger" : (item.SoLuongTon <= 5 ? "text-warning-emphasis" : "text-success"))">
+                                    @item.SoLuongTon.ToString("N0")
+                                </span>
+                            </td>
+                            <td class="text-end text-muted font-monospace small">
+                                @item.TongGiaTriTon.ToString("#,##0 ₫", new CultureInfo("vi-VN"))
+                            </td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill bg-light text-dark border">@item.SoLanSuDung lượt</span>
+                            </td>
+                            <td class="text-center">
+                                @if (item.TrangThai)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Đang sử dụng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border">Ngừng sử dụng</span>
+                                }
+                            </td>
+                            @if (Model.LaAdmin)
+                            {
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Edit" asp-route-id="@item.MaVatTu" class="btn btn-outline-primary" title="Sửa thông tin">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                                        </a>
+                                        <form method="post" asp-action="ChuyenTrangThai" asp-route-id="@item.MaVatTu" class="d-inline m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-secondary" title="@(item.TrangThai ? "Chuyển sang Ngừng sử dụng" : "Mở lại Đang sử dụng")">
+                                                <span class="material-symbols-outlined" style="font-size: 16px;">
+                                                    @(item.TrangThai ? "toggle_on" : "toggle_off")
+                                                </span>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-outline-danger" title="Xóa vật tư"
+                                                onclick="moModalXoa(@item.MaVatTu, '@item.TenVatTu', @item.SoLanSuDung)">
+                                            <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* ---- PHÂN TRANG ---- *@
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="text-muted small">
+                Hiển thị từ <strong>@(((Model.PageIndex - 1) * Model.PageSize) + 1)</strong> đến 
+                <strong>@(Math.Min(Model.PageIndex * Model.PageSize, Model.TotalItems))</strong> trong tổng số 
+                <strong>@Model.TotalItems</strong> vật tư
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item @(Model.PageIndex <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-Page="@(Model.PageIndex - 1)"
+                           asp-route-TuKhoa="@Model.Filter.TuKhoa"
+                           asp-route-TrangThai="@Model.Filter.TrangThai"
+                           asp-route-MucTon="@Model.Filter.MucTon">Trước</a>
+                    </li>
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.PageIndex ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-Page="@p"
+                               asp-route-TuKhoa="@Model.Filter.TuKhoa"
+                               asp-route-TrangThai="@Model.Filter.TrangThai"
+                               asp-route-MucTon="@Model.Filter.MucTon">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.PageIndex >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-Page="@(Model.PageIndex + 1)"
+                           asp-route-TuKhoa="@Model.Filter.TuKhoa"
+                           asp-route-TrangThai="@Model.Filter.TrangThai"
+                           asp-route-MucTon="@Model.Filter.MucTon">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
+
+@* ---- MODAL XÁC NHẬN XÓA AN TOÀN ---- *@
+<div class="modal fade" id="modalXoaVatTu" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" id="formXoaVatTu" asp-action="Xoa">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <span class="material-symbols-outlined align-middle me-1">warning</span>
+                        Xác nhận xóa vật tư
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn xóa vật tư <strong id="tenVatTuXoa" class="text-dark"></strong> khỏi kho?</p>
+                    <div id="canhBaoLichSu" class="alert alert-warning small d-none" role="alert">
+                        <span class="material-symbols-outlined align-middle fs-6 me-1">info</span>
+                        Vật tư này đã được xuất dùng trong <strong id="soLanDungXoa"></strong> lượt sửa chữa. Hệ thống sẽ <strong>chặn xóa vật lý</strong> để bảo toàn lịch sử dữ liệu. Hãy chọn chuyển sang <em>Ngừng sử dụng</em>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function moModalXoa(id, ten, soLanDung) {
+            document.getElementById('formXoaVatTu').action = '@Url.Action("Xoa")/' + id;
+            document.getElementById('tenVatTuXoa').textContent = ten;
+            var alertDiv = document.getElementById('canhBaoLichSu');
+            var soLanSpan = document.getElementById('soLanDungXoa');
+            if (soLanDung > 0) {
+                alertDiv.classList.remove('d-none');
+                soLanSpan.textContent = soLanDung;
+            } else {
+                alertDiv.classList.add('d-none');
+            }
+            var modal = new bootstrap.Modal(document.getElementById('modalXoaVatTu'));
+            modal.show();
+        }
+    </script>
+}
