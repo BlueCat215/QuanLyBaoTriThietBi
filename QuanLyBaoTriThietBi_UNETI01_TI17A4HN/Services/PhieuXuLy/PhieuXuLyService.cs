@@ -17,11 +17,17 @@ public class PhieuXuLyService : IPhieuXuLyService
 {
     private readonly IPhieuXuLyRepository _phieuRepo;
     private readonly AppDbContext _context;
+    private readonly ITepDinhKemService _tepDinhKemService;
 
-    public PhieuXuLyService(IPhieuXuLyRepository phieuRepo, AppDbContext context)
+    public PhieuXuLyService(
+        IPhieuXuLyRepository phieuRepo,
+        AppDbContext context,
+        ITepDinhKemService tepDinhKemService
+    )
     {
         _phieuRepo = phieuRepo;
         _context = context;
+        _tepDinhKemService = tepDinhKemService;
     }
 
     public async Task<PhieuXuLyIndexViewModel> LayDanhSachAsync(PhieuXuLyBoLoc boLoc)
@@ -103,6 +109,12 @@ public class PhieuXuLyService : IPhieuXuLyService
             vm.MoTaSuCo = bc.MoTaSuCo;
             vm.MucDoSuCo = bc.MucDoSuCo;
             vm.NguoiBaoCao = bc.TaiKhoanBaoCao?.HoTen;
+
+            // STT 55: Tải danh sách ảnh hiện trường sự cố để KTV và Admin xem trực tiếp trên Phiếu xử lý
+            vm.DanhSachAnhSuCo = await _tepDinhKemService.LayDanhSachTheoDoiTuongAsync(
+                LoaiDoiTuongDinhKemEnum.BaoCaoSuCo,
+                bc.MaBaoCao
+            );
 
             if (bc.ThietBi != null)
             {

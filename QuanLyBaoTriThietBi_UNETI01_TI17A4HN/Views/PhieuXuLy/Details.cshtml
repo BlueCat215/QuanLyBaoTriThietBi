@@ -151,6 +151,51 @@
                 </div>
             </div>
 
+            @* STT 55: Ảnh hiện trường sự cố (nếu phiếu là XuLySuCo) *@
+            @if (Model.LoaiXuLy == LoaiXuLyEnum.XuLySuCo)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h3 class="mb-0">Ảnh hiện trường sự cố (@Model.DanhSachAnhSuCo.Count)</h3>
+                            <a asp-controller="BaoCaoSuCo" asp-action="Details" asp-route-id="@Model.MaBaoCao" class="btn btn-sm btn-ghost">
+                                Xem báo cáo gốc <span class="material-symbols-outlined icon-18">arrow_forward</span>
+                            </a>
+                        </div>
+                        <p class="text-muted small mb-3">Ảnh chụp hiện trường do người dùng đính kèm khi gửi báo cáo sự cố để KTV đánh giá trước khi xuống hiện trường.</p>
+                        @if (Model.DanhSachAnhSuCo.Count == 0)
+                        {
+                            <div class="p-3 text-center border rounded bg-light text-muted small">
+                                <span class="material-symbols-outlined icon-24 d-block mb-1 text-muted">no_photography</span>
+                                Báo cáo sự cố này không có ảnh đính kèm hiện trường.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row g-2 row-cols-2 row-cols-sm-3 row-cols-md-4">
+                                @foreach (var anh in Model.DanhSachAnhSuCo)
+                                {
+                                    <div class="col">
+                                        <div class="card h-100 border shadow-sm overflow-hidden" style="cursor: pointer;"
+                                             onclick="moLightboxSuCo('@anh.DuongDanFile', '@anh.TenFileGoc', '@anh.NgayUpload.ToString("dd/MM/yyyy HH:mm")', '@(anh.TenNguoiUpload ?? "Người báo")')">
+                                            <div style="height: 120px; background-color: #f8fafc;">
+                                                <img src="@anh.DuongDanFile" alt="@anh.TenFileGoc"
+                                                     class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s;"
+                                                     onmouseover="this.style.transform='scale(1.05)'"
+                                                     onmouseout="this.style.transform='scale(1)'" />
+                                            </div>
+                                            <div class="p-2 text-truncate small text-muted bg-white border-top" title="@anh.TenFileGoc">
+                                                @anh.TenFileGoc
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
             @*Card Lịch sử phân công (Bảo toàn lịch sử khi đổi KTV) *@
             <div class="card">
                 <div class="card-body">
@@ -506,6 +551,30 @@
         </div>
     }
 
+<!-- STT 55: MODAL LIGHTBOX XEM ANH HIEN TRUONG SU CO -->
+<div class="modal fade" id="lightboxSuCoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-0">
+            <div class="modal-header border-bottom border-secondary py-2">
+                <div>
+                    <h5 class="modal-title fs-6 text-white mb-0" id="lightboxSuCoTitle">Ảnh hiện trường sự cố</h5>
+                    <small class="text-secondary" id="lightboxSuCoMeta"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center p-2 bg-black d-flex align-items-center justify-content-center" style="min-height: 400px; max-height: 75vh;">
+                <img id="lightboxSuCoImg" src="" alt="Ảnh hiện trường" class="img-fluid" style="max-height: 70vh; object-fit: contain; border-radius: 4px;" />
+            </div>
+            <div class="modal-footer border-top border-secondary py-2 justify-content-between">
+                <a id="lightboxSuCoDownloadBtn" href="" download class="btn btn-sm btn-outline-light">
+                    <span class="material-symbols-outlined icon-18 me-1">download</span> Tải ảnh gốc
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         (function () {
@@ -556,5 +625,15 @@
                 capNhatGiaoDienNghiemThu();
             }
         })();
+
+        function moLightboxSuCo(url, tenFile, ngayUpload, nguoiUpload) {
+            document.getElementById('lightboxSuCoImg').src = url;
+            document.getElementById('lightboxSuCoTitle').textContent = tenFile;
+            document.getElementById('lightboxSuCoMeta').textContent = 'Tải lên lúc: ' + ngayUpload + ' · Người đăng: ' + nguoiUpload;
+            document.getElementById('lightboxSuCoDownloadBtn').href = url;
+
+            var modal = new bootstrap.Modal(document.getElementById('lightboxSuCoModal'));
+            modal.show();
+        }
     </script>
 }

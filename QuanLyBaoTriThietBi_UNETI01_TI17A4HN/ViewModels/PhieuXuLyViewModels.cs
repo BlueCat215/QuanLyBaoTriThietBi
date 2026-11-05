@@ -1,6 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
-// Nội dung: Module 4 - ViewModel Phiếu xử lý và Phân công xử lý
+// Nội dung: Module 4 - ViewModel Phiếu xử lý và Phân công xử lý (kèm ảnh hiện trường sự cố STT 55)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -128,6 +128,9 @@ public class PhieuXuLyDetailsViewModel
 
     // Lịch sử phân công
     public List<PhanCongXuLyLichSuRow> LichSuPhanCong { get; set; } = new();
+
+    // STT 55: Ảnh hiện trường sự cố (nếu phiếu phát sinh từ Báo cáo sự cố)
+    public List<TepDinhKemItemViewModel> DanhSachAnhSuCo { get; set; } = new();
 
     // Quyền thao tác
     public bool LaAdmin { get; set; }

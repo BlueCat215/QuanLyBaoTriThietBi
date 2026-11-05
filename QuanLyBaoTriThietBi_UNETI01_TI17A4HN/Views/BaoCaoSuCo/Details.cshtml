@@ -1,10 +1,11 @@
-@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Chi tiết báo cáo sự cố, hủy, xóa an toàn *@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Chi tiết báo cáo sự cố, hủy, xóa an toàn, đính kèm ảnh hiện trường STT 55 *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoDetailsViewModel
 @{
     var bc = Model.BaoCao;
     var lienQuan = Model.DuLieuLienQuan;
     ViewData["Title"] = "Báo cáo " + UiHelper.Ma("SC", bc.MaBaoCao);
+    var coQuyenSuaAnh = Model.LaAdmin || bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao;
 }
 
 <div class="page-header">
@@ -23,6 +24,7 @@
 
 <div class="row g-3">
     <div class="col-lg-8">
+        @* Card Thông tin sự cố *@
         <div class="card mb-3">
             <div class="card-body">
                 <h3 class="mb-3">Thông tin sự cố</h3>
@@ -45,139 +47,278 @@
                     </dd>
 
                     <dt class="col-sm-4">Loại / Khu vực</dt>
-                    <dd class="col-sm-8">@(bc.ThietBi?.LoaiThietBi?.TenLoaiThietBi ?? "—") ·
-                        @(bc.ThietBi?.KhuVuc?.TenKhuVuc ?? "—")</dd>
+                    <dd class="col-sm-8">
+                        @(bc.ThietBi?.LoaiThietBi?.TenLoaiThietBi ?? "—") · @(bc.ThietBi?.KhuVuc?.TenKhuVuc ?? "—")
+                    </dd>
 
-                        <dt class="col-sm-4">Ngày báo cáo</dt>
-                        <dd class="col-sm-8">@UiHelper.NgayGio(bc.NgayBaoCao)</dd>
+                    <dt class="col-sm-4">Ngày báo cáo</dt>
+                    <dd class="col-sm-8">@UiHelper.NgayGio(bc.NgayBaoCao)</dd>
 
-                        <dt class="col-sm-4">Người báo</dt>
-                        <dd class="col-sm-8">@(bc.TaiKhoanBaoCao?.HoTen ?? "—")</dd>
+                    <dt class="col-sm-4">Người báo</dt>
+                    <dd class="col-sm-8">@(bc.TaiKhoanBaoCao?.HoTen ?? "—")</dd>
 
-                        <dt class="col-sm-4">Mô tả sự cố</dt>
-                        <dd class="col-sm-8" style="white-space: pre-line">@bc.MoTaSuCo</dd>
+                    <dt class="col-sm-4">Mô tả sự cố</dt>
+                    <dd class="col-sm-8" style="white-space: pre-line">@bc.MoTaSuCo</dd>
 
-                        <dt class="col-sm-4">Ghi chú</dt>
-                        <dd class="col-sm-8" style="white-space: pre-line">@(string.IsNullOrEmpty(bc.GhiChu) ? "—" :
-                                                                                bc.GhiChu)</dd>
-                        </dl>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="mb-3">Phiếu xử lý</h3>
-                        @if (!Model.PhieuXuLys.Any())
-                        {
-                            <p class="text-muted mb-0">Chưa có phiếu xử lý nào cho báo cáo này.</p>
-                        }
-                        else
-                        {
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Mã phiếu</th>
-                                        <th>Loại</th>
-                                        <th>Trạng thái</th>
-                                        <th>Ngày tạo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var p in Model.PhieuXuLys)
-                                    {
-                                        <tr>
-                                            <td class="mono">@UiHelper.Ma("PX", p.MaPhieuXuLy)</td>
-                                            <td>@(p.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</td>
-                                            <td>
-                                                <partial name="_StatusBadge" model="UiHelper.Badge(p.TrangThai)" />
-                                            </td>
-                                            <td>@UiHelper.NgayGio(p.NgayTao)</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        }
-                    </div>
-                </div>
+                    <dt class="col-sm-4">Ghi chú</dt>
+                    <dd class="col-sm-8" style="white-space: pre-line">@(string.IsNullOrEmpty(bc.GhiChu) ? "—" : bc.GhiChu)</dd>
+                </dl>
             </div>
+        </div>
 
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="mb-3">Thao tác</h3>
-
-                        @if (!Model.CoTheSua && !Model.CoTheHuy && !Model.CoTheXoa)
-                        {
-                            <p class="text-muted mb-0">Báo cáo đã được xử lý hoặc đang trong quy trình xử lý nên không còn thao tác
-                                chỉnh sửa. Lịch sử được giữ nguyên.</p>
-                            }
-
-                            @if (Model.CoTheHuy)
-                            {
-                                <p class="text-muted">Hủy báo cáo (ví dụ báo nhầm). Báo cáo vẫn được lưu để giữ lịch sử.</p>
-                                <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
-                                        data-bs-target="#modalHuy">Hủy báo cáo</button>
-                            }
-
-                            @if (Model.CoTheXoa)
-                            {
-                                <p class="text-muted">Báo cáo chưa phát sinh dữ liệu nên có thể xóa hẳn.</p>
-                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
-                                        data-bs-target="#modalXoa">Xóa báo cáo</button>
-                            }
-                            else if (bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao && lienQuan.CoDuLieu)
-                            {
-                                <p class="text-muted mb-0">Đã phát sinh dữ liệu (@lienQuan.SoPhieuXuLy phiếu xử lý,
-                                    @lienQuan.SoTepDinhKem tệp) nên không thể xóa.</p>
-                                }
-                            </div>
-                        </div>
+        @* STT 55: Bộ sưu tập ảnh hiện trường sự cố (Gallery + Lightbox) *@
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="mb-0">Ảnh hiện trường sự cố (@Model.DanhSachAnh.Count)</h3>
+                        <p class="text-muted small mb-0">Hình ảnh trực quan ghi nhận hiện trường hỏng hóc để kỹ thuật viên chuẩn bị phương án xử lý.</p>
                     </div>
+                    @if (coQuyenSuaAnh)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalUploadAnh">
+                            <span class="material-symbols-outlined icon-18 me-1">add_a_photo</span> Thêm ảnh
+                        </button>
+                    }
                 </div>
+
+                @if (Model.DanhSachAnh.Count == 0)
+                {
+                    <div class="p-4 text-center border rounded bg-light">
+                        <span class="material-symbols-outlined text-muted" style="font-size: 48px;">photo_camera</span>
+                        <p class="text-muted mt-2 mb-2">Chưa có ảnh hiện trường nào được đính kèm cho báo cáo này.</p>
+                        @if (coQuyenSuaAnh)
+                        {
+                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalUploadAnh">
+                                Tải ảnh hiện trường ngay
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3 row-cols-2 row-cols-sm-3 row-cols-md-4">
+                        @foreach (var anh in Model.DanhSachAnh)
+                        {
+                            <div class="col">
+                                <div class="card h-100 border shadow-sm position-relative overflow-hidden">
+                                    <div style="height: 140px; background-color: #f8fafc; cursor: pointer;"
+                                         onclick="moLightbox('@anh.DuongDanFile', '@anh.TenFileGoc', '@anh.NgayUpload.ToString("dd/MM/yyyy HH:mm")', '@(anh.TenNguoiUpload ?? "Hệ thống")')">
+                                        <img src="@anh.DuongDanFile" alt="@anh.TenFileGoc"
+                                             class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s;"
+                                             onmouseover="this.style.transform='scale(1.05)'"
+                                             onmouseout="this.style.transform='scale(1)'" />
+                                    </div>
+                                    <div class="p-2 d-flex justify-content-between align-items-center bg-white border-top">
+                                        <div class="text-truncate small text-muted pe-1" title="@anh.TenFileGoc">@anh.TenFileGoc</div>
+                                        @if (coQuyenSuaAnh)
+                                        {
+                                            <form asp-action="XoaAnh" asp-route-id="@bc.MaBaoCao" asp-route-maTepDinhKem="@anh.MaTepDinhKem" method="post"
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa ảnh này?');" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-ghost text-danger p-0 border-0" title="Xóa ảnh">
+                                                    <span class="material-symbols-outlined icon-18">delete</span>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Card Phiếu xử lý *@
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Phiếu xử lý</h3>
+                @if (!Model.PhieuXuLys.Any())
+                {
+                    <p class="text-muted mb-0">Chưa có phiếu xử lý nào cho báo cáo này.</p>
+                }
+                else
+                {
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã phiếu</th>
+                                <th>Loại</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.PhieuXuLys)
+                            {
+                                <tr>
+                                    <td class="mono">
+                                        <a asp-controller="PhieuXuLy" asp-action="Details" asp-route-id="@p.MaPhieuXuLy">
+                                            @UiHelper.Ma("PX", p.MaPhieuXuLy)
+                                        </a>
+                                    </td>
+                                    <td>@(p.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? "Xử lý sự cố" : "Bảo trì định kỳ")</td>
+                                    <td>
+                                        <partial name="_StatusBadge" model="UiHelper.Badge(p.TrangThai)" />
+                                    </td>
+                                    <td>@UiHelper.NgayGio(p.NgayTao)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="mb-3">Thao tác</h3>
+
+                @if (!Model.CoTheSua && !Model.CoTheHuy && !Model.CoTheXoa)
+                {
+                    <p class="text-muted mb-0">Báo cáo đã được xử lý hoặc đang trong quy trình xử lý nên không còn thao tác chỉnh sửa. Lịch sử được giữ nguyên.</p>
+                }
 
                 @if (Model.CoTheHuy)
                 {
-                    <div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <form asp-action="Huy" asp-route-id="@bc.MaBaoCao" method="post">
-                                    <div class="modal-header">
-                                        <h3 class="modal-title" id="modalHuyTitle">Hủy báo cáo sự cố</h3>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Bạn có chắc muốn hủy báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>?</p>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
-                                        <button type="submit" class="btn btn-danger">Hủy báo cáo</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+                    <p class="text-muted">Hủy báo cáo (ví dụ báo nhầm). Báo cáo vẫn được lưu để giữ lịch sử.</p>
+                    <button type="button" class="btn btn-outline-secondary w-100 mb-2" data-bs-toggle="modal"
+                            data-bs-target="#modalHuy">Hủy báo cáo</button>
                 }
 
                 @if (Model.CoTheXoa)
                 {
-                    <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <form asp-action="Delete" asp-route-id="@bc.MaBaoCao" method="post">
-                                    <div class="modal-header">
-                                        <h3 class="modal-title" id="modalXoaTitle">Xóa báo cáo sự cố</h3>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Bạn có chắc muốn xóa báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>? Hành động này
-                                            không thể hoàn tác.</p>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
-                                            <button type="submit" class="btn btn-danger">Xóa báo cáo</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                    <p class="text-muted">Báo cáo chưa phát sinh dữ liệu nên có thể xóa hẳn.</p>
+                    <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                            data-bs-target="#modalXoa">Xóa báo cáo</button>
+                }
+                else if (bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao && lienQuan.CoDuLieu)
+                {
+                    <p class="text-muted mb-0">Đã phát sinh dữ liệu (@lienQuan.SoPhieuXuLy phiếu xử lý, @lienQuan.SoTepDinhKem tệp đính kèm) nên không thể xóa.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal Hủy *@
+@if (Model.CoTheHuy)
+{
+    <div class="modal fade" id="modalHuy" tabindex="-1" aria-labelledby="modalHuyTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Huy" asp-route-id="@bc.MaBaoCao" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalHuyTitle">Hủy báo cáo sự cố</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn hủy báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Không</button>
+                        <button type="submit" class="btn btn-danger">Hủy báo cáo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Xóa *@
+@if (Model.CoTheXoa)
+{
+    <div class="modal fade" id="modalXoa" tabindex="-1" aria-labelledby="modalXoaTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="Delete" asp-route-id="@bc.MaBaoCao" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modalXoaTitle">Xóa báo cáo sự cố</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn xóa báo cáo <strong>@UiHelper.Ma("SC", bc.MaBaoCao)</strong>? Hành động này không thể hoàn tác.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Xóa báo cáo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Tải thêm ảnh hiện trường (STT 55) *@
+@if (coQuyenSuaAnh)
+{
+    <div class="modal fade" id="modalUploadAnh" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form asp-action="UploadAnh" asp-route-id="@bc.MaBaoCao" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-header">
+                        <h3 class="modal-title fs-5">Tải lên ảnh hiện trường sự cố</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required">Chọn các tệp ảnh chụp hiện trường</label>
+                            <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.webp,.gif" class="form-control" required />
+                            <div class="form-text">Chấp nhận ảnh (.jpg, .jpeg, .png, .webp, .gif), tối đa 5MB/ảnh.</div>
                         </div>
-                    }
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-symbols-outlined icon-18 me-1">upload</span> Tải lên
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@* Modal Lightbox phóng to ảnh hiện trường (STT 55) *@
+<div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark text-white border-0">
+            <div class="modal-header border-bottom border-secondary py-2">
+                <div>
+                    <h5 class="modal-title fs-6 text-white mb-0" id="lightboxTitle">Chi tiết ảnh hiện trường</h5>
+                    <small class="text-secondary" id="lightboxMeta"></small>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body text-center p-2 bg-black d-flex align-items-center justify-content-center" style="min-height: 400px; max-height: 75vh;">
+                <img id="lightboxImg" src="" alt="Ảnh hiện trường sự cố" class="img-fluid" style="max-height: 70vh; object-fit: contain; border-radius: 4px;" />
+            </div>
+            <div class="modal-footer border-top border-secondary py-2 justify-content-between">
+                <a id="lightboxDownloadBtn" href="" download class="btn btn-sm btn-outline-light">
+                    <span class="material-symbols-outlined icon-18 me-1">download</span> Tải ảnh gốc
+                </a>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function moLightbox(url, tenFile, ngayUpload, nguoiUpload) {
+            document.getElementById('lightboxImg').src = url;
+            document.getElementById('lightboxTitle').textContent = tenFile;
+            document.getElementById('lightboxMeta').textContent = 'Tải lên lúc: ' + ngayUpload + ' · Người đăng: ' + nguoiUpload;
+            document.getElementById('lightboxDownloadBtn').href = url;
+
+            var modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+            modal.show();
+        }
+    </script>
+}

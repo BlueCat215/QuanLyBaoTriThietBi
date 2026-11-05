@@ -1,4 +1,4 @@
-@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Gửi báo cáo sự cố *@
+@* Họ tên: Trịnh Trung Hoàng | MSSV: 23103100229 | Nội dung: Module 4 - Gửi báo cáo sự cố (Đính kèm ảnh hiện trường STT 55) *@
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.BaoCaoSuCoFormViewModel
 @{
     ViewData["Title"] = "Báo sự cố mới";
@@ -15,12 +15,14 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form asp-action="Create" method="post">
-                    <div asp-validation-summary="ModelOnly"></div>
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <partial name="_Form" model="Model" />
                     <div class="d-flex justify-content-between">
                         <a class="btn btn-outline-secondary" asp-action="CuaToi">Hủy</a>
-                        <button type="submit" class="btn btn-accent">Gửi báo cáo</button>
+                        <button type="submit" class="btn btn-accent">
+                            <span class="material-symbols-outlined icon-20 me-1">send</span> Gửi báo cáo
+                        </button>
                     </div>
                 </form>
             </div>
