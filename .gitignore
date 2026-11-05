@@ -8,3 +8,7 @@ obj/
 *.ldf
 *.bak
 appsettings.Development.json
+
+# Uploaded files
+QuanLyBaoTriThietBi_UNETI01_TI17A4HN/wwwroot/uploads/*/*
+!QuanLyBaoTriThietBi_UNETI01_TI17A4HN/wwwroot/uploads/*/.gitkeep

@@ -1,4 +1,4 @@
-// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Họ tên: Nguyễn Minh Đức (Module 2), Trịnh Trung Hoàng (MSSV: 23103100229 - Module 4) - Lớp: TI17A4HN - Nhóm: UNETI01
 // Nội dung: STT 53 - Repository triển khai cho Tệp đính kèm đa hình (TepDinhKem)
 #nullable enable
 using Microsoft.EntityFrameworkCore;

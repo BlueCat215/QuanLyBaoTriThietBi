@@ -1,6 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
-// Nội dung: Module 4 - Controller CRUD Báo cáo sự cố (người dùng gửi + xem báo cáo của mình, Admin xem tất cả)
+// Nội dung: Module 4 - Controller CRUD Báo cáo sự cố (người dùng gửi + xem báo cáo của mình, Admin xem tất cả, đính kèm ảnh hiện trường STT 55)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -15,12 +15,19 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 [Authorize]
 public class BaoCaoSuCoController : Controller
 {
-    
     private const bool DungTaiKhoanXemThuKhiChuaDangNhap = false;
 
     private readonly IBaoCaoSuCoService _service;
+    private readonly ITepDinhKemService _tepDinhKemService;
 
-    public BaoCaoSuCoController(IBaoCaoSuCoService service) => _service = service;
+    public BaoCaoSuCoController(
+        IBaoCaoSuCoService service,
+        ITepDinhKemService tepDinhKemService
+    )
+    {
+        _service = service;
+        _tepDinhKemService = tepDinhKemService;
+    }
 
     // ---------- Thông tin người đang đăng nhập (claim do việc 12 tạo: MaTaiKhoan + Role) ----------
     private bool DaDangNhap => User.Identity?.IsAuthenticated ?? false;
@@ -114,6 +121,23 @@ public class BaoCaoSuCoController : Controller
             var result = await _service.GuiBaoCaoAsync(vm, nguoi);
             if (result.Succeeded)
             {
+                // STT 55: Tải lên các tệp ảnh hiện trường sự cố nếu có
+                if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
+                {
+                    var uploadRes = await _tepDinhKemService.UploadNhieuTepAsync(
+                        vm.TepAnhDinhKem,
+                        LoaiDoiTuongDinhKemEnum.BaoCaoSuCo,
+                        result.Data,
+                        nguoi.MaTaiKhoan,
+                        chiChapNhanAnh: true
+                    );
+
+                    if (!uploadRes.Succeeded)
+                    {
+                        TempData["CanhBao"] = "Báo cáo sự cố đã gửi thành công nhưng một số tệp ảnh không tải lên được: " + uploadRes.ErrorMessage;
+                    }
+                }
+
                 TempData["ThanhCong"] = "Đã gửi báo cáo sự cố thành công.";
                 return RedirectToAction(nameof(Details), new { id = result.Data });
             }
@@ -158,6 +182,23 @@ public class BaoCaoSuCoController : Controller
             var result = await _service.SuaAsync(vm, nguoi);
             if (result.Succeeded)
             {
+                // STT 55: Tải lên thêm các tệp ảnh hiện trường sự cố nếu có
+                if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
+                {
+                    var uploadRes = await _tepDinhKemService.UploadNhieuTepAsync(
+                        vm.TepAnhDinhKem,
+                        LoaiDoiTuongDinhKemEnum.BaoCaoSuCo,
+                        id,
+                        nguoi.MaTaiKhoan,
+                        chiChapNhanAnh: true
+                    );
+
+                    if (!uploadRes.Succeeded)
+                    {
+                        TempData["CanhBao"] = "Báo cáo sự cố đã cập nhật nhưng một số tệp ảnh không tải lên được: " + uploadRes.ErrorMessage;
+                    }
+                }
+
                 TempData["ThanhCong"] = "Đã cập nhật báo cáo sự cố.";
                 return RedirectToAction(nameof(Details), new { id });
             }
@@ -166,6 +207,84 @@ public class BaoCaoSuCoController : Controller
 
         await NapThietBiAsync(vm, nguoi);
         return View(vm);
+    }
+
+    /// <summary>
+    /// STT 55: Tải lên thêm ảnh hiện trường sự cố từ trang Chi tiết báo cáo
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UploadAnh(int id, List<IFormFile> files)
+    {
+        var nguoi = await LayNguoiThaoTacAsync();
+        if (nguoi is null)
+            return YeuCauDangNhap();
+
+        var bc = await _service.LayChiTietAsync(id, nguoi);
+        if (bc is null)
+            return NotFound();
+
+        if (files == null || files.Count == 0 || files.All(f => f.Length == 0))
+        {
+            TempData["Loi"] = "Vui lòng chọn ít nhất một tệp ảnh để tải lên.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var result = await _tepDinhKemService.UploadNhieuTepAsync(
+            files,
+            LoaiDoiTuongDinhKemEnum.BaoCaoSuCo,
+            id,
+            nguoi.MaTaiKhoan,
+            chiChapNhanAnh: true
+        );
+
+        if (result.Succeeded)
+        {
+            var soLuong = result.Data?.Count ?? 0;
+            TempData["ThanhCong"] = $"Đã tải lên thành công {soLuong} ảnh hiện trường sự cố.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    /// <summary>
+    /// STT 55: Xóa ảnh hiện trường sự cố
+    /// </summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> XoaAnh(int id, int maTepDinhKem, string? returnUrl)
+    {
+        var nguoi = await LayNguoiThaoTacAsync();
+        if (nguoi is null)
+            return YeuCauDangNhap();
+
+        var bc = await _service.LayChiTietAsync(id, nguoi);
+        if (bc is null)
+            return NotFound();
+
+        // Chỉ Admin hoặc người gửi báo cáo khi còn ở Mới báo mới được xóa ảnh
+        if (!nguoi.LaAdmin && bc.BaoCao.TrangThai != TrangThaiBaoCaoEnum.MoiBao)
+        {
+            TempData["Loi"] = "Báo cáo sự cố đã được tiếp nhận hoặc xử lý, không thể xóa ảnh hiện trường.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var result = await _tepDinhKemService.XoaTepAsync(maTepDinhKem);
+        if (result.Succeeded)
+        {
+            TempData["ThanhCong"] = "Đã xóa ảnh hiện trường thành công.";
+        }
+        else
+        {
+            TempData["Loi"] = result.ErrorMessage;
+        }
+
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // ---------- Hủy / Xóa ----------

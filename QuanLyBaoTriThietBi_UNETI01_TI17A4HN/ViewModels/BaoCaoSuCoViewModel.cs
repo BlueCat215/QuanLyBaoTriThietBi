@@ -1,7 +1,8 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
-// Nội dung: Module 4 - ViewModel Báo cáo sự cố (danh sách, chi tiết, form gửi/sửa)
+// Nội dung: Module 4 - ViewModel Báo cáo sự cố (danh sách, chi tiết, form gửi/sửa, đính kèm ảnh hiện trường sự cố STT 55)
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -64,6 +65,9 @@ public class BaoCaoSuCoDetailsViewModel
     public bool CoTheSua { get; init; }
     public bool CoTheHuy { get; init; }
     public bool CoTheXoa { get; init; }
+
+    /// STT 55: Danh sách ảnh chụp hiện trường sự cố
+    public List<TepDinhKemItemViewModel> DanhSachAnh { get; set; } = new();
 }
 
 public class BaoCaoSuCoFormViewModel
@@ -94,4 +98,8 @@ public class BaoCaoSuCoFormViewModel
 
     [BindNever, ValidateNever]
     public List<SelectListItem> ThietBiOptions { get; set; } = new();
+
+    /// STT 55: Tệp ảnh hiện trường đính kèm khi gửi hoặc cập nhật báo cáo
+    [Display(Name = "Ảnh hiện trường sự cố")]
+    public List<IFormFile> TepAnhDinhKem { get; set; } = new();
 }

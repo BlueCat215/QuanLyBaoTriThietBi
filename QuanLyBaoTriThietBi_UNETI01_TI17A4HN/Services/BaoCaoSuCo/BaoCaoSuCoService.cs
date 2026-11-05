@@ -1,6 +1,6 @@
 // Họ tên: Trịnh Trung Hoàng
 // MSSV: 23103100229
-// Nội dung: Module 4 - Service Báo cáo sự cố (validate thiết bị/mô tả/mức độ, ngày do hệ thống gán, phạm vi xem, hủy/xóa an toàn)
+// Nội dung: Module 4 - Service Báo cáo sự cố (validate thiết bị/mô tả/mức độ, ngày do hệ thống gán, phạm vi xem, hủy/xóa an toàn, đính kèm ảnh STT 55)
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
@@ -14,8 +14,13 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
     private const string KhongTimThay = "Không tìm thấy báo cáo sự cố.";
 
     private readonly IBaoCaoSuCoRepository _repo;
+    private readonly ITepDinhKemService _tepDinhKemService;
 
-    public BaoCaoSuCoService(IBaoCaoSuCoRepository repo) => _repo = repo;
+    public BaoCaoSuCoService(IBaoCaoSuCoRepository repo, ITepDinhKemService tepDinhKemService)
+    {
+        _repo = repo;
+        _tepDinhKemService = tepDinhKemService;
+    }
 
     // ---------------- Truy vấn ----------------
     public async Task<BaoCaoSuCoIndexViewModel> LayDanhSachAsync(
@@ -40,6 +45,11 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
             return null;
 
         var lienQuan = await _repo.DemDuLieuLienQuanAsync(id);
+        var danhSachAnh = await _tepDinhKemService.LayDanhSachTheoDoiTuongAsync(
+            LoaiDoiTuongDinhKemEnum.BaoCaoSuCo,
+            id
+        );
+
         return new BaoCaoSuCoDetailsViewModel
         {
             BaoCao = bc,
@@ -49,6 +59,7 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
             CoTheSua = bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao,
             CoTheHuy = CoTheHuy(bc, lienQuan, nguoi),
             CoTheXoa = CoTheXoa(bc, lienQuan),
+            DanhSachAnh = danhSachAnh
         };
     }
 
@@ -174,6 +185,8 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
 
         try
         {
+            // Xóa toàn bộ file đính kèm của sự cố trên đĩa & CSDL nếu có
+            await _tepDinhKemService.XoaToanBoTheoDoiTuongAsync(LoaiDoiTuongDinhKemEnum.BaoCaoSuCo, id);
             _repo.Remove(bc);
             await _repo.SaveChangesAsync();
         }
@@ -194,8 +207,9 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
     {
         if (lienQuan.SoPhieuConHieuLuc > 0)
             return false;
+
         return nguoi.LaAdmin
-            ? bc.TrangThai is TrangThaiBaoCaoEnum.MoiBao or TrangThaiBaoCaoEnum.DaTiepNhan
+            ? bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao || bc.TrangThai == TrangThaiBaoCaoEnum.DaTiepNhan
             : bc.TrangThai == TrangThaiBaoCaoEnum.MoiBao;
     }
 
