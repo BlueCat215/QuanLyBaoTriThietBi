@@ -15,11 +15,17 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
 
     private readonly IBaoCaoSuCoRepository _repo;
     private readonly ITepDinhKemService _tepDinhKemService;
+    private readonly IThongBaoService _thongBaoService;
 
-    public BaoCaoSuCoService(IBaoCaoSuCoRepository repo, ITepDinhKemService tepDinhKemService)
+    public BaoCaoSuCoService(
+        IBaoCaoSuCoRepository repo,
+        ITepDinhKemService tepDinhKemService,
+        IThongBaoService thongBaoService
+    )
     {
         _repo = repo;
         _tepDinhKemService = tepDinhKemService;
+        _thongBaoService = thongBaoService;
     }
 
     // ---------------- Truy vấn ----------------
@@ -120,6 +126,13 @@ public class BaoCaoSuCoService : IBaoCaoSuCoService
 
         await _repo.AddAsync(bc);
         await _repo.SaveChangesAsync();
+
+        // STT 59: Trigger bắn thông báo nội bộ cho Admin và Kỹ thuật viên khi có sự cố mới
+        await _thongBaoService.TaoThongBaoChoAdminVaKtvAsync(
+            $"Có báo cáo sự cố mới {Helpers.UiHelper.Ma("SC", bc.MaBaoCao)}: {bc.MoTaSuCo}",
+            bc.MaThietBi
+        );
+
         return ServiceResult<int>.Ok(bc.MaBaoCao);
     }
 

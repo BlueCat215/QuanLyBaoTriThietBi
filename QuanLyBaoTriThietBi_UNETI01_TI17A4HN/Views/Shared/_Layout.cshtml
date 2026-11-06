@@ -1,4 +1,4 @@
-﻿@using System.Security.Claims
+@using System.Security.Claims
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @{
     // Thong tin nguoi dung lay tu Claims. SV1 khi viet dang nhap PHAI them claim "HoTen" va ClaimTypes.Role (= ten VaiTroEnum).
@@ -6,6 +6,7 @@
     var vaiTro = User.FindFirst(ClaimTypes.Role)?.Value;
     var vaiTroText = Enum.TryParse<VaiTroEnum>(vaiTro, out var vt) ? UiHelper.Badge(vt).Text : "";
     var tieuDe = ViewData["Title"] as string ?? "";
+    var daDangNhap = User.Identity?.IsAuthenticated == true;
 }
 <!DOCTYPE html>
 <html lang="vi">
@@ -43,6 +44,38 @@
                     </nav>
                 </div>
                 <div class="d-flex align-items-center gap-2">
+                    @if (daDangNhap)
+                    {
+                        @* Chuông thông báo nội bộ (In-App Notification Bell - STT 59) *@
+                        <div class="dropdown position-relative me-1" id="notificationDropdownContainer">
+                            <button type="button" class="btn btn-ghost btn-icon position-relative" id="btnNotificationBell" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+                                <span class="material-symbols-outlined" style="font-size: 22px;">notifications</span>
+                                <span class="position-absolute badge rounded-pill bg-danger d-none" id="notificationBadge" style="font-size: 10px; top: 4px; right: 4px;">
+                                    0
+                                </span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end shadow-lg p-0" aria-labelledby="btnNotificationBell" style="width: 360px; max-width: 90vw; border-radius: 12px; overflow: hidden;" id="notificationMenu">
+                                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+                                    <span class="fw-bold text-dark" style="font-size: 14px;">Thông báo</span>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-muted" id="btnMarkAllRead" style="font-size: 12px;">
+                                        Đánh dấu đã đọc
+                                    </button>
+                                </div>
+                                <div id="notificationList" style="max-height: 380px; overflow-y: auto;">
+                                    <div class="p-3 text-center text-muted" id="notificationLoading">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                        <span class="ms-2 text-small">Đang tải thông báo...</span>
+                                    </div>
+                                </div>
+                                <div class="p-2 border-top text-center bg-light">
+                                    <a href="/ThongBao/Index" class="text-decoration-none text-primary fw-semibold" style="font-size: 13px;">
+                                        Xem tất cả thông báo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <span class="avatar" title="@hoTen">@UiHelper.VietTat(hoTen)</span>
                     <span class="d-none d-sm-block text-small fw-semibold">@hoTen</span>
                 </div>
@@ -82,6 +115,89 @@
                 if (sb.classList.contains('is-open') && !sb.contains(e.target) && !btn.contains(e.target)) sb.classList.remove('is-open');
             });
         })();
+
+        @if (daDangNhap)
+        {
+            <text>
+            // Xử lý chuông thông báo nội bộ (In-App Notification Bell - STT 59)
+            window.capNhatSoThongBaoChuaDoc = function () {
+                $.getJSON('/ThongBao/SoChuaDoc', function (res) {
+                    var $badge = $('#notificationBadge');
+                    if (res && res.count > 0) {
+                        $badge.text(res.count > 99 ? '99+' : res.count).removeClass('d-none');
+                    } else {
+                        $badge.text('0').addClass('d-none');
+                    }
+                });
+            };
+
+            function taiDanhSachThongBaoNhanh() {
+                var $list = $('#notificationList');
+                $list.html('<div class="p-3 text-center text-muted"><div class="spinner-border spinner-border-sm text-primary" role="status"></div><span class="ms-2 text-small">Đang tải thông báo...</span></div>');
+
+                $.getJSON('/ThongBao/DanhSachNhanh', function (res) {
+                    if (!res || !res.items || res.items.length === 0) {
+                        $list.html('<div class="p-4 text-center text-muted"><span class="material-symbols-outlined" style="font-size: 32px;">notifications_none</span><p class="mt-2 mb-0 text-small">Không có thông báo mới nào</p></div>');
+                        return;
+                    }
+
+                    var html = '';
+                    res.items.forEach(function (item) {
+                        var bgClass = !item.daDoc ? 'bg-light-subtle' : '';
+                        var dot = !item.daDoc ? '<span class="badge rounded-circle bg-danger p-1" style="width: 8px; height: 8px;"> </span>' : '';
+                        var linkAttr = item.urlDieuHuong ? 'href="' + item.urlDieuHuong + '"' : 'href="javascript:void(0)"';
+                        
+                        html += '<a ' + linkAttr + ' class="list-group-item list-group-item-action d-flex align-items-start gap-2 p-2 border-bottom notify-item ' + bgClass + '" data-id="' + item.maThongBao + '" style="text-decoration: none;">'
+                              + '  <div class="p-1 rounded-circle ' + item.badgeClass + ' d-flex align-items-center justify-content-center mt-1" style="width: 32px; height: 32px; min-width: 32px;">'
+                              + '    <span class="material-symbols-outlined" style="font-size: 18px;">' + item.icon + '</span>'
+                              + '  </div>'
+                              + '  <div class="flex-grow-1 overflow-hidden">'
+                              + '    <div class="d-flex justify-content-between align-items-center">'
+                              + '      <span class="text-small text-muted" style="font-size: 11px;">' + item.thoiGianAgo + '</span>'
+                              +        dot
+                              + '    </div>'
+                              + '    <p class="mb-0 text-dark ' + (!item.daDoc ? 'fw-bold' : '') + '" style="font-size: 13px; line-height: 1.3;">' + item.noiDung + '</p>'
+                              + '  </div>'
+                              + '</a>';
+                    });
+                    $list.html(html);
+
+                    // Đăng ký sự kiện click từng thông báo
+                    $list.find('.notify-item').on('click', function () {
+                        var id = $(this).data('id');
+                        if (id) {
+                            $.post('/ThongBao/DanhDauDaDoc', { id: id }, function () {
+                                window.capNhatSoThongBaoChuaDoc();
+                            });
+                        }
+                    });
+                });
+            }
+
+            $(function () {
+                // Tải số lượng ban đầu và thiết lập Polling 45 giây/lần
+                window.capNhatSoThongBaoChuaDoc();
+                setInterval(window.capNhatSoThongBaoChuaDoc, 45000);
+
+                // Khi mở dropdown -> tải danh sách mới nhất
+                var dropdownEl = document.getElementById('notificationDropdownContainer');
+                if (dropdownEl) {
+                    dropdownEl.addEventListener('show.bs.dropdown', function () {
+                        taiDanhSachThongBaoNhanh();
+                    });
+                }
+
+                // Đánh dấu tất cả đã đọc
+                $('#btnMarkAllRead').on('click', function (e) {
+                    e.stopPropagation();
+                    $.post('/ThongBao/DanhDauTatCaDaDoc', function () {
+                        window.capNhatSoThongBaoChuaDoc();
+                        taiDanhSachThongBaoNhanh();
+                    });
+                });
+            });
+            </text>
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

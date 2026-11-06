@@ -16,8 +16,13 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
     private const int SoNamToiDa = 5; // chặn gõ nhầm năm (vd 2206)
 
     private readonly IKeHoachBaoTriRepository _repo;
+    private readonly IThongBaoService _thongBaoService;
 
-    public KeHoachBaoTriService(IKeHoachBaoTriRepository repo) => _repo = repo;
+    public KeHoachBaoTriService(IKeHoachBaoTriRepository repo, IThongBaoService thongBaoService)
+    {
+        _repo = repo;
+        _thongBaoService = thongBaoService;
+    }
 
     // ---------------- Truy vấn ----------------
     public async Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(KeHoachBaoTriBoLoc boLoc)
@@ -309,6 +314,13 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         }
 
         await _repo.SaveChangesAsync();
+
+        // STT 59: Bắn thông báo nội bộ khi phát sinh phiếu xử lý định kỳ mới
+        await _thongBaoService.TaoThongBaoChoAdminVaKtvAsync(
+            $"Kế hoạch {UiHelper.Ma("KH", kh.MaKeHoach)} đã phát sinh phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)} (Chờ phân công).",
+            kh.MaThietBi
+        );
+
         return ServiceResult<int>.Ok(phieu.MaPhieuXuLy);
     }
 

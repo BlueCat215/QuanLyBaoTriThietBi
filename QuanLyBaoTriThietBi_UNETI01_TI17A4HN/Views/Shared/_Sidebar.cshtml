@@ -64,6 +64,7 @@
             <div class="sidebar-group">Hệ thống</div>
             Muc("TaiKhoan", "Index", "manage_accounts", "Tài khoản");
             Muc("NhatKyDangNhap", "Index", "history", "Nhật ký đăng nhập");
+            Muc("ThongBao", "Index", "notifications", "Thông báo");
         }
         else if (laKtv)
         {
@@ -74,6 +75,7 @@
             Muc("ThietBi", "Index", "precision_manufacturing", "Thiết bị");
             Muc("KeHoachBaoTri", "Index", "calendar_clock", "Kế hoạch bảo trì");
             Muc("VatTu", "Index", "inventory_2", "Kho vật tư");
+            Muc("ThongBao", "Index", "notifications", "Thông báo");
         }
         else if (laNguoiDung)
         {
@@ -83,6 +85,9 @@
             <div class="sidebar-group">Sự cố</div>
             Muc("BaoCaoSuCo", "Create", "add_alert", "Báo sự cố mới", matchAction: true, accent: true);
             Muc("BaoCaoSuCo", "CuaToi", "list_alt", "Báo cáo của tôi", matchAction: true);
+
+            <div class="sidebar-group">Hệ thống</div>
+            Muc("ThongBao", "Index", "notifications", "Thông báo");
         }
     </nav>
 

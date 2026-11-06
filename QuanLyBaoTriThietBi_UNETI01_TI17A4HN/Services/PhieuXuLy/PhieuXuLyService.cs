@@ -18,16 +18,19 @@ public class PhieuXuLyService : IPhieuXuLyService
     private readonly IPhieuXuLyRepository _phieuRepo;
     private readonly AppDbContext _context;
     private readonly ITepDinhKemService _tepDinhKemService;
+    private readonly IThongBaoService _thongBaoService;
 
     public PhieuXuLyService(
         IPhieuXuLyRepository phieuRepo,
         AppDbContext context,
-        ITepDinhKemService tepDinhKemService
+        ITepDinhKemService tepDinhKemService,
+        IThongBaoService thongBaoService
     )
     {
         _phieuRepo = phieuRepo;
         _context = context;
         _tepDinhKemService = tepDinhKemService;
+        _thongBaoService = thongBaoService;
     }
 
     public async Task<PhieuXuLyIndexViewModel> LayDanhSachAsync(PhieuXuLyBoLoc boLoc)
@@ -235,6 +238,13 @@ public class PhieuXuLyService : IPhieuXuLyService
 
                 await _phieuRepo.ThemPhanCongAsync(pc);
                 await _phieuRepo.SaveChangesAsync();
+
+                // STT 59: Bắn thông báo phân công cho KTV
+                await _thongBaoService.TaoThongBaoChoKtvAsync(
+                    model.MaKyThuatVien.Value,
+                    $"Bạn vừa được phân công xử lý phiếu {UiHelper.Ma("PX", phieu.MaPhieuXuLy)}: {pc.NoiDungPhanCong}.",
+                    bc.MaThietBi
+                );
             }
 
             return ServiceResult<int>.Ok(phieu.MaPhieuXuLy);
@@ -290,6 +300,13 @@ public class PhieuXuLyService : IPhieuXuLyService
 
                 await _phieuRepo.ThemPhanCongAsync(pc);
                 await _phieuRepo.SaveChangesAsync();
+
+                // STT 59: Bắn thông báo phân công cho KTV
+                await _thongBaoService.TaoThongBaoChoKtvAsync(
+                    model.MaKyThuatVien.Value,
+                    $"Bạn vừa được phân công xử lý phiếu {UiHelper.Ma("PX", phieu.MaPhieuXuLy)}: {pc.NoiDungPhanCong}.",
+                    kh.MaThietBi
+                );
             }
 
             return ServiceResult<int>.Ok(phieu.MaPhieuXuLy);
@@ -300,6 +317,7 @@ public class PhieuXuLyService : IPhieuXuLyService
     public async Task<ServiceResult> PhanCongXuLyAsync(PhanCongXuLyFormViewModel model)
     {
         var phieu = await _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo)
             .Include(p => p.KeHoachBaoTri)
             .FirstOrDefaultAsync(p => p.MaPhieuXuLy == model.MaPhieuXuLy);
 
@@ -342,6 +360,14 @@ public class PhieuXuLyService : IPhieuXuLyService
         await _phieuRepo.ThemPhanCongAsync(pc);
         await _phieuRepo.SaveChangesAsync();
 
+        // STT 59: Bắn thông báo cho Kỹ thuật viên được phân công
+        int? maThietBi = phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? phieu.BaoCaoSuCo?.MaThietBi : phieu.KeHoachBaoTri?.MaThietBi;
+        await _thongBaoService.TaoThongBaoChoKtvAsync(
+            model.MaKyThuatVien.Value,
+            $"Bạn vừa được phân công phụ trách phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)}: {pc.NoiDungPhanCong}.",
+            maThietBi
+        );
+
         return ServiceResult.Ok();
     }
 
@@ -354,7 +380,10 @@ public class PhieuXuLyService : IPhieuXuLyService
         if (!model.MaKyThuatVienMoi.HasValue)
             return ServiceResult.Fail("Vui lòng chọn kỹ thuật viên mới.");
 
-        var phieu = await _context.PhieuXuLys.FindAsync(model.MaPhieuXuLy);
+        var phieu = await _context.PhieuXuLys
+            .Include(p => p.BaoCaoSuCo)
+            .Include(p => p.KeHoachBaoTri)
+            .FirstOrDefaultAsync(p => p.MaPhieuXuLy == model.MaPhieuXuLy);
         if (phieu == null)
             return ServiceResult.Fail("Phiếu xử lý không tồn tại.");
 
@@ -396,6 +425,14 @@ public class PhieuXuLyService : IPhieuXuLyService
 
         await _phieuRepo.ThemPhanCongAsync(phanCongMoi);
         await _phieuRepo.SaveChangesAsync();
+
+        // STT 59: Bắn thông báo cho Kỹ thuật viên mới được chuyển giao
+        int? maThietBiDoi = phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? phieu.BaoCaoSuCo?.MaThietBi : phieu.KeHoachBaoTri?.MaThietBi;
+        await _thongBaoService.TaoThongBaoChoKtvAsync(
+            model.MaKyThuatVienMoi.Value,
+            $"Bạn được phân công thay thế phụ trách phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)}: {model.LyDoDoi.Trim()}.",
+            maThietBiDoi
+        );
 
         return ServiceResult.Ok();
     }
@@ -576,7 +613,7 @@ public class PhieuXuLyService : IPhieuXuLyService
 
             if (!string.IsNullOrWhiteSpace(model.NhanXetNghiemThu))
             {
-                var dongLog = $"[Nghiệm thu ĐẠT {UiHelper.NgayGio(ngayHt)}]: {model.NhanXetNghiemThu.Trim()}";
+                var dongLog = $"[Nghiệm thu ĐẠT {UiHelper.NgayGio(ngayHt)}]: {(model.NhanXetNghiemThu ?? string.Empty).Trim()}";
                 phieu.KetQuaXuLy = string.IsNullOrWhiteSpace(phieu.KetQuaXuLy)
                     ? dongLog
                     : phieu.KetQuaXuLy + Environment.NewLine + dongLog;
@@ -620,7 +657,7 @@ public class PhieuXuLyService : IPhieuXuLyService
                 return ServiceResult.Fail("Vui lòng nhập lý do chưa đạt / yêu cầu xử lý lại để kỹ thuật viên khắc phục.", nameof(model.NhanXetNghiemThu));
 
             phieu.TrangThai = TrangThaiPhieuXuLyEnum.DangXuLy;
-            var dongLog = $"[Nghiệm thu CHƯA ĐẠT - {UiHelper.NgayGio(DateTime.Now)}]: {model.NhanXetNghiemThu.Trim()}";
+            var dongLog = $"[Nghiệm thu CHƯA ĐẠT - {UiHelper.NgayGio(DateTime.Now)}]: {(model.NhanXetNghiemThu ?? string.Empty).Trim()}";
             phieu.KetQuaXuLy = string.IsNullOrWhiteSpace(phieu.KetQuaXuLy)
                 ? dongLog
                 : phieu.KetQuaXuLy + Environment.NewLine + dongLog;
@@ -636,6 +673,38 @@ public class PhieuXuLyService : IPhieuXuLyService
         }
 
         await _context.SaveChangesAsync();
+
+        // STT 59: Bắn thông báo sau khi nghiệm thu
+        int? maThietBiNt = phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo ? phieu.BaoCaoSuCo?.MaThietBi : phieu.KeHoachBaoTri?.MaThietBi;
+        if (model.Dat)
+        {
+            await _thongBaoService.TaoThongBaoChoAdminAsync(
+                $"Phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)} đã được nghiệm thu hoàn thành đạt yêu cầu.",
+                maThietBiNt
+            );
+
+            if (phieu.LoaiXuLy == LoaiXuLyEnum.XuLySuCo && phieu.BaoCaoSuCo?.MaTaiKhoanBaoCao != null)
+            {
+                await _thongBaoService.TaoThongBaoHeThongAsync(
+                    phieu.BaoCaoSuCo.MaTaiKhoanBaoCao,
+                    $"Sự cố ({UiHelper.Ma("SC", phieu.BaoCaoSuCo.MaBaoCao)}) của thiết bị {phieu.BaoCaoSuCo.ThietBi?.TenThietBi} đã được xử lý và nghiệm thu hoàn thành.",
+                    maThietBiNt
+                );
+            }
+        }
+        else
+        {
+            var ktvHienTai = phieu.PhanCongXuLys.FirstOrDefault(pc => pc.TrangThai == TrangThaiPhanCongEnum.DangHieuLuc);
+            if (ktvHienTai != null)
+            {
+                await _thongBaoService.TaoThongBaoChoKtvAsync(
+                    ktvHienTai.MaKyThuatVien,
+                    $"Phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)} nghiệm thu CHƯA ĐẠT và cần xử lý lại: {(model.NhanXetNghiemThu ?? string.Empty).Trim()}.",
+                    maThietBiNt
+                );
+            }
+        }
+
         return ServiceResult.Ok();
     }
 

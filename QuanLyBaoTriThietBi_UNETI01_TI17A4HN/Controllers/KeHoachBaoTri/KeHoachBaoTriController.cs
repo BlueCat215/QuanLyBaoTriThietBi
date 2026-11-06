@@ -180,5 +180,5 @@ public class KeHoachBaoTriController : Controller
     {
         var ds = await _service.LayThietBiChoChonAsync(vm.MaThietBi);
         vm.ThietBiOptions = ds.Select(x => new SelectListItem(x.Ten, x.Ma.ToString())).ToList();
-    }
+    }ơ
 }

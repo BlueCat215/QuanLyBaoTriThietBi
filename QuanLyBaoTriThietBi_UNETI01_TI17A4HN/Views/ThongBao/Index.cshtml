@@ -1,0 +1,145 @@
+@* Họ tên: Phạm Việt Hoàn - Nguyễn Khắc Hiếu | MSSV: 23103100207 - 23103100225 | Nội dung: Module 3 & 5 - STT 59: Danh sách thông báo nội bộ *@
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThongBaoIndexViewModel
+@{
+    ViewData["Title"] = "Thông báo hệ thống";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Thông báo hệ thống</h1>
+        <p>Theo dõi mọi diễn biến phân công kỹ thuật viên, sự cố mới và nghiệm thu bảo trì.</p>
+    </div>
+    <div class="page-actions">
+        @if (Model.SoChuaDoc > 0)
+        {
+            <button type="button" class="btn btn-outline-primary" id="btnDocTatCaPage">
+                <span class="material-symbols-outlined icon-20">mark_email_read</span> Đánh dấu tất cả đã đọc
+            </button>
+        }
+    </div>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    <a asp-action="Index" asp-route-chiChuaDoc="false" class="btn @(Model.ChiChuaDoc != true ? "btn-primary" : "btn-outline-secondary") btn-sm">
+        Tất cả (@Model.TongSo)
+    </a>
+    <a asp-action="Index" asp-route-chiChuaDoc="true" class="btn @(Model.ChiChuaDoc == true ? "btn-primary" : "btn-outline-secondary") btn-sm">
+        Chưa đọc (@Model.SoChuaDoc)
+    </a>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="card">
+        <div class="card-body empty-state text-center p-5">
+            <span class="material-symbols-outlined icon-48 text-muted" style="font-size: 48px;">notifications_off</span>
+            <h3 class="mt-3">Không có thông báo nào</h3>
+            <p class="text-muted">Bạn đã cập nhật tất cả thông tin mới nhất của hệ thống.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="list-group list-group-flush">
+            @foreach (var tb in Model.Items)
+            {
+                <div class="list-group-item d-flex align-items-start gap-3 p-3 @(!tb.DaDoc ? "bg-light-subtle" : "")" id="tb-row-@tb.MaThongBao">
+                    <div class="p-2 rounded-circle @tb.BadgeClass d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px;">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">@tb.Icon</span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-small text-muted">@tb.ThoiGianAgo (@tb.NgayTao.ToString("dd/MM/yyyy HH:mm"))</span>
+                            @if (!tb.DaDoc)
+                            {
+                                <span class="badge bg-danger rounded-pill">Mới</span>
+                            }
+                        </div>
+                        <p class="mb-1 @(!tb.DaDoc ? "fw-bold text-dark" : "text-secondary")" style="font-size: 14px;">
+                            @tb.NoiDung
+                        </p>
+                        @if (!string.IsNullOrEmpty(tb.TenThietBi))
+                        {
+                            <div class="text-small text-muted mb-2">
+                                <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">precision_manufacturing</span>
+                                Thiết bị: <strong>@tb.TenThietBi</strong> (Serial: <span class="mono">@tb.SoSerial</span>)
+                            </div>
+                        }
+                        <div class="d-flex gap-2 mt-2">
+                            @if (!string.IsNullOrEmpty(tb.UrlDieuHuong))
+                            {
+                                <a href="@tb.UrlDieuHuong" class="btn btn-sm btn-outline-primary btn-xem-tb" data-id="@tb.MaThongBao">
+                                    <span class="material-symbols-outlined" style="font-size: 15px;">open_in_new</span> Xem chi tiết
+                                </a>
+                            }
+                            @if (!tb.DaDoc)
+                            {
+                                <button type="button" class="btn btn-sm btn-ghost btn-doc-mot" data-id="@tb.MaThongBao">
+                                    Đánh dấu đã đọc
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model.PagedItems.TotalPages > 1)
+        {
+            <div class="card-footer d-flex justify-content-between align-items-center p-3">
+                <span class="text-small text-muted">Trang @Model.PagedItems.Page / @Model.PagedItems.TotalPages (Tổng số @Model.PagedItems.TotalItems thông báo)</span>
+                <ul class="pagination pagination-sm m-0">
+                    <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-chiChuaDoc="@Model.ChiChuaDoc" asp-route-trang="@(Model.PagedItems.Page - 1)">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                        </a>
+                    </li>
+                    @for (var p = 1; p <= Model.PagedItems.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.PagedItems.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-chiChuaDoc="@Model.ChiChuaDoc" asp-route-trang="@p">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-chiChuaDoc="@Model.ChiChuaDoc" asp-route-trang="@(Model.PagedItems.Page + 1)">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Đánh dấu 1 thông báo đã đọc
+            $('.btn-doc-mot, .btn-xem-tb').on('click', function () {
+                var id = $(this).data('id');
+                var $row = $('#tb-row-' + id);
+                if (id) {
+                    $.post('/ThongBao/DanhDauDaDoc', { id: id }, function () {
+                        $row.removeClass('bg-light-subtle');
+                        $row.find('.badge.bg-danger').remove();
+                        $row.find('.btn-doc-mot').remove();
+                        $row.find('p').removeClass('fw-bold text-dark').addClass('text-secondary');
+                        if (typeof window.capNhatSoThongBaoChuaDoc === 'function') {
+                            window.capNhatSoThongBaoChuaDoc();
+                        }
+                    });
+                }
+            });
+
+            // Đánh dấu tất cả đã đọc
+            $('#btnDocTatCaPage').on('click', function () {
+                $.post('/ThongBao/DanhDauTatCaDaDoc', function (res) {
+                    if (res && res.success) {
+                        location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+}
