@@ -1,4 +1,5 @@
-// ViewModel Thiết bị (danh sách, chi tiết, form Thêm/Sửa)
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị - ViewModels
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,6 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
-///Số bản ghi của các module khác đang tham chiếu tới 1 thiết bị (dùng quyết định có xóa được không).
 public record DuLieuLienQuanThietBi(int SoKeHoach, int SoBaoCao, int SoThongBao, int SoTepDinhKem)
 {
     public bool CoDuLieu => SoKeHoach + SoBaoCao + SoThongBao + SoTepDinhKem > 0;
@@ -29,19 +29,15 @@ public record ThietBiRow(
 
 public class ThietBiIndexViewModel
 {
-    /// Danh sách kết quả theo phân trang (chứa cả metadata Page, TotalPages, TotalItems)
     public PagedResult<ThietBiRow> PagedItems { get; set; } = new();
 
-    /// Danh sách phần tử của trang hiện tại (tương thích với Model.Items)
     public List<ThietBiRow> Items => PagedItems.Items;
 
-    ///Điều kiện Tìm kiếm + Lọc + Sắp xếp + Phân trang hiện tại (đổ lại vào form để giữ nguyên điều kiện).
     public ThietBiBoLoc BoLoc { get; set; } = new();
 
     public List<(int Ma, string Ten)> LoaiDeLoc { get; set; } = new();
     public List<(int Ma, string Ten)> KhuVucDeLoc { get; set; } = new();
 
-    ///Thông báo khi có điều kiện lọc không hợp lệ (đã bị bỏ qua).
     public string? CanhBao { get; set; }
 
     public bool CoBoLoc => BoLoc.CoBoLoc;
@@ -52,16 +48,12 @@ public class ThietBiDetailsViewModel
     public required ThietBi ThietBi { get; init; }
     public required DuLieuLienQuanThietBi DuLieuLienQuan { get; init; }
 
-    /// Chuỗi Data URI Base64 PNG của mã QR (sinh động từ URL hoặc Serial, không lưu DB)
     public string QrCodeDataUri { get; set; } = string.Empty;
-
-    /// Đường dẫn tuyệt đối URL chi tiết thiết bị được mã hóa trong QR
     public string QrUrl { get; set; } = string.Empty;
-    /// STT 54: Danh sách ảnh thực tế đính kèm của thiết bị
+
     public List<TepDinhKemItemViewModel> DanhSachAnh { get; set; } = new();
 }
 
-/// STT 56: ViewModel phục vụ in tem nhãn tài sản dán máy
 public class ThietBiTemNhanViewModel
 {
     public required ThietBi ThietBi { get; init; }
@@ -103,7 +95,6 @@ public class ThietBiFormViewModel
     [Display(Name = "Chu kỳ bảo trì (tháng)")]
     public int? ChuKyBaoTriThang { get; set; }
 
-    // Để trống = chưa bảo trì lần nào (mốc tính từ ngày đưa vào sử dụng)
     [DataType(DataType.Date)]
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
     [Display(Name = "Ngày bảo trì gần nhất")]
@@ -112,9 +103,10 @@ public class ThietBiFormViewModel
     [StringLength(255, ErrorMessage = "Mô tả tối đa 255 ký tự")]
     [Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
-    /// STT 54: Tệp ảnh tải lên đính kèm từ form Tạo / Sửa
+
     public List<IFormFile>? TepAnhDinhKem { get; set; }
-    /// STT 54: Danh sách ảnh hiện tại (dành cho màn hình Sửa thiết bị)
+
+    [BindNever, ValidateNever]
     public List<TepDinhKemItemViewModel> DanhSachAnhHienTai { get; set; } = new();
 
     public bool LaThemMoi => MaThietBi == 0;

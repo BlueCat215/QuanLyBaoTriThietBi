@@ -1,12 +1,13 @@
-// Controller CRUD Thiết bị + tìm kiếm (chỉ nhận request, gọi Service, trả View)
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị - ThietBiController
 #nullable enable
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
@@ -28,20 +29,18 @@ public class ThietBiController : Controller
         _tepDinhKemService = tepDinhKemService;
     }
 
+    // GET: /ThietBi
     public async Task<IActionResult> Index(ThietBiBoLoc boLoc)
     {
         var vm = await _service.LayDanhSachAsync(boLoc);
 
-        // Giá trị query string sai kiểu (ví dụ ngày không đọc được) bị bỏ qua -> báo cho người dùng biết
         if (!ModelState.IsValid)
             vm.CanhBao ??= "Một số điều kiện lọc không hợp lệ nên đã được bỏ qua.";
 
         return View(vm);
     }
 
-    /// <summary>
-    /// STT 61: Xuất toàn bộ danh sách thiết bị theo bộ lọc ra file Excel (.xlsx)
-    /// </summary>
+    // GET: /ThietBi/ExportExcel
     [HttpGet]
     public async Task<IActionResult> ExportExcel(ThietBiBoLoc boLoc)
     {
@@ -72,9 +71,7 @@ public class ThietBiController : Controller
         return File(bytes, ExcelExportHelper.ContentType, fileName);
     }
 
-    /// <summary>
-    /// STT 54: Tải lên thêm ảnh thực tế cho thiết bị từ trang Chi tiết thiết bị
-    /// </summary>
+    // POST: /ThietBi/UploadAnh/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> UploadAnh(int id, List<IFormFile> files)
@@ -107,9 +104,7 @@ public class ThietBiController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    /// <summary>
-    /// STT 54: Xóa ảnh thực tế của thiết bị
-    /// </summary>
+    // POST: /ThietBi/XoaAnh/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> XoaAnh(int id, int maTepDinhKem, string? returnUrl)
@@ -130,13 +125,13 @@ public class ThietBiController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // GET: /ThietBi/Details/{id}
     public async Task<IActionResult> Details(int id)
     {
         var vm = await _service.LayChiTietAsync(id);
         if (vm is null)
             return NotFound();
 
-        // STT 56: Sinh mã QR động trỏ tới URL chi tiết thiết bị
         var urlChiTiet = Url.Action("Details", "ThietBi", new { id }, Request.Scheme) 
             ?? $"{Request.Scheme}://{Request.Host}/ThietBi/Details/{id}";
         vm.QrUrl = urlChiTiet;
@@ -145,9 +140,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
-    /// <summary>
-    /// STT 56: Tải về ảnh mã QR của thiết bị (.png)
-    /// </summary>
+    // GET: /ThietBi/QrCode/{id}
     [HttpGet]
     public async Task<IActionResult> QrCode(int id)
     {
@@ -163,9 +156,7 @@ public class ThietBiController : Controller
         return File(pngBytes, "image/png", fileName);
     }
 
-    /// <summary>
-    /// STT 56: Màn hình In tem nhãn tài sản dán máy (Print Template chuẩn 70mm x 40mm)
-    /// </summary>
+    // GET: /ThietBi/InTemNhan/{id}
     [HttpGet]
     public async Task<IActionResult> InTemNhan(int id)
     {
@@ -187,9 +178,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
-    /// <summary>
-    /// STT 41: Lịch sử thiết bị - hiển thị lịch sử kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, ngày hoàn thành, chi phí lũy kế
-    /// </summary>
+    // GET: /ThietBi/LichSu/{id}
     [HttpGet]
     public async Task<IActionResult> LichSu(int id)
     {
@@ -200,6 +189,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
+    // GET: /ThietBi/Create
     [HttpGet]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Create()
@@ -209,6 +199,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
+    // POST: /ThietBi/Create
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Create(ThietBiFormViewModel vm)
@@ -229,6 +220,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
+    // GET: /ThietBi/Edit/{id}
     [HttpGet]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Edit(int id)
@@ -241,6 +233,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
+    // POST: /ThietBi/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> Edit(int id, ThietBiFormViewModel vm)
@@ -264,9 +257,7 @@ public class ThietBiController : Controller
         return View(vm);
     }
 
-
-
-    /// <param name="returnUrl">Địa chỉ nội bộ để quay về sau khi đổi (danh sách giữ nguyên Tìm kiếm/Lọc/Sắp xếp, hoặc trang chi tiết).</param>
+    // POST: /ThietBi/DoiTinhTrang/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> DoiTinhTrang(
@@ -282,13 +273,13 @@ public class ThietBiController : Controller
         else
             TempData["Loi"] = result.ErrorMessage;
 
-        // Chỉ chuyển hướng về địa chỉ nội bộ (chống open redirect)
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return LocalRedirect(returnUrl);
 
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /ThietBi/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(int id)

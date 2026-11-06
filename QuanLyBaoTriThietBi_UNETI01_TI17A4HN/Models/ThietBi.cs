@@ -1,5 +1,5 @@
-// Họ tên: Nguyễn Minh Đức
-// Nội dung: Module 2 - Entity ThietBi và logic tính NgayBaoTriTiepTheo + TrangThaiHanBaoTri
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -37,7 +37,7 @@ public class ThietBi
     [Display(Name = "Chu kỳ bảo trì (tháng)")]
     public int ChuKyBaoTriThang { get; set; }
 
-    // Null là chưa bảo trì lần nào, tính mốc từ NgayDuaVaoSuDung
+    // Null nếu chưa từng bảo trì, lấy mốc tính từ ngày đưa vào sử dụng
     [Column(TypeName = "date"), DataType(DataType.Date)]
     [Display(Name = "Ngày bảo trì gần nhất")]
     public DateTime? NgayBaoTriGanNhat { get; set; }
@@ -48,15 +48,11 @@ public class ThietBi
     [StringLength(255), Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
 
-    /// Ngày bảo trì tiếp theo (tính động, không lưu cột riêng theo mục 2.1 THIETKE.md).
-    /// Công thức: NgayBaoTriTiepTheo = (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung) + ChuKyBaoTriThang (tháng).
-    /// Quy định mốc đầu tiên từ NgayDuaVaoSuDung nếu chưa bảo trì lần nào.
+    // Tính động theo chu kỳ bảo trì, không lưu cột trong DB
     [NotMapped, Display(Name = "Ngày bảo trì tiếp theo")]
     public DateTime NgayBaoTriTiepTheo =>
         (NgayBaoTriGanNhat ?? NgayDuaVaoSuDung).AddMonths(ChuKyBaoTriThang);
 
-    /// Phân loại hạn bảo trì (Chưa đến hạn / Sắp đến hạn / Quá hạn) theo ngưỡng dùng chung toàn hệ thống.
-    /// Thiết bị Ngừng sử dụng không tính hạn bảo trì.
     [NotMapped, Display(Name = "Trạng thái hạn bảo trì")]
     public TrangThaiHanBaoTriEnum? TrangThaiHanBaoTri =>
         TinhTrang == TinhTrangThietBiEnum.NgungSuDung
