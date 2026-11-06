@@ -1,0 +1,275 @@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Tra cứu Nhật ký đăng nhập (Audit Log) *@
+@using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
+@model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.NhatKyDangNhapIndexViewModel
+@{
+    ViewData["Title"] = "Nhật ký đăng nhập";
+    var bl = Model.BoLoc;
+    var sttBatDau = (Model.PagedItems.Page - 1) * Model.PagedItems.PageSize;
+}
+
+<div class="page-header">
+    <div>
+        <h1>Nhật ký đăng nhập</h1>
+        <p>Giám sát lịch sử truy cập, kiểm toán an ninh hệ thống và ngăn ngừa brute-force.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-outline-primary" asp-action="XuatExcel" asp-all-route-data="@bl.ToRouteValues(1)">
+            <span class="material-symbols-outlined icon-left">file_download</span>
+            Xuất Excel
+        </a>
+    </div>
+</div>
+
+@* Các thẻ thống kê KPI tổng quan *@
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card h-100">
+            <span class="kpi-icon"><span class="material-symbols-outlined">history</span></span>
+            <span class="kpi-label">Tổng lượt truy cập</span>
+            <span class="kpi-value num">@Model.ThongKe.TongSo.ToString("N0")</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card h-100">
+            <span class="kpi-icon text-success"><span class="material-symbols-outlined">check_circle</span></span>
+            <span class="kpi-label">Đăng nhập thành công</span>
+            <span class="kpi-value num text-success">@Model.ThongKe.SoThanhCong.ToString("N0")</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card is-warning h-100">
+            <span class="kpi-icon"><span class="material-symbols-outlined">lock_reset</span></span>
+            <span class="kpi-label">Sai mật khẩu</span>
+            <span class="kpi-value num">@Model.ThongKe.SoSaiMatKhau.ToString("N0")</span>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card kpi-card is-danger h-100">
+            <span class="kpi-icon"><span class="material-symbols-outlined">security</span></span>
+            <span class="kpi-label">Bị khóa / Không tồn tại</span>
+            <span class="kpi-value num">@((Model.ThongKe.SoBiKhoa + Model.ThongKe.SoKhongTonTai).ToString("N0"))</span>
+        </div>
+    </div>
+</div>
+
+@* Bộ lọc tìm kiếm *@
+<form method="get" asp-action="Index" class="filter-bar">
+    <div class="search">
+        <label class="form-label" for="tuKhoa">Tìm kiếm</label>
+        <input id="tuKhoa" name="tuKhoa" value="@bl.TuKhoa" class="form-control"
+               placeholder="Nhập username gõ, họ tên tài khoản hoặc IP" />
+    </div>
+
+    <div>
+        <label class="form-label" for="ketQua">Kết quả</label>
+        <select id="ketQua" name="ketQua" class="form-select">
+            <option value="">Tất cả</option>
+            @foreach (var kq in Enum.GetValues<KetQuaDangNhapEnum>())
+            {
+                <option value="@kq" selected="@(bl.KetQua == kq)">@UiHelper.Badge(kq).Text</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label class="form-label" for="tuNgay">Từ ngày</label>
+        <input id="tuNgay" name="tuNgay" type="date" value="@(bl.TuNgay?.ToString("yyyy-MM-dd"))" class="form-control" />
+    </div>
+
+    <div>
+        <label class="form-label" for="denNgay">Đến ngày</label>
+        <input id="denNgay" name="denNgay" type="date" value="@(bl.DenNgay?.ToString("yyyy-MM-dd"))" class="form-control" />
+    </div>
+
+    <div class="d-flex gap-2 align-items-end">
+        <button type="submit" class="btn btn-primary">
+            <span class="material-symbols-outlined icon-left">search</span>
+            Tìm kiếm
+        </button>
+        @if (bl.CoBoLoc)
+        {
+            <a class="btn btn-outline-secondary" asp-action="Index">
+                <span class="material-symbols-outlined icon-left">restart_alt</span>
+                Xóa bộ lọc
+            </a>
+        }
+    </div>
+</form>
+
+@* Bảng dữ liệu *@
+@if (!Model.PagedItems.Items.Any())
+{
+    <div class="card">
+        <div class="card-body empty-state">
+            <span class="material-symbols-outlined icon-24">search_off</span>
+            <h3>Không có dữ liệu nhật ký</h3>
+            <p>Không tìm thấy bản ghi nhật ký đăng nhập nào phù hợp với điều kiện tìm kiếm.</p>
+            @if (bl.CoBoLoc)
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Xóa bộ lọc</a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;" class="text-center">STT</th>
+                    <th style="width: 170px;">Thời gian</th>
+                    <th>Tên đăng nhập gõ</th>
+                    <th>Tài khoản liên kết</th>
+                    <th>Vai trò</th>
+                    <th>Địa chỉ IP</th>
+                    <th style="width: 160px;">Kết quả</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int idx = 0; }
+                @foreach (var item in Model.PagedItems.Items)
+                {
+                    idx++;
+                    var stt = sttBatDau + idx;
+                    <tr>
+                        <td class="text-center text-muted">@stt</td>
+                        <td class="mono">@item.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td>
+                            <strong class="mono">@item.TenDangNhapNhap</strong>
+                        </td>
+                        <td>
+                            @if (item.MaTaiKhoan.HasValue && !string.IsNullOrEmpty(item.HoTen))
+                            {
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-sm">@UiHelper.VietTat(item.HoTen)</span>
+                                    <div>
+                                        <div class="cell-title">@item.HoTen</div>
+                                        <div class="cell-sub text-muted">Mã: #@item.MaTaiKhoan</div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">Không liên kết</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.VaiTro.HasValue)
+                            {
+                                <partial name="_StatusBadge" model="UiHelper.Badge(item.VaiTro.Value)" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="mono">
+                            @(string.IsNullOrWhiteSpace(item.DiaChiIP) ? "—" : item.DiaChiIP)
+                        </td>
+                        <td>
+                            <partial name="_StatusBadge" model="UiHelper.Badge(item.KetQua)" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="table-footer d-flex justify-content-between align-items-center p-3">
+            <span>
+                Hiển thị <strong>@Model.PagedItems.Items.Count</strong> trên tổng số <strong>@Model.PagedItems.TotalItems</strong> bản ghi
+                @if (Model.PagedItems.TotalPages > 1)
+                {
+                    <span class="text-muted ms-2">(Trang @Model.PagedItems.Page / @Model.PagedItems.TotalPages)</span>
+                }
+            </span>
+
+            @if (Model.PagedItems.TotalPages > 1)
+            {
+                <nav aria-label="Phân trang nhật ký">
+                    <ul class="pagination pagination-sm m-0">
+                        @* Nút Trang trước *@
+                        <li class="page-item @(!Model.PagedItems.HasPrevious ? "disabled" : "")">
+                            @if (Model.PagedItems.HasPrevious)
+                            {
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page - 1)" aria-label="Trang trước">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="page-link" aria-hidden="true"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span></span>
+                            }
+                        </li>
+
+                        @{
+                            var curPage = Model.PagedItems.Page;
+                            var totalP = Model.PagedItems.TotalPages;
+                            var startP = Math.Max(1, curPage - 2);
+                            var endP = Math.Min(totalP, curPage + 2);
+                        }
+
+                        @if (startP > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(1)">1</a>
+                            </li>
+                            @if (startP > 2)
+                            {
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            }
+                        }
+
+                        @for (var p = startP; p <= endP; p++)
+                        {
+                            <li class="page-item @(p == curPage ? "active" : "")">
+                                @if (p == curPage)
+                                {
+                                    <span class="page-link">@p</span>
+                                }
+                                else
+                                {
+                                    <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(p)">@p</a>
+                                }
+                            </li>
+                        }
+
+                        @if (endP < totalP)
+                        {
+                            @if (endP < totalP - 1)
+                            {
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(totalP)">@totalP</a>
+                            </li>
+                        }
+
+                        @* Nút Trang sau *@
+                        <li class="page-item @(!Model.PagedItems.HasNext ? "disabled" : "")">
+                            @if (Model.PagedItems.HasNext)
+                            {
+                                <a class="page-link" asp-action="Index" asp-all-route-data="@bl.ToRouteValues(Model.PagedItems.Page + 1)" aria-label="Trang sau">
+                                    <span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="page-link" aria-hidden="true"><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span></span>
+                            }
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+}
+
+<div class="alert alert-info mt-4 d-flex align-items-center gap-2" role="alert">
+    <span class="material-symbols-outlined fs-4">verified_user</span>
+    <div>
+        <strong>Nhật ký kiểm toán bảo mật (Audit Trail):</strong>
+        Toàn bộ lịch sử đăng nhập được hệ thống tự động ghi nhận vĩnh viễn, không hỗ trợ xóa hoặc can thiệp dữ liệu
+        nhằm phục vụ thanh tra, truy vết sự cố an ninh và đối chiếu an toàn thông tin theo chuẩn quy định.
+    </div>
+</div>
