@@ -1,10 +1,10 @@
-// Nội dung: Module 2 - Điều kiện Tìm kiếm + Lọc + Sắp xếp + Phân trang danh sách Thiết bị
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị - ThietBiBoLoc
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
-/// Phân loại hạn bảo trì
 public enum TrangThaiHanBaoTriEnum
 {
     ChuaDenHan,
@@ -35,11 +35,9 @@ public class ThietBiBoLoc
     public DateTime? NgaySuDungDen { get; set; }
     public ThietBiSapXep SapXep { get; set; } = ThietBiSapXep.TenAZ;
 
-    // Phân trang
     public int Trang { get; set; } = 1;
     public int SoBanGhiMoiTrang { get; set; } = 10;
 
-    /// Có điều kiện LỌC nào đang bật không (không tính Sắp xếp và Phân trang).
     public bool CoBoLoc =>
         !string.IsNullOrWhiteSpace(TuKhoa)
         || MaLoaiThietBi.HasValue
@@ -49,13 +47,11 @@ public class ThietBiBoLoc
         || NgaySuDungTu.HasValue
         || NgaySuDungDen.HasValue;
 
-    /// "Từ ngày" lớn hơn "Đến ngày": khoảng ngày bị bỏ qua và trang hiện cảnh báo.
     public bool KhoangNgayKhongHopLe =>
         NgaySuDungTu.HasValue
         && NgaySuDungDen.HasValue
         && NgaySuDungTu.Value.Date > NgaySuDungDen.Value.Date;
 
-    /// Tạo từ điển route values để gắn vào link phân trang, giữ nguyên các điều kiện tìm kiếm, lọc, sắp xếp
     public Dictionary<string, string> ToRouteValues(int? trang = null)
     {
         var route = new Dictionary<string, string>();

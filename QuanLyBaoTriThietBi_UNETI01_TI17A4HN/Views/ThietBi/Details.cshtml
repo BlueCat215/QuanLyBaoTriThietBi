@@ -1,4 +1,5 @@
-@* Chi tiết Thiết bị, đổi tình trạng, xóa an toàn, ảnh thực tế (STT 54), mã QR (STT 56) *@
+@* Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01 *@
+@* Chi tiết thiết bị, đổi tình trạng, xóa an toàn, ảnh thực tế và mã QR *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ThietBiDetailsViewModel
@@ -81,7 +82,7 @@
             </div>
         </div>
 
-        <!-- STT 54: Bộ sưu tập ảnh thực tế thiết bị (Gallery + Lightbox) -->
+        <!-- Bộ sưu tập ảnh thực tế thiết bị (Gallery + Lightbox) -->
         <div class="card mb-3">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -171,7 +172,7 @@
             </div>
         }
 
-        <!-- STT 56: Mã QR động -->
+        <!-- Mã QR động -->
         <div class="card mb-3">
             <div class="card-body text-center">
                 <h3 class="mb-2">Mã QR Thiết bị</h3>
@@ -226,7 +227,7 @@
     </div>
 </div>
 
-<!-- MODAL UPLOAD ẢNH NHANH (STT 54) -->
+<!-- MODAL UPLOAD ẢNH NHANH -->
 @if (coQuyenQuanLy)
 {
     <div class="modal fade" id="modalUploadAnh" tabindex="-1" aria-labelledby="modalUploadAnhTitle" aria-hidden="true">
@@ -256,7 +257,7 @@
     </div>
 }
 
-<!-- MODAL LIGHTBOX XEM ẢNH PHÓNG TO (STT 54) -->
+<!-- MODAL LIGHTBOX XEM ẢNH PHÓNG TO -->
 <div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-dark text-white border-0">

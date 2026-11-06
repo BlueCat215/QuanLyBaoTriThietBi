@@ -1,5 +1,5 @@
-// Họ tên: Nguyễn Minh Đức
-// Nội dung: Repository Thiết bị (LINQ: tìm kiếm, lọc, sắp xếp, tính hạn bảo trì dùng chung toàn hệ thống)
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị - ThietBiRepository
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -12,31 +12,25 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
 
 public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
 {
-    public ThietBiRepository(AppDbContext context)
-        : base(context) { }
+    public ThietBiRepository(AppDbContext context) : base(context) { }
 
-    // Tìm kiếm, Lọc, Sắp xếp (xem ThietBiQueryExtensions)
     public IQueryable<ThietBi> TruyVan(ThietBiBoLoc boLoc)
     {
-        IQueryable<ThietBi> query = QueryNoTracking()
+        return QueryNoTracking()
             .Include(t => t.LoaiThietBi)
-            .Include(t => t.KhuVuc);
-
-        // Thứ tự bắt buộc: Where -> OrderBy (-> Skip -> Take ở phân trang)
-        return query.ApDungLoc(boLoc, DateTime.Today).ApDungSapXep(boLoc.SapXep);
+            .Include(t => t.KhuVuc)
+            .ApDungLoc(boLoc, DateTime.Today)
+            .ApDungSapXep(boLoc.SapXep);
     }
 
     public Task<List<ThietBi>> TimKiemAsync(ThietBiBoLoc boLoc) => TruyVan(boLoc).ToListAsync();
 
-    /// Đếm số thiết bị sắp đến hạn bảo trì
     public Task<int> DemSapDenHanAsync(DateTime? homNay = null) =>
         QueryNoTracking().SapDenHanBaoTri(homNay).CountAsync();
 
-    /// Đếm số thiết bị đã quá hạn bảo trì
     public Task<int> DemQuaHanAsync(DateTime? homNay = null) =>
         QueryNoTracking().QuaHanBaoTri(homNay).CountAsync();
 
-    /// Lấy danh sách thiết bị sắp đến hạn bảo trì
     public Task<List<ThietBi>> LayDanhSachSapDenHanAsync(int top = 5, DateTime? homNay = null) =>
         QueryNoTracking()
             .Include(t => t.LoaiThietBi)
@@ -46,7 +40,6 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
             .Take(top)
             .ToListAsync();
 
-    /// Lấy danh sách thiết bị đã quá hạn bảo trì
     public Task<List<ThietBi>> LayDanhSachQuaHanAsync(int top = 5, DateTime? homNay = null) =>
         QueryNoTracking()
             .Include(t => t.LoaiThietBi)
@@ -55,11 +48,10 @@ public class ThietBiRepository : Repository<ThietBi>, IThietBiRepository
             .ApDungSapXep(ThietBiSapXep.BaoTriSomNhat)
             .Take(top)
             .ToListAsync();
-    /// Lấy danh sách phân trang bằng Skip/Take (thứ tự thực hiện: Where -> OrderBy -> Skip -> Take)
+
     public Task<PagedResult<ThietBi>> LayPhanTrangAsync(ThietBiBoLoc boLoc)
     {
-        var query = TruyVan(boLoc);
-        return PagedResult<ThietBi>.CreateAsync(query, boLoc.Trang, boLoc.SoBanGhiMoiTrang);
+        return PagedResult<ThietBi>.CreateAsync(TruyVan(boLoc), boLoc.Trang, boLoc.SoBanGhiMoiTrang);
     }
 
     public Task<ThietBi?> LayChiTietAsync(int maThietBi) =>

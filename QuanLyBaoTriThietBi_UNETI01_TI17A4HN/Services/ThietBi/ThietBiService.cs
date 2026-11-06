@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Minh Đức
-// Nội dung: Service Thiết bị (Module 2: CRUD, SFSP, hạn bảo trì)
-// Service Thiết bị (không trùng serial, ngày sử dụng <= hôm nay, chu kỳ > 0, đổi tình trạng, xóa an toàn, phân trang)
+// Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 2: Quản lý thiết bị - ThietBiService
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -23,7 +22,6 @@ public class ThietBiService : IThietBiService
         _tepDinhKemService = tepDinhKemService;
     }
 
-    // ---------------- Truy vấn ----------------
     public async Task<ThietBiIndexViewModel> LayDanhSachAsync(ThietBiBoLoc boLoc)
     {
         boLoc.TuKhoa = boLoc.TuKhoa?.Trim();
@@ -108,13 +106,12 @@ public class ThietBiService : IThietBiService
         if (tb is null)
             return null;
 
-        var vm = new ThietBiDetailsViewModel
+        return new ThietBiDetailsViewModel
         {
             ThietBi = tb,
             DuLieuLienQuan = await _repo.DemDuLieuLienQuanAsync(id),
             DanhSachAnh = await _tepDinhKemService.LayDanhSachTheoDoiTuongAsync(LoaiDoiTuongDinhKemEnum.ThietBi, id),
         };
-        return vm;
     }
 
     public async Task<ThietBiFormViewModel?> LayDeSuaAsync(int id)
@@ -144,7 +141,6 @@ public class ThietBiService : IThietBiService
     public Task<List<(int Ma, string Ten)>> LayKhuVucChoChonAsync(int? giuLaiMa) =>
         _repo.LayKhuVucChoChonAsync(giuLaiMa);
 
-    // ---------------- Thêm ----------------
     public async Task<ServiceResult<int>> ThemAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null)
     {
         ChuanHoa(vm);
@@ -169,7 +165,6 @@ public class ThietBiService : IThietBiService
         await _repo.AddAsync(tb);
         await _repo.SaveChangesAsync();
 
-        // STT 54: Tải lên các tệp ảnh đính kèm ban đầu (nếu có)
         if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
         {
             await _tepDinhKemService.UploadNhieuTepAsync(
@@ -184,7 +179,6 @@ public class ThietBiService : IThietBiService
         return ServiceResult<int>.Ok(tb.MaThietBi);
     }
 
-    // ---------------- Sửa ----------------
     public async Task<ServiceResult> SuaAsync(ThietBiFormViewModel vm, int? maTaiKhoan = null)
     {
         var tb = await _repo.GetByIdAsync(vm.MaThietBi);
@@ -208,7 +202,6 @@ public class ThietBiService : IThietBiService
 
         await _repo.SaveChangesAsync();
 
-        // STT 54: Tải lên các ảnh đính kèm mới (nếu có)
         if (vm.TepAnhDinhKem != null && vm.TepAnhDinhKem.Any(f => f.Length > 0))
         {
             await _tepDinhKemService.UploadNhieuTepAsync(
@@ -223,7 +216,6 @@ public class ThietBiService : IThietBiService
         return ServiceResult.Ok();
     }
 
-    // ---------------- Đổi tình trạng ----------------
     public async Task<ServiceResult<TinhTrangThietBiEnum>> DoiTinhTrangAsync(
         int id,
         TinhTrangThietBiEnum tinhTrangMoi
@@ -244,7 +236,6 @@ public class ThietBiService : IThietBiService
         return ServiceResult<TinhTrangThietBiEnum>.Ok(tinhTrangMoi);
     }
 
-    // ---------------- Xóa an toàn ----------------
     public async Task<ServiceResult> XoaAsync(int id)
     {
         var tb = await _repo.GetByIdAsync(id);
@@ -272,7 +263,6 @@ public class ThietBiService : IThietBiService
         return ServiceResult.Ok();
     }
 
-    // ---------------- Hàm nội bộ ----------------
     private static void ChuanHoa(ThietBiFormViewModel vm)
     {
         vm.TenThietBi = (vm.TenThietBi ?? string.Empty).Trim();
@@ -280,7 +270,6 @@ public class ThietBiService : IThietBiService
         vm.MoTa = string.IsNullOrWhiteSpace(vm.MoTa) ? null : vm.MoTa.Trim();
     }
 
-    /// <param name="hienTai">null khi thêm mới; là thiết bị đang sửa khi cập nhật.</param>
     private async Task<ServiceResult> KiemTraAsync(ThietBiFormViewModel vm, ThietBi? hienTai)
     {
         if (
@@ -294,11 +283,9 @@ public class ThietBiService : IThietBiService
         var kq = ServiceResult.Ok();
         var homNay = DateTime.Today;
 
-        // Serial không trùng
         if (await _repo.SoSerialDaTonTaiAsync(vm.SoSerial, hienTai?.MaThietBi))
             kq.AddError("Số serial đã tồn tại", nameof(ThietBiFormViewModel.SoSerial));
 
-        // Ngày đưa vào sử dụng <= hiện tại
         var ngaySuDung = vm.NgayDuaVaoSuDung.Value.Date;
         if (ngaySuDung > homNay)
             kq.AddError(
@@ -311,7 +298,6 @@ public class ThietBiService : IThietBiService
                 nameof(ThietBiFormViewModel.NgayDuaVaoSuDung)
             );
 
-        // Ngày bảo trì gần nhất (tùy chọn)
         if (vm.NgayBaoTriGanNhat is { } baoTri)
         {
             if (baoTri.Date > homNay)
@@ -326,31 +312,23 @@ public class ThietBiService : IThietBiService
                 );
         }
 
-        // Chu kỳ bảo trì > 0
         if (vm.ChuKyBaoTriThang <= 0)
             kq.AddError(
                 "Chu kỳ bảo trì phải lớn hơn 0 (tháng)",
                 nameof(ThietBiFormViewModel.ChuKyBaoTriThang)
             );
 
-        // Loại / Khu vực phải tồn tại và còn hoạt động (giữ nguyên nếu thiết bị đang thuộc loại/khu vực đó)
         if (
             vm.MaLoaiThietBi != hienTai?.MaLoaiThietBi
             && !await _repo.LoaiDangHoatDongAsync(vm.MaLoaiThietBi.Value)
         )
-            kq.AddError(
-                "Loại thiết bị không tồn tại hoặc đã ngừng sử dụng",
-                nameof(ThietBiFormViewModel.MaLoaiThietBi)
-            );
+            kq.AddError("Loại thiết bị đã ngưng sử dụng", nameof(ThietBiFormViewModel.MaLoaiThietBi));
 
         if (
             vm.MaKhuVuc != hienTai?.MaKhuVuc
             && !await _repo.KhuVucDangHoatDongAsync(vm.MaKhuVuc.Value)
         )
-            kq.AddError(
-                "Khu vực không tồn tại hoặc đã ngừng hoạt động",
-                nameof(ThietBiFormViewModel.MaKhuVuc)
-            );
+            kq.AddError("Khu vực đã ngưng sử dụng", nameof(ThietBiFormViewModel.MaKhuVuc));
 
         return kq;
     }

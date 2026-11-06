@@ -1,17 +1,12 @@
 // Họ tên: Nguyễn Minh Đức - Lớp: TI17A4HN - Nhóm: UNETI01
-// Nội dung: STT 56 - Helper sinh mã QR động (QRCodeHelper) sử dụng thư viện QRCoder
+// Module 2: Quản lý thiết bị - QRCodeHelper
 #nullable enable
-using System.Text;
 using QRCoder;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 
 public static class QRCodeHelper
 {
-    /// Sinh mã QR dạng chuỗi Data URI PNG (data:image/png;base64,...), có thể nhúng trực tiếp vào thẻ &lt;img src="..." /&gt;
-    /// <param name="noiDung">Chuỗi nội dung cần mã hóa (URL, mã thiết bị, serial...)</param>
-    /// <param name="pixelsPerModule">Kích thước mỗi module điểm ảnh (mặc định 6)</param>
-    /// <returns>Chuỗi Data URI Base64 PNG</returns>
     public static string TaoDataUriPng(string noiDung, int pixelsPerModule = 6)
     {
         if (string.IsNullOrWhiteSpace(noiDung))
@@ -25,7 +20,6 @@ public static class QRCodeHelper
         return $"data:image/png;base64,{base64}";
     }
 
-    /// Sinh mã QR dưới dạng mảng byte PNG (dùng cho API trả về file ảnh hoặc tải xuống)
     public static byte[] TaoBytesPng(string noiDung, int pixelsPerModule = 6)
     {
         if (string.IsNullOrWhiteSpace(noiDung))
@@ -37,7 +31,6 @@ public static class QRCodeHelper
         return pngQrCode.GetGraphic(pixelsPerModule);
     }
 
-    /// Sinh mã QR dạng thẻ vector SVG
     public static string TaoSvg(string noiDung, int pixelsPerModule = 6)
     {
         if (string.IsNullOrWhiteSpace(noiDung))
