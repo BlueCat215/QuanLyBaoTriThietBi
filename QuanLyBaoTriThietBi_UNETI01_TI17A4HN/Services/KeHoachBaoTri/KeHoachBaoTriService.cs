@@ -1,3 +1,5 @@
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - KeHoachBaoTriService (Nghiệp vụ: Validate, Vòng đời, Chống trùng kỳ, Cập nhật mốc bảo trì)
 ﻿// Họ tên: Phạm Việt Hoàn
 // MSSV: 23103100207
 // Nội dung: Module 3 - Service Kế hoạch bảo trì (validate thiết bị/ngày/nội dung/ưu tiên, chống trùng kế hoạch cùng kỳ, hủy an toàn, nghiệm thu hoàn thành, liên kết & phát sinh Phiếu xử lý)
@@ -23,8 +25,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         _repo = repo;
         _thongBaoService = thongBaoService;
     }
-
-    // ---------------- Truy vấn ----------------
     public async Task<KeHoachBaoTriIndexViewModel> LayDanhSachAsync(KeHoachBaoTriBoLoc boLoc)
     {
         string? canhBao = null;
@@ -121,8 +121,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
 
     public Task<List<(int Ma, string Ten)>> LayThietBiChoChonAsync(int? giuLaiMa) =>
         _repo.LayThietBiChoChonAsync(giuLaiMa);
-
-    // ---------------- Thêm ----------------
     public async Task<ServiceResult<int>> ThemAsync(KeHoachBaoTriFormViewModel vm)
     {
         ChuanHoa(vm);
@@ -137,7 +135,7 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             NgayDuKien = vm.NgayDuKien!.Value.Date,
             NoiDungBaoTri = vm.NoiDungBaoTri,
             MucDoUuTien = vm.MucDoUuTien!.Value,
-            TrangThai = TrangThaiKeHoachEnum.ChoThucHien, // luôn bắt đầu ở Chờ thực hiện theo đúng vòng đời
+            TrangThai = TrangThaiKeHoachEnum.ChoThucHien, // Khởi tạo ở trạng thái Chờ thực hiện
             GhiChu = vm.GhiChu,
         };
 
@@ -145,8 +143,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         await _repo.SaveChangesAsync();
         return ServiceResult<int>.Ok(kh.MaKeHoach);
     }
-
-    // ---------------- Sửa ----------------
     public async Task<ServiceResult> SuaAsync(KeHoachBaoTriFormViewModel vm)
     {
         var kh = await _repo.GetByIdAsync(vm.MaKeHoach);
@@ -179,14 +175,10 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
     }
-
-    // ---------------- Hủy ----------------
     public async Task<ServiceResult> HuyAsync(int id)
     {
         return await ChuyenTrangThaiAsync(id, TrangThaiKeHoachEnum.DaHuy, "Hủy kế hoạch bảo trì");
     }
-
-    // ---------------- Vòng đời trạng thái Kế hoạch bảo trì (STT 31) ----------------
     public async Task<ServiceResult> ChuyenTrangThaiAsync(
         int id,
         TrangThaiKeHoachEnum trangThaiMoi,
@@ -262,8 +254,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
     }
-
-    // ---------------- Phát sinh Phiếu xử lý định kỳ (Liên kết Kế hoạch <-> Phiếu xử lý) ----------------
     public async Task<ServiceResult<int>> TaoPhieuXuLyDinhKyAsync(int maKeHoach)
     {
         var kh = await _repo.GetByIdAsync(maKeHoach);
@@ -294,28 +284,24 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         {
             LoaiXuLy = LoaiXuLyEnum.BaoTriDinhKy,
             MaKeHoach = maKeHoach,
-            MaBaoCao = null, // Đúng ràng buộc CK_Phieu_Nguon
+            MaBaoCao = null, // Ràng buộc CK_Phieu_Nguon: phiếu định kỳ không gắn sự cố
             NgayTao = DateTime.Now,
             TrangThai = TrangThaiPhieuXuLyEnum.ChoPhanCong,
         };
 
         await _repo.ThemPhieuXuLyAsync(phieu);
 
-        // Chuyển trạng thái kế hoạch sang Đang thực hiện nếu đang ở Chờ thực hiện
         if (kh.TrangThai == TrangThaiKeHoachEnum.ChoThucHien)
         {
             kh.TrangThai = TrangThaiKeHoachEnum.DangThucHien;
         }
 
-        // Chuyển tình trạng thiết bị sang Đang bảo trì nếu đang ở trạng thái Hoạt động
         if (tb.TinhTrang == TinhTrangThietBiEnum.DangHoatDong)
         {
             tb.TinhTrang = TinhTrangThietBiEnum.DangBaoTri;
         }
 
         await _repo.SaveChangesAsync();
-
-        // STT 59: Bắn thông báo nội bộ khi phát sinh phiếu xử lý định kỳ mới
         await _thongBaoService.TaoThongBaoChoAdminVaKtvAsync(
             $"Kế hoạch {UiHelper.Ma("KH", kh.MaKeHoach)} đã phát sinh phiếu xử lý {UiHelper.Ma("PX", phieu.MaPhieuXuLy)} (Chờ phân công).",
             kh.MaThietBi
@@ -323,8 +309,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
 
         return ServiceResult<int>.Ok(phieu.MaPhieuXuLy);
     }
-
-    // ---------------- Nghiệm thu / Hoàn thành kế hoạch & Cập nhật mốc bảo trì ----------------
     public async Task<ServiceResult> HoanThanhAsync(
         int maKeHoach,
         DateTime ngayHoanThanh,
@@ -385,8 +369,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
         await _repo.SaveChangesAsync();
         return ServiceResult.Ok();
     }
-
-    // ---------------- Business rule chống trùng kế hoạch ----------------
     public async Task<ServiceResult> KiemTraTrungKeHoachAsync(
         int maThietBi,
         DateTime ngayDuKien,
@@ -404,8 +386,6 @@ public class KeHoachBaoTriService : IKeHoachBaoTriService
             nameof(KeHoachBaoTriFormViewModel.NgayDuKien)
         );
     }
-
-    // ---------------- Hàm nội bộ ----------------
     private static bool CoTheSua(KeHoachBaoTri kh) =>
         !KeHoachWorkflowHelper.IsLocked(kh.TrangThai)
         && kh.TrangThai is TrangThaiKeHoachEnum.ChoThucHien or TrangThaiKeHoachEnum.DaPhanCong;

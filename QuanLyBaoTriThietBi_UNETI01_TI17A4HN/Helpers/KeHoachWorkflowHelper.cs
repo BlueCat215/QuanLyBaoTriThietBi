@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung: Module 3 - Helper vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy, kiểm tra chuyển trạng thái hợp lệ, khóa chặn khi Hoàn thành/Đã hủy).
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - KeHoachWorkflowHelper (Quản lý vòng đời trạng thái kế hoạch bảo trì)
 #nullable enable
 using System;
 using System.Collections.Generic;

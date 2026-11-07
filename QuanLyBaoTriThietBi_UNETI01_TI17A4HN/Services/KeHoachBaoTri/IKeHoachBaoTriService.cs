@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung: Module 3 - Interface Service Kế hoạch bảo trì (CRUD, Vòng đời trạng thái, Chuyển trạng thái, Chống trùng kế hoạch, Phát sinh Phiếu xử lý)
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - Interface IKeHoachBaoTriService
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
