@@ -1,7 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung 1: Module 3 - Controller CRUD & Vòng đời trạng thái Kế hoạch bảo trì (Workflow: Chờ thực hiện -> Đã phân công -> Đang thực hiện -> Chờ nghiệm thu -> Hoàn thành/Đã hủy)
-// Nội dung 2: Module 3 - Controller CRUD Kế hoạch bảo trì (danh sách, chi tiết, phát sinh Phiếu xử lý,tìm kiếm, lọc ngày/ưu tiên/trạng thái, phân trang, hủy & nghiệm thu hoàn thành)
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - KeHoachBaoTriController
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -20,9 +18,11 @@ public class KeHoachBaoTriController : Controller
 
     public KeHoachBaoTriController(IKeHoachBaoTriService service) => _service = service;
 
+    // GET: /KeHoachBaoTri
     public async Task<IActionResult> Index(KeHoachBaoTriBoLoc boLoc) =>
         View(await _service.LayDanhSachAsync(boLoc));
 
+    // GET: /KeHoachBaoTri/Details/{id}
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
@@ -35,6 +35,7 @@ public class KeHoachBaoTriController : Controller
         return View(result.Data);
     }
 
+    // POST: /KeHoachBaoTri/TaoPhieuXuLy/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> TaoPhieuXuLy(int id)
@@ -50,6 +51,7 @@ public class KeHoachBaoTriController : Controller
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    // GET: /KeHoachBaoTri/Create
     [HttpGet]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create(int? maThietBi)
@@ -59,6 +61,7 @@ public class KeHoachBaoTriController : Controller
         return View(vm);
     }
 
+    // POST: /KeHoachBaoTri/Create
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Create(KeHoachBaoTriFormViewModel vm)
@@ -78,6 +81,7 @@ public class KeHoachBaoTriController : Controller
         return View(vm);
     }
 
+    // GET: /KeHoachBaoTri/Edit/{id}
     [HttpGet]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Edit(int id)
@@ -93,6 +97,7 @@ public class KeHoachBaoTriController : Controller
         return View(result.Data);
     }
 
+    // POST: /KeHoachBaoTri/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Edit(int id, KeHoachBaoTriFormViewModel vm)
@@ -115,6 +120,7 @@ public class KeHoachBaoTriController : Controller
         return View(vm);
     }
 
+    // POST: /KeHoachBaoTri/Huy/{id}
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Huy(int id)
@@ -128,9 +134,7 @@ public class KeHoachBaoTriController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Chuyển trạng thái kế hoạch theo vòng đời (STT 31)
-    /// </summary>
+    /// POST: /KeHoachBaoTri/ChuyenTrangThai/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ChuyenTrangThai(
         int id,
@@ -154,6 +158,7 @@ public class KeHoachBaoTriController : Controller
 
         return RedirectToAction(nameof(Details), new { id });
     }
+    // POST: /KeHoachBaoTri/HoanThanh
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.AdminOrKyThuatVien)]
     public async Task<IActionResult> HoanThanh(HoanThanhKeHoachViewModel vm)

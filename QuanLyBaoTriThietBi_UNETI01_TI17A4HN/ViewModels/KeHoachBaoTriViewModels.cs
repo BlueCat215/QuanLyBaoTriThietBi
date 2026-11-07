@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung: Module 3 - ViewModel Kế hoạch bảo trì (danh sách, tìm kiếm + lọc + sắp xếp + phân trang, chi tiết vòng đời & liên kết Phiếu xử lý, form Thêm/Sửa/Nghiệm thu)
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - ViewModels (BoLoc, KeHoachRow, Details, Form, HoanThanh)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
