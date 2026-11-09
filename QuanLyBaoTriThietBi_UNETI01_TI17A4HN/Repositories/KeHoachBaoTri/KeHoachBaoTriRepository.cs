@@ -1,7 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung 1: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc, chống trùng kế hoạch cùng kỳ, nạp chi tiết vòng đời)
-// Nội dung 2: Module 3 - Repository Kế hoạch bảo trì (LINQ: tìm kiếm + lọc ngày/ưu tiên/trạng thái, sắp xếp, phân trang, chống trùng kỳ, liên kết Phiếu xử lý)
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - KeHoachBaoTriRepository (LINQ: SFSP, chống trùng kỳ, nạp liên kết)
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;
@@ -24,7 +22,7 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
     {
         IQueryable<KeHoachBaoTri> query = QueryNoTracking();
 
-        // 1. Where - Bộ lọc
+        // Điều kiện tìm kiếm và lọc
         if (boLoc.TrangThai is { } tt)
             query = query.Where(k => k.TrangThai == tt);
 
@@ -57,7 +55,7 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
             }
         }
 
-        // 2. OrderBy - Sắp xếp linh hoạt
+        // Sắp xếp linh hoạt theo tiêu chí
         query = boLoc.SapXep switch
         {
             KeHoachBaoTriSapXep.NgayDuKienXaNhat => query
@@ -99,7 +97,7 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
                 .ThenBy(k => k.MaKeHoach),
         };
 
-        // 3. Phân trang
+        // Phân trang server-side (Skip/Take)
         var page = boLoc.Trang < 1 ? 1 : boLoc.Trang;
         var pageSize = boLoc.SoBanGhiMoiTrang < 1 ? 10 : boLoc.SoBanGhiMoiTrang;
         var total = await query.CountAsync();
@@ -165,7 +163,6 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
         return paged.Items;
     }
 
-
     public Task<KeHoachBaoTri?> LayChiTietAsync(int maKeHoach) =>
         QueryNoTracking()
             .Include(k => k.ThietBi!)
@@ -222,8 +219,6 @@ public class KeHoachBaoTriRepository : Repository<KeHoachBaoTri>, IKeHoachBaoTri
 
     public Task<ThietBi?> LayThietBiAsync(int maThietBi) =>
         _context.ThietBis.FirstOrDefaultAsync(t => t.MaThietBi == maThietBi);
-
-
 
     public async Task<List<(int Ma, string Ten)>> LayThietBiChoChonAsync(int? giuLaiMa)
     {

@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn
-// MSSV: 23103100207
-// Nội dung: Module 3 - Interface Repository Kế hoạch bảo trì (truy vấn danh sách, chi tiết, liên kết Phiếu xử lý)
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - Interface IKeHoachBaoTriRepository
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;

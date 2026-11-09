@@ -1,4 +1,5 @@
-//23103100207_PhamVietHoan:Module 3:Tạo Model KeHoachBaoTri.cs
+// Họ tên: Phạm Việt Hoàn - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3: Kế hoạch và lịch bảo trì định kỳ - Entity KeHoachBaoTri
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
