@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - Repository Phiếu xử lý và Phân công (LINQ phân trang, lọc, KTV hiện tại, đổi KTV giữ lịch sử)
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Triển khai Repository Phiếu xử lý, Lịch sử phân công và Lọc SFSP
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;

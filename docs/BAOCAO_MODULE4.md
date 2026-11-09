@@ -397,4 +397,20 @@ Dưới đây là các câu hỏi trọng tâm giảng viên thường hỏi sin
     3. Phân quyền xóa ảnh: Chỉ tài khoản `Admin` hoặc chính người gửi báo cáo lúc sự cố còn ở trạng thái `MoiBao` mới có quyền xóa ảnh; khi đã có KTV tiếp nhận xử lý thì dữ liệu ảnh hiện trường được bảo toàn nguyên vẹn làm bằng chứng.
 
 ---
-*Báo cáo được hoàn thiện và sẵn sàng phục vụ buổi bảo vệ đồ án kết thúc học phần.*
+### Câu 7: Khi một Phiếu xử lý được chuyển sang trạng thái "Hoàn thành" hoặc "Đã hủy", trạng thái của Báo cáo sự cố và Thiết bị được cập nhật như thế nào?
+* **Trả lời:**
+  * **Khi Phiếu xử lý "Hoàn thành" (`HoanThanh`):**
+    * Nếu phiếu bắt nguồn từ Báo cáo sự cố (`XuLySuCo`): Báo cáo sự cố tương ứng sẽ được tự động chuyển trạng thái từ `DangXuLy` sang `DaXuLy`.
+    * Thiết bị liên quan: Nếu trước đó đang ở trạng thái `TamNgungDoSuCo`, hệ thống sẽ phục hồi trạng thái của thiết bị trở lại `DangHoatDong`, cho phép đưa vào khai thác sử dụng bình thường.
+    * Cập nhật thời điểm `NgayHoanThanh = DateTime.Now` trên phiếu xử lý.
+  * **Khi Phiếu xử lý bị "Đã hủy" (`DaHuy`):**
+    * Phân công đang hiệu lực của KTV sẽ được kết thúc.
+    * Báo cáo sự cố liên kết được trả về trạng thái ban đầu (`MoiBao`) hoặc đánh dấu hủy tùy theo nguyên nhân hủy phiếu, cho phép người quản trị có thể xem xét lập phiếu xử lý khác thay thế.
+    * Toàn bộ các thao tác chuyển đổi trạng thái này đều được kiểm soát trong Service layer nhằm đảm bảo tính nhất quán dữ liệu trên toàn bộ các phân hệ của MaintainPro.
+
+---
+*Hà Nội, Ngày 09 tháng 11 năm 2026*  
+**Sinh viên thực hiện & Báo cáo viên:**  
+**Trịnh Trung Hoàng**  
+*(Mã sinh viên: 23103100229 — Lớp: TI17A4HN)*
+

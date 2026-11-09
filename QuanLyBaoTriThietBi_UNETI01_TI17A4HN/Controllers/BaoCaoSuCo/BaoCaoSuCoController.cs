@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - Controller CRUD Báo cáo sự cố (người dùng gửi + xem báo cáo của mình, Admin xem tất cả, đính kèm ảnh hiện trường STT 55)
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Controller Báo cáo sự cố (Báo mới, Của tôi, Admin xem tất cả, upload ảnh)
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;

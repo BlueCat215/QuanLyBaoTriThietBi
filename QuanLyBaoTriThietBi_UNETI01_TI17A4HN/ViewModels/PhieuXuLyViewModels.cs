@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - ViewModel Phiếu xử lý và Phân công xử lý (kèm ảnh hiện trường sự cố STT 55)
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - ViewModels Phiếu xử lý (Tạo mới 2 nguồn, Phân công, Đổi KTV, Chi tiết, Việc của tôi)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;

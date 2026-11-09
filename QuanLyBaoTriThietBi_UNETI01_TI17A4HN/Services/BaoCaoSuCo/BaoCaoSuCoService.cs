@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - Service Báo cáo sự cố (validate thiết bị/mô tả/mức độ, ngày do hệ thống gán, phạm vi xem, hủy/xóa an toàn, đính kèm ảnh STT 55)
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Triển khai Service Báo cáo sự cố (Validate, phân quyền, ảnh hiện trường STT 55)
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;

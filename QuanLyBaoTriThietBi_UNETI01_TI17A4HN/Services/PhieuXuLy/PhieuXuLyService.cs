@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - Service triển khai nghiệp vụ Phiếu xử lý, Phân công, Đổi KTV giữ lịch sử và quy tắc sự cố
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Triển khai Service Phiếu xử lý (Tạo phiếu 2 nguồn, phân công, đổi KTV giữ lịch sử)
 #nullable enable
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
