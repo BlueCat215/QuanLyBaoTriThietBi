@@ -1,50 +1,78 @@
-@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Trang đăng nhập (không sidebar) *@
+@* Họ tên: Nguyễn Văn Hoàng | MSSV: 23103100303 | Nội dung: Module 1 - Trang đăng nhập (theo mẫu giao diện tối giản) *@
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.DangNhapViewModel
 @{
     Layout = "_AuthLayout";
     ViewData["Title"] = "Đăng nhập";
 }
 
-<div class="auth-split">
-    <section class="auth-hero">
-        <div class="d-flex align-items-center gap-2 mb-4">
-            <span class="brand-mark"><span class="material-symbols-outlined">construction</span></span>
-            <span class="fs-4 fw-bold text-white">MaintainPro</span>
+<div class="auth-page">
+    <div class="auth-container">
+        <!-- Avatar profile badge -->
+        <div class="auth-avatar-circle" aria-hidden="true">
+            <svg class="auth-avatar-svg" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="24" cy="15" r="7.5" />
+                <path d="M10 40c0-7.732 6.268-14 14-14s14 6.268 14 14" />
+            </svg>
         </div>
-        <h1 class="text-white">Quản lý bảo trì thiết bị</h1>
-        <p class="mb-0">Theo dõi thiết bị, lập kế hoạch bảo trì và xử lý sự cố trong một hệ thống.</p>
-    </section>
 
-    <section class="auth-form">
-        <div>
-            <h2 class="mb-1">Đăng nhập</h2>
-            <p class="text-muted mb-4">Nhập tài khoản được cấp để tiếp tục.</p>
+        <!-- Heading -->
+        <h1 class="auth-heading">CUSTOMER LOGIN</h1>
 
+        <div class="auth-box">
             @if (TempData["ThanhCong"] is string thanhCong)
             {
-                <div class="alert alert-success" role="alert">@thanhCong</div>
+                <div class="auth-alert auth-alert-success" role="alert">@thanhCong</div>
             }
 
-            <form asp-action="DangNhap" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <form asp-action="DangNhap" method="post" autocomplete="on">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
                 <input type="hidden" asp-for="ReturnUrl" />
 
-                <div class="mb-3">
-                    <label asp-for="TenDangNhap" class="form-label required"></label>
-                    <input asp-for="TenDangNhap" class="form-control" autocomplete="username" autofocus />
-                    <span asp-validation-for="TenDangNhap"></span>
+                <!-- Email ID / Tên đăng nhập -->
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <span class="auth-input-icon" aria-hidden="true">
+                            <svg class="auth-input-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="4" width="20" height="16" rx="2" />
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                            </svg>
+                        </span>
+                        <input asp-for="TenDangNhap" class="auth-input-underline" placeholder="Email ID / Tên đăng nhập" autocomplete="username" autofocus />
+                    </div>
+                    <span asp-validation-for="TenDangNhap" class="auth-error-msg"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label asp-for="MatKhau" class="form-label required"></label>
-                    <input asp-for="MatKhau" type="password" class="form-control" autocomplete="current-password" />
-                    <span asp-validation-for="MatKhau"></span>
+                <!-- Password / Mật khẩu -->
+                <div class="auth-field">
+                    <div class="auth-input-wrap">
+                        <span class="auth-input-icon" aria-hidden="true">
+                            <svg class="auth-input-svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                            </svg>
+                        </span>
+                        <input asp-for="MatKhau" type="password" class="auth-input-underline" placeholder="Password / Mật khẩu" autocomplete="current-password" />
+                    </div>
+                    <span asp-validation-for="MatKhau" class="auth-error-msg"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+                <!-- Remember me & Forgot Password -->
+                <div class="auth-options">
+                    <label class="auth-checkbox-label" for="RememberMe">
+                        <input asp-for="RememberMe" id="RememberMe" type="checkbox" />
+                        <span>Remember me</span>
+                    </label>
+                    <a href="javascript:void(0)" class="auth-forgot-password" onclick="alert('Vui lòng liên hệ Quản trị viên (Admin) để được hỗ trợ cấp lại mật khẩu.')">Forgot Password?</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="auth-submit-btn">LOGIN</button>
             </form>
+
+            <div class="auth-system-brand">
+                <span>MaintainPro &bull; Quản lý bảo trì thiết bị</span>
+            </div>
         </div>
-    </section>
+    </div>
 </div>
 
 @section Scripts {

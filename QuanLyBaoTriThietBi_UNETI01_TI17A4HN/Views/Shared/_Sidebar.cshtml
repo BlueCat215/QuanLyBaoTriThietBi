@@ -20,6 +20,14 @@
     var vaiTro = User.FindFirst(ClaimTypes.Role)?.Value ?? (laAdmin ? nameof(VaiTroEnum.Admin) : "");
     var vaiTroText = Enum.TryParse<VaiTroEnum>(vaiTro, out var vt) ? UiHelper.Badge(vt).Text : "";
 
+    string TrangChuTheoVaiTro()
+    {
+        if (laAdmin) return Url.Action("Index", "Dashboard") ?? "/Dashboard";
+        if (laKtv) return Url.Action("ViecCuaToi", "PhieuXuLy") ?? "/PhieuXuLy/ViecCuaToi";
+        if (laNguoiDung) return Url.Action("Index", "ThietBi") ?? "/ThietBi";
+        return Url.Action("Index", "Home") ?? "/";
+    }
+
     // matchAction = true: chi sang khi dung ca action (dung khi 2 muc cung controller)
     void Muc(string ctrl, string act, string icon, string text, bool matchAction = false, bool accent = false)
     {
@@ -33,7 +41,7 @@
     }
 }
 <aside class="sidebar">
-    <a class="sidebar-brand" href="@Url.Action("Index", "Home")">
+    <a class="sidebar-brand" href="@TrangChuTheoVaiTro()">
         <span class="brand-mark"><span class="material-symbols-outlined">construction</span></span>
         <span class="sidebar-brand-text">
             <span class="brand-title">MaintainPro</span>

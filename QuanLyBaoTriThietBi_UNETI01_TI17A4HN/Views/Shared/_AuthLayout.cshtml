@@ -1,4 +1,4 @@
-﻿@* Layout KHONG co sidebar, dung cho Dang nhap va cac trang loi (403/404/500).
+@* Layout KHONG co sidebar, dung cho Dang nhap va cac trang loi (403/404/500).
    Trong View: @{ Layout = "_AuthLayout"; } *@
 <!DOCTYPE html>
 <html lang="vi">
@@ -9,8 +9,9 @@
     <link rel="stylesheet" href="~/css/fonts.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
 </head>
-<body>
+<body class="auth-layout-body">
     @RenderBody()
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
