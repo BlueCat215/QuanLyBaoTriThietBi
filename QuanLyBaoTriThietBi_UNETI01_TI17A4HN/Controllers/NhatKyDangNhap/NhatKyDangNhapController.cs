@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller tra cứu Nhật ký đăng nhập (Audit Log - bảo vệ theo Role Admin)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - NhatKyDangNhapController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +19,7 @@ public class NhatKyDangNhapController : Controller
         _service = service;
     }
 
+    // GET: /NhatKyDangNhap
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] NhatKyDangNhapBoLoc boLoc)
     {
@@ -27,6 +27,7 @@ public class NhatKyDangNhapController : Controller
         return View(vm);
     }
 
+    // GET: /NhatKyDangNhap/XuatExcel
     [HttpGet]
     public async Task<IActionResult> XuatExcel([FromQuery] NhatKyDangNhapBoLoc boLoc)
     {

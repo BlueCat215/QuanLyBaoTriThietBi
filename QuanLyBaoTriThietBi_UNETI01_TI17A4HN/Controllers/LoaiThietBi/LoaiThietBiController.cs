@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller CRUD Loại thiết bị (chỉ nhận request, gọi Service, trả View)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - LoaiThietBiController.cs
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
@@ -19,12 +18,16 @@ public class LoaiThietBiController : Controller
 
     public LoaiThietBiController(ILoaiThietBiService service) => _service = service;
 
+    // GET: /LoaiThietBi
+    [HttpGet]
     public async Task<IActionResult> Index(string? tuKhoa, bool? trangThai)
         => View(await _service.LayDanhSachAsync(tuKhoa, trangThai));
 
+    // GET: /LoaiThietBi/Create
     [HttpGet]
     public IActionResult Create() => View(new LoaiThietBi { ChuKyBaoTriMacDinhThang = 12, TrangThai = true });
 
+    // POST: /LoaiThietBi/Create
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind(FieldsBind)] LoaiThietBi model)
     {
@@ -41,6 +44,7 @@ public class LoaiThietBiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // GET: /LoaiThietBi/Edit/{id}
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -49,6 +53,7 @@ public class LoaiThietBiController : Controller
         return View(model);
     }
 
+    // POST: /LoaiThietBi/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind(FieldsBind)] LoaiThietBi model)
     {
@@ -66,6 +71,7 @@ public class LoaiThietBiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /LoaiThietBi/DoiTrangThai/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DoiTrangThai(int id)
     {
@@ -78,6 +84,7 @@ public class LoaiThietBiController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /LoaiThietBi/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {

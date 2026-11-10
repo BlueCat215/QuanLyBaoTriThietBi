@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - ViewModel danh sách Khu vực (kèm số thiết bị, số tài khoản thuộc khu vực)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - KhuVucViewModels.cs
 #nullable enable
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
