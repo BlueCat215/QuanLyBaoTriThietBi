@@ -1,6 +1,5 @@
-// Họ tên: Trịnh Trung Hoàng
-// MSSV: 23103100229
-// Nội dung: Module 4 - Interface Service Kỹ thuật viên
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Interface Service Kỹ thuật viên
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;

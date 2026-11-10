@@ -1,4 +1,5 @@
-/// 23103100229_Trịnh Trung Hoàng: Module 4: Tạo Model PhieuXuLy.cs
+// Họ tên: Trịnh Trung Hoàng - MSSV: 23103100229 - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 4: Báo cáo sự cố, Kỹ thuật viên, Phiếu xử lý, Phân công xử lý và Đổi KTV - Entity Phiếu xử lý (phát sinh từ Sự cố hoặc Kế hoạch bảo trì)
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
