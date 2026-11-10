@@ -1,6 +1,5 @@
-// Họ tên: <điền họ tên>
-// MSSV: <điền MSSV>
-// Nội dung: Module 1 - Service Tài khoản (băm mật khẩu, không trùng tên đăng nhập, khóa/mở khóa, xóa an toàn)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - TaiKhoanService.cs
 #nullable enable
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,14 +12,11 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 public class TaiKhoanService : ITaiKhoanService
 {
-    // Cùng thuật toán với DbSeeder; AuthService (việc 12) dùng VerifyHashedPassword của chính lớp này.
     private static readonly PasswordHasher<TaiKhoan> _hasher = new();
-
     private readonly ITaiKhoanRepository _repo;
 
     public TaiKhoanService(ITaiKhoanRepository repo) => _repo = repo;
 
-    // ---------------- Truy vấn ----------------
     public async Task<TaiKhoanIndexViewModel> LayDanhSachAsync(string? tuKhoa, VaiTroEnum? vaiTro, bool? trangThai, int? maNguoiThucHien)
         => new()
         {
@@ -50,7 +46,6 @@ public class TaiKhoanService : ITaiKhoanService
 
     public Task<List<KhuVucOption>> LayKhuVucChoChonAsync(int? giuLaiMa) => _repo.LayKhuVucChoChonAsync(giuLaiMa);
 
-    // ---------------- Thêm ----------------
     public async Task<ServiceResult> ThemAsync(TaiKhoanFormViewModel vm)
     {
         ChuanHoa(vm);
@@ -75,7 +70,6 @@ public class TaiKhoanService : ITaiKhoanService
         return ServiceResult.Ok();
     }
 
-    // ---------------- Sửa ----------------
     public async Task<ServiceResult> SuaAsync(TaiKhoanFormViewModel vm, int? maNguoiThucHien)
     {
         var tk = await _repo.GetByIdAsync(vm.MaTaiKhoan);
@@ -114,7 +108,6 @@ public class TaiKhoanService : ITaiKhoanService
         return ServiceResult.Ok();
     }
 
-    // ---------------- Khóa / Mở khóa ----------------
     public async Task<ServiceResult<bool>> DoiTrangThaiAsync(int id, int? maNguoiThucHien)
     {
         var tk = await _repo.GetByIdAsync(id);
@@ -141,7 +134,6 @@ public class TaiKhoanService : ITaiKhoanService
         return ServiceResult<bool>.Ok(tk.TrangThai);
     }
 
-    // ---------------- Xóa an toàn ----------------
     public async Task<ServiceResult> XoaAsync(int id, int? maNguoiThucHien)
     {
         var tk = await _repo.GetByIdAsync(id);
@@ -170,7 +162,6 @@ public class TaiKhoanService : ITaiKhoanService
         return ServiceResult.Ok();
     }
 
-    // ---------------- Hàm nội bộ ----------------
     private static void XoaTrangThaiKhoa(TaiKhoan tk)
     {
         tk.SoLanDangNhapSai = 0;

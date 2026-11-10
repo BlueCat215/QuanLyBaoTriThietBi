@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller Đăng nhập / Đăng xuất (lưu MaTaiKhoan, HoTen, VaiTro vào Session, chuyển hướng thông minh theo vai trò)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - AuthController.cs
 #nullable enable
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +18,7 @@ public class AuthController : Controller
 
     public AuthController(IAuthService auth) => _auth = auth;
 
+    // GET: /Auth/DangNhap
     [HttpGet]
     public IActionResult DangNhap(string? returnUrl = null)
     {
@@ -34,6 +34,7 @@ public class AuthController : Controller
         return View(new DangNhapViewModel { ReturnUrl = returnUrl });
     }
 
+    // POST: /Auth/DangNhap
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DangNhap(DangNhapViewModel vm)
     {
@@ -71,6 +72,7 @@ public class AuthController : Controller
         return ChuyenHuongTheoVaiTro(phien.VaiTro);
     }
 
+    // POST: /Auth/DangXuat
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult DangXuat()
     {
@@ -79,6 +81,7 @@ public class AuthController : Controller
         return RedirectToAction(nameof(DangNhap));
     }
 
+    // GET: /Auth/TuChoiTruyCap
     [HttpGet]
     public IActionResult TuChoiTruyCap()
     {
