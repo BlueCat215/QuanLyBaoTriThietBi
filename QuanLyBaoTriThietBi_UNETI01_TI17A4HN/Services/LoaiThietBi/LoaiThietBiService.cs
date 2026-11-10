@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Service Loại thiết bị (nghiệp vụ: không trùng tên, chu kỳ > 0, không xóa khi đang có thiết bị)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - LoaiThietBiService
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -90,7 +89,6 @@ public class LoaiThietBiService : ILoaiThietBiService
         return ServiceResult.Ok();
     }
 
-    // ---------- hàm nội bộ ----------
     private static void ChuanHoa(LoaiThietBi model)
     {
         model.TenLoaiThietBi = (model.TenLoaiThietBi ?? string.Empty).Trim();

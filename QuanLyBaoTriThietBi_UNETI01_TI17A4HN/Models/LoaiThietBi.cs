@@ -1,8 +1,8 @@
-//////2310310023103100303_Nguyễn Văn Hoàng: Module 1: Tạo Model LoaiThietBi.cs
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - Thực thể Loại thiết bị (LoaiThietBi)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 

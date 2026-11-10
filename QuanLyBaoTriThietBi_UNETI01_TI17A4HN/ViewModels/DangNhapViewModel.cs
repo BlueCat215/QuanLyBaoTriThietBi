@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - ViewModel form đăng nhập
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - DangNhapViewModel
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 
@@ -16,9 +15,6 @@ public class DangNhapViewModel
     [DataType(DataType.Password)]
     [Display(Name = "Mật khẩu")]
     public string MatKhau { get; set; } = string.Empty;
-
-    [Display(Name = "Ghi nhớ đăng nhập")]
-    public bool RememberMe { get; set; } = false;
 
     public string? ReturnUrl { get; set; }
 }

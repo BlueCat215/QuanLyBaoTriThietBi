@@ -1,4 +1,5 @@
-///2310310023103100303_Nguyễn Văn Hoàng: Module 1: Tạo Model TaiKhoan.cs
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - Thực thể Tài khoản (TaiKhoan)
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

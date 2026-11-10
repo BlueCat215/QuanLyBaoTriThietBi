@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Service Khu vực (nghiệp vụ: không trùng tên, không xóa khi còn thiết bị/tài khoản)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - KhuVucService
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -91,7 +90,6 @@ public class KhuVucService : IKhuVucService
         return ServiceResult.Ok();
     }
 
-    // ---------- hàm nội bộ ----------
     private static string? ChuanHoaChuoi(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
     private static void ChuanHoa(KhuVuc model)

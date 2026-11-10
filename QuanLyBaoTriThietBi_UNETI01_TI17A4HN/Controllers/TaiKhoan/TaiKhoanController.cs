@@ -1,14 +1,13 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller CRUD Tài khoản (chỉ nhận request, gọi Service, trả View)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - TaiKhoanController
 #nullable enable
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Controllers;
 
@@ -20,15 +19,16 @@ public class TaiKhoanController : Controller
     public TaiKhoanController(ITaiKhoanService service) => _service = service;
 
     /// <summary>
-    /// MaTaiKhoan của người đang đăng nhập, đọc từ claim "MaTaiKhoan".
-    /// Việc 12 (Đăng nhập) phải thêm claim này khi tạo phiên đăng nhập; trước đó trả null nên các rule "không tự khóa/xóa mình" tạm không áp dụng.
+    /// Mã tài khoản đang đăng nhập, trích xuất từ ClaimsPrincipal của phiên làm việc.
     /// </summary>
     private int? MaTaiKhoanHienTai
         => int.TryParse(User.FindFirst("MaTaiKhoan")?.Value, out var id) ? id : null;
 
+    // GET: /TaiKhoan
     public async Task<IActionResult> Index(string? tuKhoa, VaiTroEnum? vaiTro, bool? trangThai)
         => View(await _service.LayDanhSachAsync(tuKhoa, vaiTro, trangThai, MaTaiKhoanHienTai));
 
+    // GET: /TaiKhoan/Create
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -37,6 +37,7 @@ public class TaiKhoanController : Controller
         return View(vm);
     }
 
+    // POST: /TaiKhoan/Create
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(TaiKhoanFormViewModel vm)
     {
@@ -55,6 +56,7 @@ public class TaiKhoanController : Controller
         return View(vm);
     }
 
+    // GET: /TaiKhoan/Edit/{id}
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -65,6 +67,7 @@ public class TaiKhoanController : Controller
         return View(vm);
     }
 
+    // POST: /TaiKhoan/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, TaiKhoanFormViewModel vm)
     {
@@ -85,6 +88,7 @@ public class TaiKhoanController : Controller
         return View(vm);
     }
 
+    // POST: /TaiKhoan/DoiTrangThai/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DoiTrangThai(int id)
     {
@@ -97,6 +101,7 @@ public class TaiKhoanController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /TaiKhoan/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {

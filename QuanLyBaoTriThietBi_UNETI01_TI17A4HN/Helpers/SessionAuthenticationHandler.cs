@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Đọc Session mỗi request và dựng ClaimsPrincipal (để User/IsInRole/[Authorize] và _Layout, _Sidebar hoạt động)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - Bộ xử lý xác thực phiên làm việc SessionAuthenticationHandler
 #nullable enable
 using System.Security.Claims;
 using System.Text.Encodings.Web;

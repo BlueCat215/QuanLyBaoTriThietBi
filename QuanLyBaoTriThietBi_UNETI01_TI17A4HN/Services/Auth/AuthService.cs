@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 231030100303
-// Nội dung: Module 1 - Service đăng nhập (EF Core + LINQ): kiểm tra mật khẩu băm, chặn tài khoản khóa, khóa tạm sau nhiều lần sai, ghi nhật ký
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - AuthService
 #nullable enable
 using Microsoft.AspNetCore.Identity;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -11,11 +10,11 @@ namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 public class AuthService : IAuthService
 {
-    private const int SoLanSaiToiDa = 5;                 // theo THIETKE.md: ví dụ 5 lần
-    private const int PhutKhoaTam = 15;                  // ... khóa tạm 15 phút
+    private const int SoLanSaiToiDa = 5;                 // Ngưỡng khóa tạm chống Brute-force
+    private const int PhutKhoaTam = 15;                  // Thời gian tạm khóa tính theo phút
     private const string ThongBaoSai = "Tên đăng nhập hoặc mật khẩu không đúng.";
 
-    // Cùng thuật toán băm với DbSeeder và TaiKhoanService
+    // Thuật toán băm mật khẩu tiêu chuẩn bảo mật ASP.NET Core Identity
     private static readonly PasswordHasher<TaiKhoan> _hasher = new();
 
     private readonly IRepository<TaiKhoan> _taiKhoan;

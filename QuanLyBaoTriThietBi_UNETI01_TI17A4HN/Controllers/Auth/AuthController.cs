@@ -1,12 +1,9 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller Đăng nhập / Đăng xuất (lưu MaTaiKhoan, HoTen, VaiTro vào Session, chuyển hướng thông minh theo vai trò)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - AuthController
 #nullable enable
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
-using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 
@@ -19,21 +16,17 @@ public class AuthController : Controller
 
     public AuthController(IAuthService auth) => _auth = auth;
 
+    // GET: /Auth/DangNhap
     [HttpGet]
     public IActionResult DangNhap(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-        {
-            var vaiTroClaim = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (Enum.TryParse<VaiTroEnum>(vaiTroClaim, out var vaiTroDaDangNhap))
-                return ChuyenHuongTheoVaiTro(vaiTroDaDangNhap);
-
-            return RedirectToAction("Index", "Dashboard");
-        }
+            return RedirectToAction("Index", "Home");
 
         return View(new DangNhapViewModel { ReturnUrl = returnUrl });
     }
 
+    // POST: /Auth/DangNhap
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DangNhap(DangNhapViewModel vm)
     {
@@ -51,26 +44,21 @@ public class AuthController : Controller
 
         var phien = result.Data!;
 
-        // Xóa dữ liệu phiên cũ (nếu có) rồi ghi thông tin người dùng mới
+        // Khởi tạo phiên làm việc mới trong Session
         HttpContext.Session.Clear();
         HttpContext.Session.SetInt32(SessionKeys.MaTaiKhoan, phien.MaTaiKhoan);
         HttpContext.Session.SetString(SessionKeys.TenDangNhap, phien.TenDangNhap);
         HttpContext.Session.SetString(SessionKeys.HoTen, phien.HoTen);
         HttpContext.Session.SetString(SessionKeys.VaiTro, phien.VaiTro.ToString());
 
-        // Nếu có ReturnUrl hợp lệ và không phải trang chủ mặc định -> quay lại trang đang truy cập dở
-        if (!string.IsNullOrEmpty(vm.ReturnUrl) 
-            && Url.IsLocalUrl(vm.ReturnUrl) 
-            && !vm.ReturnUrl.Equals("/", StringComparison.OrdinalIgnoreCase)
-            && !vm.ReturnUrl.StartsWith("/Home", StringComparison.OrdinalIgnoreCase))
-        {
+        // Kiểm tra URL nội bộ phòng chống lỗ hổng Open Redirect
+        if (!string.IsNullOrEmpty(vm.ReturnUrl) && Url.IsLocalUrl(vm.ReturnUrl))
             return LocalRedirect(vm.ReturnUrl);
-        }
 
-        // Chuyển hướng tới trang khởi đầu tương ứng với từng loại tài khoản
-        return ChuyenHuongTheoVaiTro(phien.VaiTro);
+        return RedirectToAction("Index", "Home");
     }
 
+    // POST: /Auth/DangXuat
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult DangXuat()
     {
@@ -79,24 +67,11 @@ public class AuthController : Controller
         return RedirectToAction(nameof(DangNhap));
     }
 
+    // GET: /Auth/TuChoiTruyCap
     [HttpGet]
     public IActionResult TuChoiTruyCap()
     {
         Response.StatusCode = StatusCodes.Status403Forbidden;
         return View();
-    }
-
-    /// <summary>
-    /// Điều hướng tới trang chức năng chính tương ứng với quyền hạn của tài khoản
-    /// </summary>
-    private IActionResult ChuyenHuongTheoVaiTro(VaiTroEnum vaiTro)
-    {
-        return vaiTro switch
-        {
-            VaiTroEnum.Admin => RedirectToAction("Index", "Dashboard"),
-            VaiTroEnum.KyThuatVien => RedirectToAction("ViecCuaToi", "PhieuXuLy"),
-            VaiTroEnum.NguoiSuDung => RedirectToAction("Index", "ThietBi"),
-            _ => RedirectToAction("Index", "Dashboard")
-        };
     }
 }

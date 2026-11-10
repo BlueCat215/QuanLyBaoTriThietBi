@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - ViewModel danh sách Loại thiết bị (kèm số thiết bị đang dùng loại này)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - LoaiThietBiViewModels
 #nullable enable
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 

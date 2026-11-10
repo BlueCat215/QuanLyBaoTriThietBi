@@ -1,6 +1,5 @@
-// Họ tên: <điền họ tên>
-// MSSV: <điền MSSV>
-// Nội dung: Module 1 - ViewModel Tài khoản (danh sách + form Thêm/Sửa, không lộ trường mật khẩu băm)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý hệ thống & Danh mục - TaiKhoanViewModels
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
