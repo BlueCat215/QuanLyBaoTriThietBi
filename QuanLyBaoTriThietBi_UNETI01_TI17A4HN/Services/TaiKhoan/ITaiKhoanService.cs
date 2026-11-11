@@ -1,6 +1,5 @@
-// Họ tên: <điền họ tên>
-// MSSV: <điền MSSV>
-// Nội dung: Module 1 - Interface Service Tài khoản
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - ITaiKhoanService.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;

@@ -1,6 +1,5 @@
-// Họ tên: <điền họ tên>
-// MSSV: <điền MSSV>
-// Nội dung: Module 1 - Repository Tài khoản (chỉ truy vấn dữ liệu bằng LINQ)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - TaiKhoanRepository.cs
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;

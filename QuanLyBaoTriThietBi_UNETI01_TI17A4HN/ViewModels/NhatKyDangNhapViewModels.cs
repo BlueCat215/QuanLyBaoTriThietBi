@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - ViewModel tra cứu & lọc Nhật ký đăng nhập (Audit Log - NhatKyDangNhap)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - NhatKyDangNhapViewModels.cs
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;

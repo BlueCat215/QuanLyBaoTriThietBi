@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Văn Hoàng
-// MSSV: 23103100303
-// Nội dung: Module 1 - Controller CRUD Khu vực (chỉ nhận request, gọi Service, trả View)
+// Họ tên: Nguyễn Văn Hoàng - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 1: Quản lý Hệ thống & Danh mục dùng chung - KhuVucController.cs
 #nullable enable
 using Microsoft.AspNetCore.Mvc;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
@@ -19,12 +18,16 @@ public class KhuVucController : Controller
 
     public KhuVucController(IKhuVucService service) => _service = service;
 
+    // GET: /KhuVuc
+    [HttpGet]
     public async Task<IActionResult> Index(string? tuKhoa, bool? trangThai)
         => View(await _service.LayDanhSachAsync(tuKhoa, trangThai));
 
+    // GET: /KhuVuc/Create
     [HttpGet]
     public IActionResult Create() => View(new KhuVuc { TrangThai = true });
 
+    // POST: /KhuVuc/Create
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind(FieldsBind)] KhuVuc model)
     {
@@ -41,6 +44,7 @@ public class KhuVucController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // GET: /KhuVuc/Edit/{id}
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -49,6 +53,7 @@ public class KhuVucController : Controller
         return View(model);
     }
 
+    // POST: /KhuVuc/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind(FieldsBind)] KhuVuc model)
     {
@@ -66,6 +71,7 @@ public class KhuVucController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /KhuVuc/DoiTrangThai/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> DoiTrangThai(int id)
     {
@@ -78,6 +84,7 @@ public class KhuVucController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // POST: /KhuVuc/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
