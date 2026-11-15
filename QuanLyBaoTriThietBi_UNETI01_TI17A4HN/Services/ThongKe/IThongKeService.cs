@@ -10,4 +10,9 @@ public interface IThongKeService
 {
     /// Lấy báo cáo thống kê phân tích toàn diện theo bộ lọc thời gian
     Task<ThongKeIndexViewModel> LayThongKeAsync(ThongKeBoLoc boLoc);
+
+    /// <summary>
+    /// STT 61: Xuất toàn bộ báo cáo phân tích thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
+    /// </summary>
+    Task<byte[]> XuatExcelAsync(ThongKeBoLoc boLoc, string? nguoiXuat = null);
 }
