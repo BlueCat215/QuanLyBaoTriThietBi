@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Interface Repository Chi tiết xử lý (đọc chi tiết, tính tổng chi phí, hỗ trợ phân quyền và bắt đầu xử lý)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - IChiTietXuLyRepository.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
@@ -24,7 +23,7 @@ public interface IChiTietXuLyRepository : IRepository<ChiTietXuLy>
 
     Task<VatTu?> LayVatTuAsync(int maVatTu);
 
-    /// STT 58: Lấy vật tư có tracking để cập nhật trừ/hoàn tồn kho
+    /// Lấy vật tư có tracking để cập nhật trừ/hoàn tồn kho
     Task<VatTu?> LayVatTuTrackingAsync(int maVatTu);
 
     /// Vật tư đang sử dụng (giữ lại vật tư hiện tại của dòng đang sửa dù đã ngừng sử dụng).
@@ -40,7 +39,7 @@ public interface IChiTietXuLyRepository : IRepository<ChiTietXuLy>
     Task<PhieuXuLy?> LayPhieuEntityAsync(int maPhieuXuLy);
 
     /// <summary>
-    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế)
+    /// Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế)
     /// </summary>
     Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi);
 }

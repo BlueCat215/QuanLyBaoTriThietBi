@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Repository Chi tiết xử lý (LINQ: danh sách phiếu, chi tiết theo phiếu, tổng chi phí = SUM(ThanhTien), hỗ trợ phân quyền và bắt đầu xử lý)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - ChiTietXuLyRepository.cs
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;

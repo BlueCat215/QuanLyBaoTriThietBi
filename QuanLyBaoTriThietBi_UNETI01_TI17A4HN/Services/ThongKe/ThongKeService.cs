@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - Service Báo cáo thống kê (SST 45: LINQ GroupBy đa chiều & STT 61: Xuất Excel chuẩn hóa)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Báo cáo Thống kê đa chiều - ThongKeService.cs
 #nullable enable
 using ClosedXML.Excel;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
@@ -263,7 +262,7 @@ public class ThongKeService : IThongKeService
     }
 
     /// <summary>
-    /// STT 61: Xuất báo cáo thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
+    /// Xuất báo cáo thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
     /// Tích hợp đầy đủ các sheet: Chi phí 12 tháng, Theo Loại thiết bị, Theo Khu vực, Hiệu suất KTV, Top thiết bị sự cố & chi phí
     /// </summary>
     public async Task<byte[]> XuatExcelAsync(ThongKeBoLoc boLoc, string? nguoiXuat = null)

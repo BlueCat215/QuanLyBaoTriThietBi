@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Service Chi tiết xử lý (STT 39: Bắt đầu xử lý, cập nhật ChiTietXuLy; STT 58: Tự động trừ/hoàn tồn kho và snapshot tên vật tư bảo toàn lịch sử)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - ChiTietXuLyService.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
@@ -16,7 +15,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
 
     public ChiTietXuLyService(IChiTietXuLyRepository repo) => _repo = repo;
 
-    // ---------------------------------------------------------------- ĐỌC
+    // Đọc
 
     public async Task<ChiTietXuLyPhieuListViewModel> LayDanhSachPhieuAsync(
         TrangThaiPhieuXuLyEnum? trangThai
@@ -106,9 +105,9 @@ public class ChiTietXuLyService : IChiTietXuLyService
         vm.VatTuOptions = await _repo.LayVatTuChoChonAsync(vm.MaVatTu);
     }
 
-    // ---------------------------------------------------------------- GHI
+    // Ghi
 
-    /// STT 39: Thêm dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
+    /// Thêm dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
     public async Task<ServiceResult> ThemAsync(
         ChiTietXuLyFormViewModel vm,
         int? maTaiKhoanDangNhap = null,
@@ -131,7 +130,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         if (!loi.Succeeded)
             return loi;
 
-        // STT 58: Tích hợp xuất kho vật tư và Snapshot bảo toàn lịch sử
+        // Tích hợp xuất kho vật tư và Snapshot bảo toàn lịch sử
         if (vm.MaVatTu.HasValue && vm.SoLuong.HasValue && vm.SoLuong.Value > 0)
         {
             var vt = await _repo.LayVatTuTrackingAsync(vm.MaVatTu.Value);
@@ -166,7 +165,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         return ServiceResult.Ok();
     }
 
-    /// STT 39: Sửa dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
+    /// Sửa dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
     public async Task<ServiceResult> SuaAsync(
         ChiTietXuLyFormViewModel vm,
         int? maTaiKhoanDangNhap = null,
@@ -196,7 +195,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         if (!loi.Succeeded)
             return loi;
 
-        // STT 58: Xử lý điều chỉnh xuất / hoàn kho khi cập nhật bước xử lý
+        // Xử lý điều chỉnh xuất / hoàn kho khi cập nhật bước xử lý
         if (ct.MaVatTu == vm.MaVatTu)
         {
             if (vm.MaVatTu.HasValue)
@@ -257,7 +256,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         return ServiceResult.Ok();
     }
 
-    /// STT 39: Xóa dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
+    /// Xóa dòng chi tiết (chỉ KTV đang được phân công hoặc Admin; phiếu phải ở Đang xử lý)
     public async Task<ServiceResult<int>> XoaAsync(
         int maChiTiet,
         int? maTaiKhoanDangNhap = null,
@@ -279,7 +278,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         if (!phieu.ChoPhepGhiChiTiet)
             return ServiceResult<int>.Fail(LyDoKhongGhiDuoc(phieu));
 
-        // STT 58: Hoàn lại số lượng tồn kho khi xóa dòng chi tiết xử lý
+        // Hoàn lại số lượng tồn kho khi xóa dòng chi tiết xử lý
         if (ct.MaVatTu.HasValue && ct.SoLuong.HasValue && ct.SoLuong.Value > 0)
         {
             var vt = await _repo.LayVatTuTrackingAsync(ct.MaVatTu.Value);
@@ -296,7 +295,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
     }
 
     /// <summary>
-    /// STT 39: Bắt đầu xử lý (chỉ KTV đang được phân công hoặc Admin)
+    /// Bắt đầu xử lý (chỉ KTV đang được phân công hoặc Admin)
     /// Ghi nhận NgayBatDau, chuyển phiếu sang Đang xử lý, cập nhật trạng thái nguồn và thiết bị.
     /// </summary>
     public async Task<ServiceResult> BatDauXuLyAsync(
@@ -373,7 +372,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
     }
 
     /// <summary>
-    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ; chỉ KTV đang phân công hoặc Admin)
+    /// Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ; chỉ KTV đang phân công hoặc Admin)
     /// </summary>
     public async Task<ServiceResult> ChuyenChoNghiemThuAsync(
         ChuyenChoNghiemThuViewModel model,
@@ -431,7 +430,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
     }
 
     /// <summary>
-    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; TongChiPhi hệ thống tính)
+    /// Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; TongChiPhi hệ thống tính)
     /// </summary>
     public async Task<ServiceResult> NghiemThuAsync(
         NghiemThuPhieuViewModel model,
@@ -457,7 +456,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
 
         if (model.Dat)
         {
-            // --- NGHIỆM THU ĐẠT ---
+            // NGHIỆM THU ĐẠT
             var ngayHt = model.NgayHoanThanh ?? DateTime.Now;
             if (ngayHt > DateTime.Now.AddMinutes(5))
                 return ServiceResult.Fail("Ngày hoàn thành thực tế không được ở trong tương lai.", nameof(model.NgayHoanThanh));
@@ -513,7 +512,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         }
         else
         {
-            // --- NGHIỆM THU CHƯA ĐẠT ---
+            // NGHIỆM THU CHƯA ĐẠT
             if (string.IsNullOrWhiteSpace(model.NhanXetNghiemThu))
                 return ServiceResult.Fail("Vui lòng nhập lý do chưa đạt / yêu cầu xử lý lại để kỹ thuật viên khắc phục.", nameof(model.NhanXetNghiemThu));
 
@@ -538,7 +537,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         return ServiceResult.Ok();
     }
 
-    // ---------------------------------------------------------------- NỘI BỘ
+    // Nội bộ
 
     private async Task<bool> LaKtvPhuTrachAsync(int maPhieuXuLy, int? maTaiKhoanDangNhap)
     {
@@ -589,7 +588,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
         vm.GhiChu = string.IsNullOrWhiteSpace(vm.GhiChu) ? null : vm.GhiChu.Trim();
     }
 
-    /// STT 39: ThanhTien = SoLuong x DonGia do hệ thống tính, khớp CK_ChiTiet_ThanhTien trong DB.
+    /// ThanhTien = SoLuong x DonGia do hệ thống tính, khớp CK_ChiTiet_ThanhTien trong DB.
     private static decimal? TinhThanhTien(int? soLuong, decimal? donGia) =>
         soLuong is { } sl && donGia is { } dg ? decimal.Round(sl * dg, 2) : null;
 
@@ -646,7 +645,7 @@ public class ChiTietXuLyService : IChiTietXuLyService
     }
 
     /// <summary>
-    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
+    /// Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
     /// </summary>
     public Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi) =>
         _repo.LayLichSuThietBiAsync(maThietBi);

@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Chi tiết xử lý (danh sách phiếu, chi tiết theo phiếu, form Thêm/Sửa, bắt đầu xử lý, chuyển chờ nghiệm thu & nghiệm thu)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - ChiTietXuLyViewModels.cs
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -130,7 +129,7 @@ public class ChiTietXuLyFormViewModel
     public bool LaAdmin { get; set; }
     public bool LaKtvPhuTrach { get; set; }
 
-    // ---- Chỉ để hiển thị, không bind từ form ----
+    // Chỉ để hiển thị, không bind từ form
     [BindNever, ValidateNever]
     public PhieuTomTat? Phieu { get; set; }
 
@@ -139,7 +138,7 @@ public class ChiTietXuLyFormViewModel
 }
 
 /// <summary>
-/// STT 40: Form chuyển phiếu sang Chờ nghiệm thu (yêu cầu bắt buộc có KetQuaXuLy)
+/// Form chuyển phiếu sang Chờ nghiệm thu (yêu cầu bắt buộc có KetQuaXuLy)
 /// </summary>
 public class ChuyenChoNghiemThuViewModel
 {
@@ -152,7 +151,7 @@ public class ChuyenChoNghiemThuViewModel
 }
 
 /// <summary>
-/// STT 40: Form Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý)
+/// Form Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý)
 /// </summary>
 public class NghiemThuPhieuViewModel
 {

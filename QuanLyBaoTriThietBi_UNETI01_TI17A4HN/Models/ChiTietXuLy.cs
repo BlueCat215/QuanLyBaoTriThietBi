@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - STT 8, 20, 39: Entity Chi tiết xử lý và linh kiện vật tư thay thế
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - ChiTietXuLy.cs
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

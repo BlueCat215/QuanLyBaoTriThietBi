@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - STT 57: Triển khai Repository Quản lý kho vật tư
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Quản lý Kho vật tư - VatTuRepository.cs
 #nullable enable
 using Microsoft.EntityFrameworkCore;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Data;

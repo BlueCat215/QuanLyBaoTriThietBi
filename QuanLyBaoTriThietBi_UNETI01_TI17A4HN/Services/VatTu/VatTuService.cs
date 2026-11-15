@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - STT 57: Triển khai Service Quản lý kho vật tư (CRUD, validation, cảnh báo tồn kho, xuất Excel)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Quản lý Kho vật tư - VatTuService.cs
 #nullable enable
 using ClosedXML.Excel;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;

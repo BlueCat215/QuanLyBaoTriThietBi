@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Interface Repository Báo cáo thống kê
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Báo cáo Thống kê đa chiều - IThongKeRepository.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models;
 

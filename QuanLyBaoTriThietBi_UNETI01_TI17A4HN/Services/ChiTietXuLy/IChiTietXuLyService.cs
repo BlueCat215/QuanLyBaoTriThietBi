@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Interface Service Chi tiết xử lý (CRUD chi tiết, tính tổng chi phí, Bắt đầu xử lý, Chuyển chờ nghiệm thu & Nghiệm thu phiếu)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - IChiTietXuLyService.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
@@ -34,23 +33,23 @@ public interface IChiTietXuLyService
     Task<ServiceResult<int>> XoaAsync(int maChiTiet, int? maTaiKhoanDangNhap = null, bool laAdmin = false);
 
     /// <summary>
-    /// STT 39: Bắt đầu xử lý (chỉ KTV đang được phân công hoặc Admin)
+    /// Bắt đầu xử lý (chỉ KTV đang được phân công hoặc Admin)
     /// Ghi NgayBatDau, chuyển phiếu sang Đang xử lý, cập nhật trạng thái nguồn và thiết bị.
     /// </summary>
     Task<ServiceResult> BatDauXuLyAsync(int maPhieuXuLy, int? maTaiKhoanDangNhap, bool laAdmin);
 
     /// <summary>
-    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ, chỉ KTV phụ trách hoặc Admin)
+    /// Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ, chỉ KTV phụ trách hoặc Admin)
     /// </summary>
     Task<ServiceResult> ChuyenChoNghiemThuAsync(ChuyenChoNghiemThuViewModel model, int? maTaiKhoanDangNhap, bool laAdmin);
 
     /// <summary>
-    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
+    /// Nghiệm thu phiếu (Đạt -> Hoàn thành + NgayHoanThanh; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
     /// </summary>
     Task<ServiceResult> NghiemThuAsync(NghiemThuPhieuViewModel model, int? maTaiKhoanDangNhap, bool laAdmin);
 
     /// <summary>
-    /// STT 41: Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
+    /// Lấy toàn bộ lịch sử thiết bị (kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí, ngày hoàn thành)
     /// </summary>
     Task<LichSuThietBiViewModel?> LayLichSuThietBiAsync(int maThietBi);
 }

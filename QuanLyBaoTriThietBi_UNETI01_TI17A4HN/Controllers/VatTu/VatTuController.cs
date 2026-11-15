@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - STT 57: Controller Quản lý danh mục Kho vật tư (CRUD, tìm kiếm, lọc cảnh báo tồn kho, xuất Excel)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Quản lý Kho vật tư - VatTuController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +21,8 @@ public class VatTuController : Controller
 
     private bool LaAdmin => User.IsInRole("Admin");
 
-    // ==========================================
     // 1. DANH SÁCH & BỘ LỌC
-    // ==========================================
+    // GET: /VatTu/Index
     [HttpGet]
     public async Task<IActionResult> Index([FromQuery] VatTuFilterViewModel filter)
     {
@@ -32,9 +30,8 @@ public class VatTuController : Controller
         return View(vm);
     }
 
-    // ==========================================
     // 2. THÊM MỚI VẬT TƯ (Chỉ Admin)
-    // ==========================================
+    // GET: /VatTu/Create
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public IActionResult Create()
@@ -66,9 +63,8 @@ public class VatTuController : Controller
         return View(vm);
     }
 
-    // ==========================================
     // 3. CẬP NHẬT VẬT TƯ (Chỉ Admin)
-    // ==========================================
+    // GET: /VatTu/Edit/{id}
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
@@ -105,9 +101,7 @@ public class VatTuController : Controller
         return View(vm);
     }
 
-    // ==========================================
     // 4. BẬT / TẮT TRẠNG THÁI SỬ DỤNG (Chỉ Admin)
-    // ==========================================
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
@@ -126,9 +120,7 @@ public class VatTuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ==========================================
     // 5. XÓA VẬT TƯ (Chỉ Admin - Có kiểm tra an toàn)
-    // ==========================================
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [ValidateAntiForgeryToken]
@@ -147,9 +139,8 @@ public class VatTuController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ==========================================
-    // 6. XUẤT EXCEL DANH SÁCH KHO VẬT TƯ (STT 61)
-    // ==========================================
+    // 6. XUẤT EXCEL DANH SÁCH KHO VẬT TƯ
+    // GET: /VatTu/XuatExcel
     [HttpGet]
     public async Task<IActionResult> XuatExcel([FromQuery] VatTuFilterViewModel filter)
     {

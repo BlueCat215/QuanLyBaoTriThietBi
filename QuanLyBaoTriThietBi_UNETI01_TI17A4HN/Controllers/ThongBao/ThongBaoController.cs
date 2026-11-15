@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn - Nguyễn Khắc Hiếu
-// MSSV: 23103100207 - 23103100225
-// Nội dung: Module 3 & 5 - STT 59: Controller Thông báo nội bộ (In-App Notification Bell & AJAX)
+// Họ tên: Phạm Việt Hoàn - Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3 & 5: Hệ thống Thông báo nội bộ - ThongBaoController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +25,7 @@ public class ThongBaoController : Controller
         }
     }
 
-    /// AJAX: Lấy số lượng thông báo chưa đọc để cập nhật badge đỏ trên chuông
+    // GET: /ThongBao/SoChuaDoc (AJAX)
     [HttpGet]
     public async Task<IActionResult> SoChuaDoc()
     {
@@ -37,7 +36,7 @@ public class ThongBaoController : Controller
         return Json(new { count = vm.SoChuaDoc });
     }
 
-    /// AJAX: Lấy danh sách thông báo nhanh khi người dùng click mở dropdown chuông
+    // GET: /ThongBao/DanhSachNhanh (AJAX)
     [HttpGet]
     public async Task<IActionResult> DanhSachNhanh()
     {
@@ -52,7 +51,7 @@ public class ThongBaoController : Controller
         });
     }
 
-    /// AJAX: Đánh dấu một thông báo là đã đọc
+    // POST: /ThongBao/DanhDauDaDoc (AJAX)
     [HttpPost]
     public async Task<IActionResult> DanhDauDaDoc(int id)
     {
@@ -63,7 +62,7 @@ public class ThongBaoController : Controller
         return Json(new { success = ok });
     }
 
-    /// AJAX: Đánh dấu tất cả thông báo của tài khoản là đã đọc
+    // POST: /ThongBao/DanhDauTatCaDaDoc (AJAX)
     [HttpPost]
     public async Task<IActionResult> DanhDauTatCaDaDoc()
     {
@@ -74,7 +73,7 @@ public class ThongBaoController : Controller
         return Json(new { success = true, count });
     }
 
-    /// Trang danh sách đầy đủ toàn bộ thông báo (/ThongBao/Index)
+    // GET: /ThongBao/Index
     [HttpGet]
     public async Task<IActionResult> Index(bool? chiChuaDoc, int trang = 1)
     {

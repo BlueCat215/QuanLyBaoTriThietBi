@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Dashboard (SST 44: 8 chỉ số thống kê tổng quan + danh sách cảnh báo nghiệp vụ)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Dashboard Tổng quan - DashboardViewModel.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 
@@ -36,10 +35,10 @@ public record BaoCaoChoXuLyItem(
 
 public class DashboardViewModel
 {
-    /// true = số liệu đang là dữ liệu tạm (khung giao diện, việc 21); false khi đã nối số liệu thật (việc 44).
+    /// true = số liệu đang là dữ liệu tạm (khung giao diện, việc 21); false khi đã nối số liệu thật .
     public bool LaDuLieuMinhHoa { get; set; }
 
-    // ---- 8 chỉ số theo yêu cầu (việc 44) ----
+    // 8 chỉ số theo yêu cầu 
 
     /// 1. Tổng số thiết bị.
     public int TongThietBi { get; set; }
@@ -67,7 +66,7 @@ public class DashboardViewModel
     public int Thang { get; set; }
     public int Nam { get; set; }
 
-    // ---- Danh sách hành động nhanh cho Quản trị viên ----
+    // Danh sách hành động nhanh cho Quản trị viên
 
     /// Thiết bị quá hạn hoặc sắp đến hạn cần lập kế hoạch bảo trì
     public List<ThietBiCanBaoTriItem> ThietBiCanBaoTri { get; set; } = new();

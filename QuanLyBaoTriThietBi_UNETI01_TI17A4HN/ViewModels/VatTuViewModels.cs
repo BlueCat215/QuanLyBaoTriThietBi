@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - STT 57 & STT 58: ViewModel Quản lý danh mục Kho vật tư và Tích hợp xuất kho bảo toàn lịch sử
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Quản lý Kho vật tư - VatTuViewModels.cs
 #nullable enable
 using System.ComponentModel.DataAnnotations;
 
