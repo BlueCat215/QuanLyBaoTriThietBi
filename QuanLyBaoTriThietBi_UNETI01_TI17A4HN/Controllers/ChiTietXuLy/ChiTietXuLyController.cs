@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Controller CRUD Chi tiết xử lý và Bắt đầu xử lý (STT 39: chỉ KTV đang được phân công hoặc Admin)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Chi tiết xử lý & Nghiệm thu - ChiTietXuLyController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,10 +22,14 @@ public class ChiTietXuLyController : Controller
     private int? MaTaiKhoanDangNhap => int.TryParse(User.FindFirst("MaTaiKhoan")?.Value, out var id) ? id : null;
 
     /// Danh sách phiếu xử lý để chọn phiếu cần xem/nhập chi tiết.
+    // GET: /ChiTietXuLy/Index?trangThai=
+    [HttpGet]
     public async Task<IActionResult> Index(TrangThaiPhieuXuLyEnum? trangThai) =>
         View(await _service.LayDanhSachPhieuAsync(trangThai));
 
     /// Chi tiết xử lý của 1 phiếu + tổng chi phí.
+    // GET: /ChiTietXuLy/TheoPhieu?maPhieu={maPhieu}
+    [HttpGet]
     public async Task<IActionResult> TheoPhieu(int maPhieu)
     {
         var vm = await _service.LayTheoPhieuAsync(maPhieu, MaTaiKhoanDangNhap, LaAdmin);
@@ -36,9 +39,10 @@ public class ChiTietXuLyController : Controller
     }
 
     /// <summary>
-    /// STT 39: Bắt đầu xử lý phiếu (chỉ KTV đang được phân công hoặc Admin)
+    /// Bắt đầu xử lý phiếu (chỉ KTV đang được phân công hoặc Admin)
     /// Ghi nhận NgayBatDau, chuyển phiếu sang Đang xử lý
     /// </summary>
+    // POST: /ChiTietXuLy/BatDauXuLy
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> BatDauXuLy(int maPhieuXuLy)
     {
@@ -55,8 +59,9 @@ public class ChiTietXuLyController : Controller
     }
 
     /// <summary>
-    /// STT 40: Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ)
+    /// Chuyển phiếu sang Chờ nghiệm thu (yêu cầu có KetQuaXuLy hợp lệ)
     /// </summary>
+    // POST: /ChiTietXuLy/ChuyenChoNghiemThu
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ChuyenChoNghiemThu(ChuyenChoNghiemThuViewModel model)
     {
@@ -79,8 +84,9 @@ public class ChiTietXuLyController : Controller
     }
 
     /// <summary>
-    /// STT 40: Nghiệm thu phiếu (Đạt -> Hoàn thành; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
+    /// Nghiệm thu phiếu (Đạt -> Hoàn thành; Chưa đạt -> trả về Đang xử lý; chỉ Admin)
     /// </summary>
+    // POST: /ChiTietXuLy/NghiemThu
     [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> NghiemThu(NghiemThuPhieuViewModel model)
@@ -99,6 +105,7 @@ public class ChiTietXuLyController : Controller
         return RedirectToAction(nameof(TheoPhieu), new { maPhieu = model.MaPhieuXuLy });
     }
 
+    // GET: /ChiTietXuLy/Create?maPhieu={maPhieu}
     [HttpGet]
     public async Task<IActionResult> Create(int maPhieu)
     {
@@ -120,6 +127,7 @@ public class ChiTietXuLyController : Controller
         return View(vm);
     }
 
+    // POST: /ChiTietXuLy/Create
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ChiTietXuLyFormViewModel vm)
     {
@@ -140,6 +148,7 @@ public class ChiTietXuLyController : Controller
         return View(vm);
     }
 
+    // GET: /ChiTietXuLy/Edit/{id}
     [HttpGet]
     public async Task<IActionResult> Edit(int id)
     {
@@ -161,6 +170,7 @@ public class ChiTietXuLyController : Controller
         return View(vm);
     }
 
+    // POST: /ChiTietXuLy/Edit/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, ChiTietXuLyFormViewModel vm)
     {
@@ -187,6 +197,7 @@ public class ChiTietXuLyController : Controller
         return View(vm);
     }
 
+    // POST: /ChiTietXuLy/Delete/{id}
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id, int maPhieu)
     {
@@ -202,8 +213,9 @@ public class ChiTietXuLyController : Controller
     }
 
     /// <summary>
-    /// STT 41: Lịch sử thiết bị - hiển thị toàn diện kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế
+    /// Lịch sử thiết bị - hiển thị toàn diện kế hoạch bảo trì, sự cố, phiếu xử lý, KTV đã phụ trách, chi phí lũy kế
     /// </summary>
+    // GET: /ChiTietXuLy/LichSuThietBi/{id}
     [HttpGet]
     public async Task<IActionResult> LichSuThietBi(int id)
     {

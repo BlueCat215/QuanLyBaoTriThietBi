@@ -1,6 +1,5 @@
-// Họ tên: Phạm Việt Hoàn - Nguyễn Khắc Hiếu
-// MSSV: 23103100207 - 23103100225
-// Nội dung: Module 3 & 5 - STT 59: ViewModel Hệ thống thông báo nội bộ (In-App Notification Bell)
+// Họ tên: Phạm Việt Hoàn - Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 3 & 5: Hệ thống Thông báo nội bộ - ThongBaoViewModels.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 

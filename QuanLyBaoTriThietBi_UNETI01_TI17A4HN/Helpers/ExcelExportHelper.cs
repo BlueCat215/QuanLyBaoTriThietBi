@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: STT 61 - Hạ tầng Xuất dữ liệu Excel chuẩn hóa (Excel Export Engine) dùng ClosedXML
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Hạ tầng Xuất Excel chuẩn hóa - ExcelExportHelper.cs
 #nullable enable
 using System.Globalization;
 using ClosedXML.Excel;

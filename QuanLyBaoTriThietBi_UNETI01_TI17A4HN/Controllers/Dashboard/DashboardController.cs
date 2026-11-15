@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Controller Dashboard (SST 44: hiển thị số liệu thật, hỗ trợ lọc tháng chi phí)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Dashboard Tổng quan - DashboardController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +15,8 @@ public class DashboardController : Controller
 
     public DashboardController(IDashboardService service) => _service = service;
 
+    // GET: /Dashboard/Index
+    [HttpGet]
     public async Task<IActionResult> Index(int? thang, int? nam)
     {
         var vm = await _service.LayThongKeAsync(thang, nam);

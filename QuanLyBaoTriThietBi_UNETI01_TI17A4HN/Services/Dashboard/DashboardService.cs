@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Service Dashboard (SST 44: số liệu thật từ Repository - 8 chỉ số tổng quan + danh sách hành động)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Dashboard Tổng quan - DashboardService.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
@@ -10,7 +9,7 @@ using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels;
 namespace QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Services;
 
 /// <summary>
-/// SST 44: Xử lý logic Dashboard dựa trên số liệu từ IDashboardRepository.
+/// Xử lý logic Dashboard dựa trên số liệu từ IDashboardRepository.
 /// NgayBaoTriTiepTheo là [NotMapped] nên tính bằng UiHelper.PhanLoaiHanBaoTri.
 /// LaDuLieuMinhHoa = false.
 /// </summary>
@@ -26,13 +25,13 @@ public class DashboardService : IDashboardService
         int targetThang = (thang is >= 1 and <= 12) ? thang.Value : homNay.Month;
         int targetNam = (nam is >= 2000 and <= 2100) ? nam.Value : homNay.Year;
 
-        // ---- 1 + 2: Tổng thiết bị và phân loại theo tình trạng ----
+        // 1 + 2: Tổng thiết bị và phân loại theo tình trạng
         var thietBiList = await _repo.LayDanhSachThietBiAsync();
 
         var tinhTrangDict = Enum.GetValues<TinhTrangThietBiEnum>()
             .ToDictionary(v => v, v => thietBiList.Count(tb => tb.TinhTrang == v));
 
-        // ---- 3 + 4: Sắp đến hạn / Quá hạn bảo trì ----
+        // 3 + 4: Sắp đến hạn / Quá hạn bảo trì
         // Thiết bị Ngừng sử dụng không tính hạn bảo trì (theo TrangThaiHanBaoTri? của entity ThietBi)
         var thietBiCanTinhHan = thietBiList
             .Where(tb => tb.TinhTrang != TinhTrangThietBiEnum.NgungSuDung)
@@ -76,19 +75,19 @@ public class DashboardService : IDashboardService
             ))
             .ToList();
 
-        // ---- 5: Kế hoạch bảo trì chờ thực hiện ----
+        // 5: Kế hoạch bảo trì chờ thực hiện
         int keHoachChoThucHien = await _repo.DemKeHoachChoThucHienAsync();
 
-        // ---- 6: Báo cáo sự cố theo trạng thái ----
+        // 6: Báo cáo sự cố theo trạng thái
         var suCoDict = await _repo.DemBaoCaoSuCoTheoTrangThaiAsync();
 
         // Danh sách sự cố mới / đã tiếp nhận đang chờ xử lý
         var suCoMoiCanXuLy = await _repo.LayBaoCaoChoXuLyAsync(5);
 
-        // ---- 7: Phiếu xử lý theo trạng thái ----
+        // 7: Phiếu xử lý theo trạng thái
         var phieuDict = await _repo.DemPhieuXuLyTheoTrangThaiAsync();
 
-        // ---- 8: Tổng chi phí tháng được chọn (bỏ qua các phiếu đã hủy) ----
+        // 8: Tổng chi phí tháng được chọn (bỏ qua các phiếu đã hủy)
         decimal tongChiPhiThang = await _repo.TinhTongChiPhiThangAsync(targetThang, targetNam);
 
         return new DashboardViewModel

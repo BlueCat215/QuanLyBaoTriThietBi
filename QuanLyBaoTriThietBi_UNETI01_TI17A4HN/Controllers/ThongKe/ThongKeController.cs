@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: 23103100225
-// Nội dung: Module 5 - Controller Báo cáo thống kê (SST 45: mục 9.8 - Phân quyền Admin, thống kê đa chiều theo LINQ; STT 61: Xuất Excel chuẩn hóa)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Báo cáo Thống kê đa chiều - ThongKeController.cs
 #nullable enable
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +16,7 @@ public class ThongKeController : Controller
 
     public ThongKeController(IThongKeService service) => _service = service;
 
+    // GET: /ThongKe/Index
     [HttpGet]
     public async Task<IActionResult> Index(ThongKeBoLoc boLoc)
     {
@@ -32,8 +32,9 @@ public class ThongKeController : Controller
     }
 
     /// <summary>
-    /// STT 61: Xuất toàn bộ báo cáo phân tích thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
+    /// Xuất toàn bộ báo cáo phân tích thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
     /// </summary>
+    // GET: /ThongKe/XuatExcel
     [HttpGet]
     public async Task<IActionResult> XuatExcel([FromQuery] ThongKeBoLoc boLoc)
     {

@@ -1,6 +1,5 @@
-// Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - ViewModel Báo cáo thống kê (SST 45: LINQ GroupBy theo loại, khu vực, mức độ, KTV, chi phí & hiệu suất)
+// Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01
+// Module 5: Báo cáo Thống kê đa chiều - ThongKeViewModels.cs
 #nullable enable
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 

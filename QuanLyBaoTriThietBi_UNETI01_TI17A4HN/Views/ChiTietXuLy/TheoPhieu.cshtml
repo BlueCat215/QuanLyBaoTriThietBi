@@ -1,4 +1,5 @@
-@* Họ tên: Nguyễn Khắc Hiếu | MSSV: <23103100225> | Nội dung: Module 5 - Danh sách chi tiết xử lý + Bắt đầu xử lý (STT 39) + Chuyển Chờ nghiệm thu & Nghiệm thu phiếu (STT 40) *@
+@* Họ tên: Nguyễn Khắc Hiếu - Lớp: TI17A4HN - Nhóm: UNETI01 *@
+@* Module 5: Chi tiết xử lý & Nghiệm thu - TheoPhieu.cshtml *@
 @using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums
 @model QuanLyBaoTriThietBi_UNETI01_TI17A4HN.ViewModels.ChiTietXuLyIndexViewModel
 @{
@@ -35,7 +36,7 @@
             <span class="material-symbols-outlined icon-20">description</span> Xem Phiếu @UiHelper.Ma("PX", phieu.MaPhieuXuLy)
         </a>
 
-        @* STT 39: Bắt đầu xử lý *@
+        @* Bắt đầu xử lý *@
         @if (Model.CoTheBatDauXuLy)
         {
             <form asp-action="BatDauXuLy" method="post" class="d-inline">
@@ -55,7 +56,7 @@
             </a>
         }
 
-        @* STT 40: Chuyển Chờ nghiệm thu *@
+        @* Chuyển Chờ nghiệm thu *@
         @if (Model.CoTheChuyenNghiemThu)
         {
             <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalChuyenNghiemThu">
@@ -63,7 +64,7 @@
             </button>
         }
 
-        @* STT 40: Nghiệm thu phiếu (Admin) *@
+        @* Nghiệm thu phiếu (Admin) *@
         @if (Model.CoTheNghiemThu)
         {
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNghiemThu">
@@ -104,7 +105,7 @@
     </div>
 </div>
 
-@* Banner kích hoạt Bắt đầu xử lý (STT 39) *@
+@* Banner kích hoạt Bắt đầu xử lý *@
 @if (Model.CoTheBatDauXuLy)
 {
     <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3">
@@ -126,7 +127,7 @@
         </form>
     </div>
 }
-@* Banner Chờ nghiệm thu (STT 40) *@
+@* Banner Chờ nghiệm thu *@
 else if (phieu.TrangThai == TrangThaiPhieuXuLyEnum.ChoNghiemThu)
 {
     <div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-3">
@@ -331,7 +332,7 @@ else
     </div>
 </div>
 
-@* STT 40: Modal Chuyển Chờ Nghiệm Thu *@
+@* Modal Chuyển Chờ Nghiệm Thu *@
 @if (Model.CoTheChuyenNghiemThu)
 {
     <div class="modal fade" id="modalChuyenNghiemThu" tabindex="-1" aria-labelledby="modalChuyenNghiemThuTitle" aria-hidden="true">
@@ -377,7 +378,7 @@ else
     </div>
 }
 
-@* STT 40: Modal Nghiệm Thu Phiếu (Admin) *@
+@* Modal Nghiệm Thu Phiếu (Admin) *@
 @if (Model.CoTheNghiemThu)
 {
     <div class="modal fade" id="modalNghiemThu" tabindex="-1" aria-labelledby="modalNghiemThuTitle" aria-hidden="true">
