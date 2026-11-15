@@ -1,7 +1,8 @@
 // Họ tên: Nguyễn Khắc Hiếu
-// MSSV: <23103100225>
-// Nội dung: Module 5 - Service Báo cáo thống kê (SST 45: LINQ GroupBy theo loại, khu vực, mức độ, KTV, chi phí & thời gian xử lý)
+// MSSV: 23103100225
+// Nội dung: Module 5 - Service Báo cáo thống kê (SST 45: LINQ GroupBy đa chiều & STT 61: Xuất Excel chuẩn hóa)
 #nullable enable
+using ClosedXML.Excel;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Helpers;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Models.Enums;
 using QuanLyBaoTriThietBi_UNETI01_TI17A4HN.Repositories;
@@ -259,5 +260,143 @@ public class ThongKeService : IThongKeService
             TopThietBiTonChiPhi = topChiPhi,
             ChiPhi12Thang = chiPhi12Thang
         };
+    }
+
+    /// <summary>
+    /// STT 61: Xuất báo cáo thống kê đa chiều ra tệp Excel (.xlsx) chuẩn hóa
+    /// Tích hợp đầy đủ các sheet: Chi phí 12 tháng, Theo Loại thiết bị, Theo Khu vực, Hiệu suất KTV, Top thiết bị sự cố & chi phí
+    /// </summary>
+    public async Task<byte[]> XuatExcelAsync(ThongKeBoLoc boLoc, string? nguoiXuat = null)
+    {
+        var vm = await LayThongKeAsync(boLoc);
+        var namText = boLoc.CoBoLocKhoangNgay
+            ? $"Từ {boLoc.TuNgay:dd/MM/yyyy} đến {boLoc.DenNgay:dd/MM/yyyy}"
+            : $"Năm {boLoc.Nam ?? DateTime.Today.Year}";
+
+        using var workbook = new XLWorkbook();
+
+        // Sheet 1: Chi phí 12 tháng
+        var colChiPhiThang = new List<ExcelColumn<ChiPhiTheoThangItem>>
+        {
+            new("Tháng", c => $"Tháng {c.Thang}/{c.Nam}", alignment: XLAlignmentHorizontalValues.Center, width: 16),
+            new("Số phiếu xử lý phát sinh", c => c.SoPhieuPhatSinh, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 26),
+            new("Tổng chi phí bảo trì & sửa chữa", c => c.TongChiPhi, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 32)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "ChiPhi_12Thang",
+            $"BÁO CÁO TỔNG HỢP CHI PHÍ BẢO TRÌ THEO THÁNG ({namText})",
+            vm.ChiPhi12Thang,
+            colChiPhiThang,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        // Sheet 2: Theo Loại thiết bị
+        var colLoai = new List<ExcelColumn<ThongKeNhomItem>>
+        {
+            new("Tên loại thiết bị", x => x.TenNhom, width: 28),
+            new("Số thiết bị", x => x.SoThietBi, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 16),
+            new("Số sự cố phát sinh", x => x.SoSuCo, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Số kế hoạch bảo trì", x => x.SoKeHoach, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Số phiếu xử lý", x => x.SoPhieuXuLy, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Tổng chi phí", x => x.TongChiPhi, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 24)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "Theo_LoaiThietBi",
+            $"THỐNG KÊ HOẠT ĐỘNG BẢO TRÌ THEO LOẠI THIẾT BỊ ({namText})",
+            vm.TheoLoaiThietBi,
+            colLoai,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        // Sheet 3: Theo Khu vực
+        var colKhuVuc = new List<ExcelColumn<ThongKeNhomItem>>
+        {
+            new("Tên khu vực / Phòng ban", x => x.TenNhom, width: 28),
+            new("Số thiết bị", x => x.SoThietBi, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 16),
+            new("Số sự cố phát sinh", x => x.SoSuCo, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Số kế hoạch bảo trì", x => x.SoKeHoach, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Số phiếu xử lý", x => x.SoPhieuXuLy, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Tổng chi phí", x => x.TongChiPhi, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 24)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "Theo_KhuVuc",
+            $"THỐNG KÊ HOẠT ĐỘNG BẢO TRÌ THEO KHU VỰC VẬN HÀNH ({namText})",
+            vm.TheoKhuVuc,
+            colKhuVuc,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        // Sheet 4: Hiệu suất Kỹ thuật viên
+        var colKtv = new List<ExcelColumn<ThongKeKtvItem>>
+        {
+            new("Kỹ thuật viên", x => x.TenKyThuatVien, width: 26),
+            new("Chuyên môn", x => x.ChuyenMon ?? "—", width: 22),
+            new("Số điện thoại", x => x.SoDienThoai ?? "—", alignment: XLAlignmentHorizontalValues.Center, width: 16),
+            new("Tổng phiếu phụ trách", x => x.TongPhieuPhuTrach, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 22),
+            new("Phiếu hoàn thành", x => x.SoPhieuHoanThanh, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Phiếu đang xử lý", x => x.SoPhieuDangXuLy, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("TG xử lý TB (giờ)", x => x.ThoiGianXuLyTrungBinhGio, numberFormat: "#,##0.0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Tổng chi phí vật tư", x => x.TongChiPhiVatTu, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 24)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "HieuSuat_KTV",
+            $"BÁO CÁO ĐÁNH GIÁ HIỆU SUẤT LÀM VIỆC KỸ THUẬT VIÊN ({namText})",
+            vm.TheoKyThuatVien,
+            colKtv,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        // Sheet 5: Top thiết bị nhiều sự cố
+        var colTopSuCo = new List<ExcelColumn<ThietBiNhieuSuCoItem>>
+        {
+            new("Tên thiết bị", x => x.TenThietBi, width: 28),
+            new("Số Serial", x => x.SoSerial, alignment: XLAlignmentHorizontalValues.Center, width: 18),
+            new("Loại thiết bị", x => x.TenLoaiThietBi ?? "—", width: 22),
+            new("Khu vực", x => x.TenKhuVuc ?? "—", width: 22),
+            new("Tình trạng máy", x => UiHelper.Badge(x.TinhTrang).Text, alignment: XLAlignmentHorizontalValues.Center, width: 18),
+            new("Số sự cố gặp phải", x => x.SoSuCo, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Số phiếu bảo trì", x => x.SoPhieuBaoTri, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Tổng chi phí xử lý", x => x.TongChiPhi, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 24)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "Top_ThietBiSuCo",
+            $"DANH SÁCH THIẾT BỊ PHÁT SINH NHIỀU SỰ CỐ NHẤT ({namText})",
+            vm.TopThietBiNhieuSuCo,
+            colTopSuCo,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        // Sheet 6: Top thiết bị tốn chi phí nhất
+        var colTopChiPhi = new List<ExcelColumn<ThietBiTonChiPhiItem>>
+        {
+            new("Tên thiết bị", x => x.TenThietBi, width: 28),
+            new("Số Serial", x => x.SoSerial, alignment: XLAlignmentHorizontalValues.Center, width: 18),
+            new("Loại thiết bị", x => x.TenLoaiThietBi ?? "—", width: 22),
+            new("Khu vực", x => x.TenKhuVuc ?? "—", width: 22),
+            new("Số phiếu xử lý", x => x.SoPhieuXuLy, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 18),
+            new("Số lần dùng vật tư", x => x.SoLanDungVatTu, numberFormat: "#,##0", alignment: XLAlignmentHorizontalValues.Right, width: 20),
+            new("Tổng chi phí tích lũy", x => x.TongChiPhi, numberFormat: "#,##0 ₫", alignment: XLAlignmentHorizontalValues.Right, width: 24)
+        };
+        ExcelExportHelper.AddWorksheet(
+            workbook,
+            "Top_ThietBiChiPhi",
+            $"DANH SÁCH THIẾT BỊ TỐN KÉM CHI PHÍ BẢO TRÌ SỬA CHỮA NHẤT ({namText})",
+            vm.TopThietBiTonChiPhi,
+            colTopChiPhi,
+            nguoiXuat,
+            coCotStt: true
+        );
+
+        return ExcelExportHelper.SaveToBytes(workbook);
     }
 }

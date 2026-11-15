@@ -13,6 +13,15 @@
         <h1>Báo cáo thống kê</h1>
         <p>Phân tích đa chiều về thiết bị, sự cố, hiệu suất kỹ thuật viên và chi phí bảo trì.</p>
     </div>
+    <div class="page-actions d-flex gap-2">
+        <a asp-action="XuatExcel"
+           asp-route-Nam="@Model.BoLoc.Nam"
+           asp-route-TuNgay="@(Model.BoLoc.TuNgay?.ToString("yyyy-MM-dd"))"
+           asp-route-DenNgay="@(Model.BoLoc.DenNgay?.ToString("yyyy-MM-dd"))"
+           class="btn btn-outline-success btn-sm">
+            <span class="material-symbols-outlined icon-16">download</span> Xuất báo cáo Excel
+        </a>
+    </div>
 </div>
 
 @* Thanh bộ lọc thời gian *@
@@ -40,6 +49,14 @@
                 <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
                     <span class="material-symbols-outlined icon-16">filter_alt</span> Thống kê
                 </button>
+                <a asp-action="XuatExcel"
+                   asp-route-Nam="@Model.BoLoc.Nam"
+                   asp-route-TuNgay="@(Model.BoLoc.TuNgay?.ToString("yyyy-MM-dd"))"
+                   asp-route-DenNgay="@(Model.BoLoc.DenNgay?.ToString("yyyy-MM-dd"))"
+                   class="btn btn-outline-success btn-sm"
+                   title="Xuất toàn bộ báo cáo thống kê ra file Excel">
+                    <span class="material-symbols-outlined icon-16">download</span> Xuất Excel
+                </a>
                 @if (Model.BoLoc.CoBoLocKhoangNgay || Model.BoLoc.Nam != namHienTai)
                 {
                     <a asp-action="Index" class="btn btn-outline-secondary btn-sm" title="Đặt lại năm hiện tại">

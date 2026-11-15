@@ -1,3 +1,6 @@
+// Họ tên: Nguyễn Khắc Hiếu
+// MSSV: 23103100225
+// Nội dung: STT 61 - Hạ tầng Xuất dữ liệu Excel chuẩn hóa (Excel Export Engine) dùng ClosedXML
 #nullable enable
 using System.Globalization;
 using ClosedXML.Excel;
@@ -89,6 +92,32 @@ public static class ExcelExportHelper
         bool coCotStt = true)
     {
         using var workbook = new XLWorkbook();
+        AddWorksheet(workbook, sheetName, reportTitle, data, columns, nguoiXuat, coCotStt);
+        return SaveToBytes(workbook);
+    }
+
+    /// <summary>
+    /// Lưu XLWorkbook ra mảng byte để trả về FileContentResult.
+    /// </summary>
+    public static byte[] SaveToBytes(XLWorkbook workbook)
+    {
+        using var memoryStream = new MemoryStream();
+        workbook.SaveAs(memoryStream);
+        return memoryStream.ToArray();
+    }
+
+    /// <summary>
+    /// Thêm một worksheet chuẩn hóa giao diện vào XLWorkbook (dùng cho báo cáo xuất đa sheet).
+    /// </summary>
+    public static IXLWorksheet AddWorksheet<T>(
+        XLWorkbook workbook,
+        string sheetName,
+        string reportTitle,
+        IEnumerable<T> data,
+        IReadOnlyList<ExcelColumn<T>> columns,
+        string? nguoiXuat = null,
+        bool coCotStt = true)
+    {
         var safeSheetName = string.IsNullOrWhiteSpace(sheetName) ? "Báo cáo" : sheetName.Trim();
         // Excel giới hạn tên Sheet tối đa 31 ký tự và không chứa ký tự cấm: \ / ? * : [ ]
         if (safeSheetName.Length > 30) safeSheetName = safeSheetName[..30];
@@ -269,9 +298,7 @@ public static class ExcelExportHelper
             }
         }
 
-        using var memoryStream = new MemoryStream();
-        workbook.SaveAs(memoryStream);
-        return memoryStream.ToArray();
+        return worksheet;
     }
 
     /// <summary>
